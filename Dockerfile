@@ -12,7 +12,7 @@ COPY --chown=user:user migrations/ /app/
 
 
 # install app
-RUN pip install sabogaapi --index-url https://gitlab.com/api/v4/projects/52722115/packages/pypi/simple
+RUN pip install sabogaapi --index-url https://gitlab.com/api/v4/projects/52729730/packages/pypi/simple
 
 # run command as user
 USER user
