@@ -1,0 +1,14 @@
+# python & package specific files
+__pycache__/
+dist/
+*.egg-info
+.tox/
+.pytest_cache/
+
+_autosummary/
+_build/
+doctrees/
+
+# IDE/OS specific files
+.DS_Store
+**/.idea/*
