@@ -27,7 +27,7 @@ serve: # Serve the site locally for testing.
 ifeq (True,$(HAS_CONDA))
 ifneq ("$(wildcard $(MY_ENV_DIR))","") # check if the directory is there
 	$(MAKE) build
-	cd testing-environment && docker compose up -d --build
+	cd testing-environment && docker compose stop && docker compose up -d --build
 	#$(MAKE) apply_migrations
 	$(MAKE) clean
 else
