@@ -7,8 +7,11 @@ WORKDIR /app
 # add non-root user
 RUN adduser user && chown -R user /app
 
+# copy migrations
+#COPY --chown=user:user migrations/ /app/
+
 # install app
-COPY --chown=user:user ../dist /app/dist
+COPY --chown=user:user ./dist /app/dist
 RUN pip3 install dist/*.whl
 
 # run command as user

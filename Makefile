@@ -27,8 +27,8 @@ serve: # Serve the site locally for testing.
 ifeq (True,$(HAS_CONDA))
 ifneq ("$(wildcard $(MY_ENV_DIR))","") # check if the directory is there
 	$(MAKE) build
-	cd testing-environment && docker compose stop && docker compose up -d --build
-	#$(MAKE) apply_migrations
+	cd api-testing && docker compose up -d --build
+	docker exec -w /app/migrations saboga-api alembic upgrade head
 	$(MAKE) clean
 else
 	@echo ">>> Please setup the environment first with 'make environment'"
@@ -43,12 +43,6 @@ clean: # Clean up build files.
 
 create_migrations:
 	cd migrations && ./create_migrations.sh
-
-downgrade_migrations:
-	cd migrations && ./downgrade_migrations.sh
-
-apply_migrations:
-	cd migrations && ./apply_migrations.sh
 
 
 environment: # Install the development environment.
