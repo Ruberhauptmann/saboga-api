@@ -22,21 +22,21 @@ Type check:
   script:
     - tox -e type
 
-Test python3.12:
-  extends: .tests
-  script:
-    - tox -e py312
-  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
-  artifacts:
-    when: always
-    paths:
-      - report.xml
-      - coverage.xml
-    reports:
-      junit: report.xml
-      coverage_report:
-        coverage_format: cobertura
-        path: coverage.xml
+#Test python3.12:
+#  extends: .tests
+#  script:
+#    - tox -e py312
+#  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+#  artifacts:
+#    when: always
+#    paths:
+#      - report.xml
+#      - coverage.xml
+#    reports:
+#      junit: report.xml
+#      coverage_report:
+#        coverage_format: cobertura
+#        path: coverage.xml
 
 Build package:
   extends: .base

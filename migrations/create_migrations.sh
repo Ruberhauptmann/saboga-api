@@ -1,2 +1,2 @@
 read -r -p "Enter migration message: " message
-docker exec saboga-api alembic revision --autogenerate -m "$message"
+docker exec -w /app/migrations saboga-api alembic revision --autogenerate -m "$message"

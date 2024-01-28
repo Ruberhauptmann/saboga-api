@@ -8,7 +8,7 @@ WORKDIR /app
 RUN adduser user && chown -R user /app
 
 # install app
-COPY --chown=user:user ../dist /app/dist
+COPY --chown=user:user ./dist /app/dist
 RUN pip3 install dist/*.whl
 
 # run command as user
