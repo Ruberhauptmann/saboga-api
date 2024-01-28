@@ -6,4 +6,3 @@ def test_games_all(client: TestClient):
     print(response.json())
     assert response.status_code == 200
     assert False
-    #assert response.json() == {"msg": "Hello World"}
