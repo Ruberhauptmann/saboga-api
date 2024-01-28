@@ -1,7 +1,6 @@
-from typing import Type
+from typing import List, Sequence
 
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import Sequence
 from sqlmodel import Session, select
 
 from sabogaapi.database import engine
@@ -14,7 +13,8 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[BoardgameRead])
+@router.get("/")
+@router.get("/", response_model=List[BoardgameRead])
 def read_all_games() -> Sequence[Boardgame]:
     with Session(engine) as session:
         games = session.exec(select(Boardgame)).all()
@@ -22,7 +22,7 @@ def read_all_games() -> Sequence[Boardgame]:
 
 
 @router.post("/", response_model=BoardgameRead)
-def create_hero(game: BoardgameCreate):
+def create_game(game: BoardgameCreate) -> Boardgame:
     with Session(engine) as session:
         db_game = Boardgame.model_validate(game)
         session.add(db_game)
@@ -32,7 +32,7 @@ def create_hero(game: BoardgameCreate):
 
 
 @router.patch("/{game_id}", response_model=BoardgameRead)
-def update_hero(game_id: int, game: BoardgameUpdate):
+def update_game(game_id: int, game: BoardgameUpdate) -> Boardgame:
     with Session(engine) as session:
         db_game = session.get(Boardgame, game_id)
         if not db_game:
@@ -47,7 +47,7 @@ def update_hero(game_id: int, game: BoardgameUpdate):
 
 
 @router.delete("/{game_id}")
-def delete_hero(game_id: int):
+def delete_game(game_id: int) -> dict[str, bool]:
     with Session(engine) as session:
         game = session.get(Boardgame, game_id)
         if not game:
@@ -58,7 +58,7 @@ def delete_hero(game_id: int):
 
 
 @router.get("/{game_id}", response_model=BoardgameRead)
-def read_game(game_id: int) -> Type[Boardgame]:
+def read_game(game_id: int) -> Boardgame:
     with Session(engine) as session:
         game = session.get(Boardgame, game_id)
         if not game:
