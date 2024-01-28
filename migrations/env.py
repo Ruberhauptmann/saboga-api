@@ -31,7 +31,7 @@ target_metadata = SQLModel.metadata
 def get_connection_url():
     connection_string = (
         f'{os.getenv("DB_DRIVER")}://'
-        "root"
+        f'{os.getenv("MARIADB_USER")}'
         f':{os.getenv("MARIADB_PASSWORD")}@{os.getenv("DB_URL")}:{os.getenv("DB_PORT")}'
         f'/{os.getenv("MARIADB_DATABASE")}'
     )
