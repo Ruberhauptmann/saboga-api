@@ -16,8 +16,7 @@ def get_session() -> Generator[Session, None, None]:
 app = FastAPI()
 
 origins = [
-    "http://localhost:3000",
-    "https://saboga.tjarksievers.de"
+    "*"
 ]
 
 app.add_middleware(
