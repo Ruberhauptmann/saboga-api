@@ -17,6 +17,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
+    "https://saboga.tjarksievers.de"
 ]
 
 app.add_middleware(
