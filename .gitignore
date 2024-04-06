@@ -12,3 +12,7 @@ doctrees/
 # IDE/OS specific files
 .DS_Store
 **/.idea/*
+
+coverage.xml
+.coverage
+report.xml

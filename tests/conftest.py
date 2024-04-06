@@ -3,7 +3,8 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
-from sabogaapi.main import app, get_session
+from sabogaapi.extensions import get_session
+from sabogaapi.main import app
 
 
 @pytest.fixture(name="session")
