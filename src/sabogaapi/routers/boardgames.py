@@ -1,24 +1,32 @@
 from typing import List, Sequence
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from sabogaapi.database import engine
-from sabogaapi.models import Boardgame, BoardgameRead, BoardgameCreate, BoardgameUpdate
+from sabogaapi.extensions import get_session
+from sabogaapi.models import (
+    Boardgame,
+    BoardgameCreate,
+    BoardgameRead,
+    BoardgameReadWithPlays,
+    BoardgameUpdate,
+)
 
 router = APIRouter(
-    prefix="/games",
-    tags=["games"],
+    prefix="/boardgames",
+    tags=["boardgames"],
     responses={404: {"description": "Not found"}},
 )
 
 
 @router.get("/")
 @router.get("/", response_model=List[BoardgameRead])
-def read_all_games() -> Sequence[Boardgame]:
-    with Session(engine) as session:
-        games = session.exec(select(Boardgame)).all()
-        return games
+def read_all_game(
+    *, session: Session = Depends(get_session)
+) -> Sequence[Boardgame]:
+    games = session.exec(select(Boardgame)).all()
+    return games
 
 
 @router.post("/", response_model=BoardgameRead)
@@ -57,10 +65,9 @@ def delete_game(game_id: int) -> dict[str, bool]:
         return {"ok": True}
 
 
-@router.get("/{game_id}", response_model=BoardgameRead)
-def read_game(game_id: int) -> Boardgame:
-    with Session(engine) as session:
-        game = session.get(Boardgame, game_id)
-        if not game:
-            raise HTTPException(status_code=404, detail="Game not found")
-        return game
+@router.get("/{game_id}", response_model=BoardgameReadWithPlays)
+def read_game(*, session: Session = Depends(get_session), game_id: int) -> Boardgame:
+    game = session.get(Boardgame, game_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return game

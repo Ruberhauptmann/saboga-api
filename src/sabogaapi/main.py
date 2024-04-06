@@ -1,23 +1,11 @@
-from typing import Generator
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session
 
-from .routers import boardgames
-from .database import engine
-
-
-def get_session() -> Generator[Session, None, None]:
-    with Session(engine) as session:
-        yield session
-
+from .routers import boardgames, plays
 
 app = FastAPI()
 
-origins = [
-    "*"
-]
+origins = ["https://saboga.tjarksievers.de"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -28,3 +16,4 @@ app.add_middleware(
 )
 
 app.include_router(boardgames.router)
+app.include_router(plays.router)

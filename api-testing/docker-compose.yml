@@ -1,7 +1,25 @@
 version: '3.8'
 
 services:
-  api:
+  reverse-proxy:
+    container_name: traefik
+    image: traefik:v2.11
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--log.level=DEBUG"
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - saboga-api
+
+  saboga-api:
     build:
       context: ../
       dockerfile: api-testing/Dockerfile
@@ -11,6 +29,8 @@ services:
       - "8000:8000"
     volumes:
       - ../migrations:/app/migrations
+    labels:
+      - "traefik.http.routers.saboga-api.rule=Host(`api.saboga.localhost`)"
     env_file:
       - ../.env
     networks:
