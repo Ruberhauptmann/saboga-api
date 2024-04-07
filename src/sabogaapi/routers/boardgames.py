@@ -10,7 +10,7 @@ from sabogaapi.models import (
     BoardgameCreate,
     BoardgameRead,
     BoardgameReadWithPlays,
-    BoardgameUpdate,
+    BoardgameUpdate, Play,
 )
 
 router = APIRouter(
@@ -20,8 +20,7 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-@router.get("/", response_model=List[BoardgameRead])
+@router.get("/", response_model=List[BoardgameReadWithPlays])
 def read_all_game(
     *, session: Session = Depends(get_session)
 ) -> Sequence[Boardgame]:
@@ -71,3 +70,16 @@ def read_game(*, session: Session = Depends(get_session), game_id: int) -> Board
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+
+@router.put("/{game_id}/plays/{play_id}")
+def add_play_to_game(*, session: Session = Depends(get_session), game_id: int, play_id: int):
+    game = session.get(Boardgame, game_id)
+    play = session.get(Play, play_id)
+    if not play:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if not game:
+        raise HTTPException(status_code=404, detail="Play not found")
+
+    game.plays.append(play)
+    session.add(game)
+    session.commit()
