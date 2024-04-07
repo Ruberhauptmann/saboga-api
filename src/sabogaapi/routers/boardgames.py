@@ -71,8 +71,9 @@ def read_game(*, session: Session = Depends(get_session), game_id: int) -> Board
         raise HTTPException(status_code=404, detail="Game not found")
     return game
 
+
 @router.put("/{game_id}/plays/{play_id}")
-def add_play_to_game(*, session: Session = Depends(get_session), game_id: int, play_id: int):
+def add_play_to_game(*, session: Session = Depends(get_session), game_id: int, play_id: int) -> dict[str, bool]:
     game = session.get(Boardgame, game_id)
     play = session.get(Play, play_id)
     if not play:
@@ -83,3 +84,5 @@ def add_play_to_game(*, session: Session = Depends(get_session), game_id: int, p
     game.plays.append(play)
     session.add(game)
     session.commit()
+
+    return {"ok": True}
