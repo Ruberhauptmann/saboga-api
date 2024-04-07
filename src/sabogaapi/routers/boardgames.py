@@ -10,7 +10,8 @@ from sabogaapi.models import (
     BoardgameCreate,
     BoardgameRead,
     BoardgameReadWithPlays,
-    BoardgameUpdate, Play,
+    BoardgameUpdate,
+    Play,
 )
 
 router = APIRouter(
@@ -21,9 +22,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[BoardgameReadWithPlays])
-def read_all_game(
-    *, session: Session = Depends(get_session)
-) -> Sequence[Boardgame]:
+def read_all_game(*, session: Session = Depends(get_session)) -> Sequence[Boardgame]:
     games = session.exec(select(Boardgame)).all()
     return games
 
@@ -73,7 +72,9 @@ def read_game(*, session: Session = Depends(get_session), game_id: int) -> Board
 
 
 @router.put("/{game_id}/plays/{play_id}")
-def add_play_to_game(*, session: Session = Depends(get_session), game_id: int, play_id: int) -> dict[str, bool]:
+def add_play_to_game(
+    *, session: Session = Depends(get_session), game_id: int, play_id: int
+) -> dict[str, bool]:
     game = session.get(Boardgame, game_id)
     play = session.get(Play, play_id)
     if not play:

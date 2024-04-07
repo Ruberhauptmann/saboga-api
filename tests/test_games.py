@@ -11,7 +11,7 @@ def test_games(client, session):
         player_min=1,
         player_max=8,
         player_recommended_min=1,
-        player_recommended_max=6
+        player_recommended_max=6,
     )
     game_2 = Boardgame(
         name="Test",
@@ -22,13 +22,13 @@ def test_games(client, session):
         player_min=2,
         player_max=6,
         player_recommended_min=2,
-        player_recommended_max=4
+        player_recommended_max=4,
     )
     session.add(game_1)
     session.add(game_2)
     session.commit()
 
-    response = client.get('/boardgames/')
+    response = client.get("/boardgames/")
     data = response.json()
 
     assert response.status_code == 200
