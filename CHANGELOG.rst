@@ -1,4 +1,20 @@
 
+.. _changelog-0.0.7:
+
+0.0.7 — 2024-04-07
+------------------
+
+Added
+^^^^^
+
+- Endpoint to link a play onto a game
+
+Changed
+^^^^^^^
+
+- Expanded FastAPI models, set some fields nullable
+- Versioning for Docker containers
+
 .. _changelog-0.0.6:
 
 0.0.6 — 2024-04-06

@@ -5,10 +5,7 @@ from .routers import boardgames, plays
 
 app = FastAPI()
 
-origins = [
-    "https://saboga.tjarksievers.de"
-    "https://api.saboga.tjarksievers.de"
-]
+origins = ["https://saboga.tjarksievers.de" "https://api.saboga.tjarksievers.de"]
 
 app.add_middleware(
     CORSMiddleware,

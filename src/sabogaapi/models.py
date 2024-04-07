@@ -50,18 +50,22 @@ class PlayUpdate(SQLModel):
     name: str | None = None
     playtime_s: int | None = None
     rating: float | None = None
+    points: int | None = None
     date: datetime.date | None = None
-    games_played: list["Boardgame"] | None = None
+    won: bool | None = None
+    result_str: str | None = None
 
 
 class BoardgameBase(SQLModel):
     name: str = Field(index=True)
     bgg_rating: float
+    bgg_id: int
+    bgg_weight: float
     owner: str
-    player_min: int
-    player_recommended_min: int
-    player_max: int
-    player_recommended_max: int
+    player_min: int | None
+    player_recommended_min: int | None
+    player_max: int | None
+    player_recommended_max: int | None
 
 
 class Boardgame(BoardgameBase, table=True):
@@ -93,12 +97,13 @@ class BoardgameCreate(BoardgameBase):
 class BoardgameUpdate(SQLModel):
     name: str | None = None
     bgg_rating: int | None = None
+    bgg_id: int | None
+    bgg_weight: float | None
     owner: str | None = None
     player_min: int | None = None
     player_recommended_min: int | None = None
     player_max: int | None = None
     player_recommended_max: None | int = None
-    plays: list[Play] | None = None
 
 
 class BoardgameReadWithPlays(BoardgameRead):

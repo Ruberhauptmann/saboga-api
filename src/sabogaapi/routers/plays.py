@@ -21,10 +21,8 @@ router = APIRouter(
 
 
 @router.get("/")
-@router.get("/", response_model=List[PlayRead])
-def read_all_game(
-        *, session: Session = Depends(get_session)
-) -> Sequence[Play]:
+@router.get("/", response_model=List[PlayReadWithBoardgames])
+def read_all_game(*, session: Session = Depends(get_session)) -> Sequence[Play]:
     plays = session.exec(select(Play)).all()
     return plays
 
