@@ -1,6 +1,6 @@
 import datetime
 
-from pydantic import computed_field
+from pydantic import computed_field, field_validator
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -62,10 +62,23 @@ class BoardgameBase(SQLModel):
     bgg_id: int
     bgg_weight: float
     owner: str
-    player_min: int | None
-    player_recommended_min: int | None
-    player_max: int | None
-    player_recommended_max: int | None
+    player_min: int | None = None
+    player_recommended_min: int | None = None
+    player_max: int | None = None
+    player_recommended_max: int | None = None
+
+    @field_validator(
+        "player_min",
+        "player_recommended_min",
+        "player_max",
+        "player_recommended_max",
+        mode="before",
+    )
+    @classmethod
+    def parameters_str(cls, v):
+        if v == "":
+            return None
+        return v
 
 
 class Boardgame(BoardgameBase, table=True):
