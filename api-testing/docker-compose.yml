@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   reverse-proxy:
     container_name: traefik
@@ -36,11 +34,12 @@ services:
     networks:
       - saboga-api
 
+
   database:
-    image: mariadb:latest
+    image: mongo:jammy
     container_name: saboga-database
     ports:
-      - "3306:3306"
+      - 27017:27017
     env_file:
       - ../.env
     networks:

@@ -7,11 +7,11 @@
 ..
 .. - A bullet item for the Removed category.
 ..
-.. Added
-.. ^^^^^
-..
-.. - A bullet item for the Added category.
-..
+Added
+^^^^^
+
+- Add authentication via fastapi-users
+
 .. Changed
 .. ^^^^^^^
 ..
