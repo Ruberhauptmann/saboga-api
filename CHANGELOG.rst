@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.8:
+
+0.0.8 — 2024-05-15
+------------------
+
+Changed
+^^^^^^^
+
+- Switched to MongoBD via Beanie as database backend
+
 .. _changelog-0.0.7:
 
 0.0.7 — 2024-04-07
