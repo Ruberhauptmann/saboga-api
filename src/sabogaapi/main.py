@@ -1,19 +1,9 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from sabogaapi import create_app
+from sabogaapi.api_v1.database import init_db
 
-from .routers import boardgames, plays
+app = create_app()
 
-app = FastAPI()
 
-origins = ["https://saboga.tjarksievers.de" "https://api.saboga.tjarksievers.de"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(boardgames.router)
-app.include_router(plays.router)
+@app.on_event("startup")
+async def startup_db_client():
+    await init_db()

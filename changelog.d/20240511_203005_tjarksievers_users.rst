@@ -12,11 +12,11 @@
 ..
 .. - A bullet item for the Added category.
 ..
-.. Changed
-.. ^^^^^^^
-..
-.. - A bullet item for the Changed category.
-..
+Changed
+^^^^^^^
+
+- Switched to MongoBD via Beanie as database backend
+
 .. Deprecated
 .. ^^^^^^^^^^
 ..
