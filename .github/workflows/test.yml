@@ -1,7 +1,6 @@
 name: Test, typecheck and linting
 
 on:
-  workflow_call:
   pull_request:
   push:
     tags:
