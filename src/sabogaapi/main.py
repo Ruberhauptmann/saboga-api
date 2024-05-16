@@ -5,5 +5,5 @@ app = create_app()
 
 
 @app.on_event("startup")
-async def startup_db_client():
+async def startup_db_client() -> None:
     await init_db()

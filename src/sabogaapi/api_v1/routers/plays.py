@@ -1,15 +1,10 @@
-from typing import List
+from typing import List, Sequence
 
 from beanie import DeleteRules, PydanticObjectId
 from fastapi import APIRouter, HTTPException
 
 from sabogaapi.api_v1.models import Play
-from sabogaapi.api_v1.schemas import (
-    PlayCreate,
-    PlayPublic,
-    PlayPublicWithBoardgames,
-    PlayUpdate,
-)
+from sabogaapi.api_v1.schemas import PlayCreate, PlayPublicWithBoardgames, PlayUpdate
 
 router = APIRouter(
     prefix="/plays",
@@ -19,14 +14,14 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[PlayPublicWithBoardgames])
-async def read_all_plays():
+async def read_all_plays() -> Sequence[Play]:
     plays = await Play.find_all(fetch_links=True).to_list()
     return plays
 
 
 @router.post("/", response_model=PlayPublicWithBoardgames)
 async def create_play(play: PlayCreate) -> Play:
-    play_response = await Play.model_validate(play, from_attributes=True).create()
+    play_response: Play = await Play.model_validate(play, from_attributes=True).create()
     return play_response
 
 
@@ -55,5 +50,5 @@ async def update_play(play_id: int, play: PlayUpdate) -> Play:
     play_data = play.model_dump(exclude_unset=True)
     for key, value in play_data.items():
         setattr(db_play, key, value)
-    db_play.save()
+    await db_play.save()
     return db_play

@@ -30,7 +30,7 @@ class Play(Document):
     won: bool
     result_str: str
 
-    games_played: List[BackLink[Boardgame]] = Field(original_field="plays")
+    games_played: List[BackLink[Boardgame]] = Field(original_field="plays")  # type: ignore
 
     class Settings:
         name = "plays"
