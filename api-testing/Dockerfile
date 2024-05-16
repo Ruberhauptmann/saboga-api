@@ -1,18 +1,26 @@
-# pull official python base image
-FROM python:3.12.0
+FROM thehale/python-poetry:1.8.3-py3.12-slim as builder
 
-# set work directory
+COPY src/ /build/src
+COPY pyproject.toml /build
+COPY README.md /build
+
+WORKDIR /build
+RUN poetry build
+
+
+FROM python:3.12.3-slim
+ENV FASTAPI_ENV=production
+COPY --from=builder /build/dist/ dist/
+RUN pip3 install dist/*.whl
+RUN rm -r dist/
+
+# set working directory
 WORKDIR /app
 
 # add non-root user
 RUN adduser user && chown -R user /app
 
-# install app
-COPY --chown=user:user ./dist /app/dist
-RUN pip3 install dist/*.whl
-
 # run command as user
 USER user
 
-# run wsgi server
 CMD uvicorn sabogaapi.main:app --workers 1 --host 0.0.0.0 --port 8000

@@ -26,7 +26,7 @@ async def read_all_games() -> List[Boardgame]:
 
 @router.post("/", response_model=BoardgamePublic)
 async def add_boardgame(boardgame: BoardgameCreate) -> Boardgame:
-    boardgame_response = await Boardgame.model_validate(
+    boardgame_response: Boardgame = await Boardgame.model_validate(
         boardgame, from_attributes=True
     ).create()
     return boardgame_response

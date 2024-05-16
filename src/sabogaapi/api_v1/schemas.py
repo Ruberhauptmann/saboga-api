@@ -23,12 +23,12 @@ class BoardgameCreate(BaseBoardgame):
 class BoardgamePublic(BaseBoardgame):
     id: PydanticObjectId
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def type(self) -> str:
         return "boardgame"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def link(self) -> dict[str, str]:
         return {"self": f"/boardgames/{self.id}"}
@@ -46,12 +46,12 @@ class BasePlay(BaseModel):
 class PlayPublic(BasePlay):
     id: PydanticObjectId
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def type(self) -> str:
         return "play"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def link(self) -> dict[str, str]:
         return {"self": f"/plays/{self.id}"}
@@ -86,17 +86,17 @@ class BoardgameUpdate(BaseModel):
 class BoardgamePublicWithPlays(BoardgamePublic):
     plays: list[PlayPublic] = []
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def number_of_plays(self) -> int:
         return len(self.plays)
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def number_of_wins(self) -> int:
         return sum(play.won for play in self.plays)
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def win_percentage(self) -> float:
         if self.number_of_plays > 0:
@@ -104,7 +104,7 @@ class BoardgamePublicWithPlays(BoardgamePublic):
         else:
             return 0
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def average_rating(self) -> float:
         if self.number_of_plays > 0:
