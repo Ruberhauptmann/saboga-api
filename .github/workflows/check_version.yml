@@ -1,0 +1,16 @@
+name: Make sure that the version is bumped
+
+on:
+  pull_request:
+    branches:
+      - 'release-*'
+
+jobs:
+  check_version:
+    runs-on: ubuntu-latest
+    container: ghcr.io/ruberhauptmann/saboga-api:0.0.10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Check version
+        run: ./check_version.sh
