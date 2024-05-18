@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from beanie import PydanticObjectId
 from fastapi_users import schemas
@@ -121,7 +121,7 @@ class UserRead(schemas.BaseUser[PydanticObjectId]):
 class UserCreate(schemas.BaseUserCreate):
     role: str = "user"
 
-    def create_update_dict(self):
+    def create_update_dict(self) -> dict[str, Any]:
         return model_dump(
             self,
             exclude_unset=True,
@@ -135,14 +135,14 @@ class UserCreate(schemas.BaseUserCreate):
             },
         )
 
-    def create_update_dict_superuser(self):
+    def create_update_dict_superuser(self) -> dict[str, Any]:
         return model_dump(self, exclude_unset=True, exclude={"id"})
 
 
 class UserUpdate(schemas.BaseUserUpdate):
     role: str
 
-    def create_update_dict(self):
+    def create_update_dict(self) -> dict[str, Any]:
         return model_dump(
             self,
             exclude_unset=True,
@@ -156,5 +156,5 @@ class UserUpdate(schemas.BaseUserUpdate):
             },
         )
 
-    def create_update_dict_superuser(self):
+    def create_update_dict_superuser(self) -> dict[str, Any]:
         return model_dump(self, exclude_unset=True, exclude={"id"})

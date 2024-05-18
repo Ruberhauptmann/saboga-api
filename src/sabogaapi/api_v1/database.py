@@ -1,3 +1,5 @@
+from typing import AsyncGenerator
+
 from beanie import init_beanie
 from fastapi_users.db import BeanieUserDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -5,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from sabogaapi.api_v1.models import Boardgame, Play, User
 
 
-async def get_user_db():
+async def get_user_db() -> AsyncGenerator[BeanieUserDatabase[User], None]:
     yield BeanieUserDatabase(User)
 
 

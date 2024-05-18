@@ -1,4 +1,6 @@
 import os
+from contextlib import AbstractAsyncContextManager
+from typing import Any, Callable, Mapping
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +12,11 @@ os.getenv("FASTAPI-USERS-SECRET")
 SECRET = "SECRET"
 
 
-def create_app(lifespan) -> FastAPI:
+def create_app(
+    lifespan: Callable[[FastAPI], AbstractAsyncContextManager[None]]
+    | Callable[[FastAPI], AbstractAsyncContextManager[Mapping[str, Any]]]
+    | None
+) -> FastAPI:
     description = """
     Boardgame storage
     """

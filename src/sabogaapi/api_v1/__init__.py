@@ -1,9 +1,8 @@
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 
-from sabogaapi.api_v1.database import User
 from sabogaapi.api_v1.routers import boardgames, plays
 from sabogaapi.api_v1.schemas import UserCreate, UserRead, UserUpdate
-from sabogaapi.api_v1.users import auth_backend, current_active_user, fastapi_users
+from sabogaapi.api_v1.users import auth_backend, fastapi_users
 
 api_v1 = FastAPI()
 

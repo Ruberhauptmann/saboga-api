@@ -1,9 +1,8 @@
 import datetime
-from typing import List, Optional
+from typing import List
 
-from beanie import BackLink, Document, Link
+from beanie import Document, Link
 from fastapi_users.db import BeanieBaseUser
-from pydantic import Field
 
 
 class User(BeanieBaseUser, Document):
@@ -32,8 +31,6 @@ class Play(Document):
     date: datetime.date
     won: bool
     user: Link[User] | None = None
-
-    # games_played: List[BackLink[Boardgame]] = Field(original_field="plays")  # type: ignore
 
     class Settings:
         name = "plays"
