@@ -14,6 +14,8 @@ COPY --from=builder /build/dist/ dist/
 RUN pip3 install dist/*.whl
 RUN rm -r dist/
 
+EXPOSE 8000
+
 # set working directory
 WORKDIR /app
 

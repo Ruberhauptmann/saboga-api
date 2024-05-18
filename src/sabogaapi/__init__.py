@@ -1,12 +1,24 @@
+import os
+from contextlib import AbstractAsyncContextManager
+from typing import Any, Callable, Mapping
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from sabogaapi.api_v1 import api_v1
 
+os.getenv("FASTAPI-USERS-SECRET")
 
-def create_app() -> FastAPI:
+SECRET = "SECRET"
+
+
+def create_app(
+    lifespan: Callable[[FastAPI], AbstractAsyncContextManager[None]]
+    | Callable[[FastAPI], AbstractAsyncContextManager[Mapping[str, Any]]]
+    | None
+) -> FastAPI:
     description = """
-    Boardgamem storage
+    Boardgame storage
     """
     tags_metadata = [
         {
@@ -24,16 +36,18 @@ def create_app() -> FastAPI:
         description=description,
         contact={
             "name": "Hello World Jr",
-            "url": "",
-            "email": "",
+            "url": "https://api.saboga.tjarksievers.de",
+            "email": "tjarksievers@icloud.com",
         },
         license_info={
             "name": "MIT",
-            "url": "",
+            "url": "https://github.com/Ruberhauptmann/saboga-api/blob/main/LICENSE.md",
         },
         openapi_tags=tags_metadata,
+        lifespan=lifespan,
     )
 
+    # app.mount("/", api_v1)
     app.mount("/v1", api_v1)
     app.mount("/latest", api_v1)
 
