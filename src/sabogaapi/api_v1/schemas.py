@@ -1,6 +1,9 @@
 import datetime
+from typing import Optional
 
 from beanie import PydanticObjectId
+from fastapi_users import schemas
+from fastapi_users.schemas import model_dump
 from pydantic import BaseModel, computed_field
 
 
@@ -9,11 +12,43 @@ class BaseBoardgame(BaseModel):
     bgg_rating: float | None = None
     bgg_id: int | None = None
     bgg_weight: float | None = None
-    owner: str | None = None
     player_min: int | None = None
     player_recommended_min: int | None = None
     player_max: int | None = None
     player_recommended_max: int | None = None
+
+
+class BasePlay(BaseModel):
+    playtime_s: int
+    rating: float
+    date: datetime.date
+    won: bool
+
+
+class PlayPublic(BasePlay):
+    id: PydanticObjectId
+    user: Optional["UserRead"]
+
+    @computed_field  # type: ignore
+    @property
+    def type(self) -> str:
+        return "play"
+
+    @computed_field  # type: ignore
+    @property
+    def link(self) -> dict[str, str]:
+        return {"self": f"/plays/{self.id}"}
+
+
+class PlayCreate(BasePlay):
+    pass
+
+
+class PlayUpdate(BaseModel):
+    playtime_s: int | None = None
+    rating: float | None = None
+    date: datetime.date | None = None
+    won: bool | None = None
 
 
 class BoardgameCreate(BaseBoardgame):
@@ -34,49 +69,11 @@ class BoardgamePublic(BaseBoardgame):
         return {"self": f"/boardgames/{self.id}"}
 
 
-class BasePlay(BaseModel):
-    playtime_s: int
-    rating: float
-    points: int
-    date: datetime.date
-    won: bool
-    result_str: str
-
-
-class PlayPublic(BasePlay):
-    id: PydanticObjectId
-
-    @computed_field  # type: ignore
-    @property
-    def type(self) -> str:
-        return "play"
-
-    @computed_field  # type: ignore
-    @property
-    def link(self) -> dict[str, str]:
-        return {"self": f"/plays/{self.id}"}
-
-
-class PlayCreate(BasePlay):
-    pass
-
-
-class PlayUpdate(BaseModel):
-    name: str | None = None
-    playtime_s: int | None = None
-    rating: float | None = None
-    points: int | None = None
-    date: datetime.date | None = None
-    won: bool | None = None
-    result_str: str | None = None
-
-
 class BoardgameUpdate(BaseModel):
     name: str | None = None
     bgg_rating: int | None = None
-    bgg_id: int | None
-    bgg_weight: float | None
-    owner: str | None = None
+    bgg_id: int | None = None
+    bgg_weight: float | None = None
     player_min: int | None = None
     player_recommended_min: int | None = None
     player_max: int | None = None
@@ -113,5 +110,51 @@ class BoardgamePublicWithPlays(BoardgamePublic):
             return 0
 
 
-class PlayPublicWithBoardgames(PlayPublic):
-    games_played: list[BoardgamePublic] = []
+# class PlayPublicWithBoardgames(PlayPublic):
+#    games_played: list[BoardgamePublic] = []
+
+
+class UserRead(schemas.BaseUser[PydanticObjectId]):
+    role: str = "user"
+
+
+class UserCreate(schemas.BaseUserCreate):
+    role: str = "user"
+
+    def create_update_dict(self):
+        return model_dump(
+            self,
+            exclude_unset=True,
+            exclude={
+                "id",
+                "is_superuser",
+                "is_active",
+                "is_verified",
+                "oauth_accounts",
+                "role",
+            },
+        )
+
+    def create_update_dict_superuser(self):
+        return model_dump(self, exclude_unset=True, exclude={"id"})
+
+
+class UserUpdate(schemas.BaseUserUpdate):
+    role: str
+
+    def create_update_dict(self):
+        return model_dump(
+            self,
+            exclude_unset=True,
+            exclude={
+                "id",
+                "is_superuser",
+                "is_active",
+                "is_verified",
+                "oauth_accounts",
+                "role",
+            },
+        )
+
+    def create_update_dict_superuser(self):
+        return model_dump(self, exclude_unset=True, exclude={"id"})
