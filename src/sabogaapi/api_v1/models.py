@@ -9,6 +9,14 @@ class User(BeanieBaseUser, Document):
     role: str = "user"
 
 
+class Collection(Document):
+    user: Link[User] | None = None
+    games: List[Link["Boardgame"]] = []
+
+    class Settings:
+        name = "collections"
+
+
 class Boardgame(Document):
     name: str
     bgg_rating: float | None = None
@@ -18,8 +26,6 @@ class Boardgame(Document):
     player_recommended_min: int | None = None
     player_max: int | None = None
     player_recommended_max: int | None = None
-
-    plays: List[Link["Play"]] = []
 
     class Settings:
         name = "boardgames"
@@ -31,6 +37,8 @@ class Play(Document):
     date: datetime.date
     won: bool
     user: Link[User] | None = None
+
+    games_played: List[Link[Boardgame]] = []
 
     class Settings:
         name = "plays"
