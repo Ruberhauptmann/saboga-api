@@ -5,13 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from sabogaapi.api_v1.models import Boardgame, Collection, User
 from sabogaapi.api_v1.schemas import (
-    BoardgamePublic,
     CollectionCreate,
     CollectionPublic,
     CollectionUpdate,
-    PlayCreate,
-    PlayPublic,
-    PlayUpdate,
 )
 from sabogaapi.api_v1.users import current_active_user
 

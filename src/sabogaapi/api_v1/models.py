@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Optional
 
 from beanie import Document, Link
 from fastapi_users.db import BeanieBaseUser
@@ -11,7 +11,7 @@ class User(BeanieBaseUser, Document):
 
 class Collection(Document):
     name: str
-    user: Link[User] = None
+    user: Optional[Link[User]] = None
     games: List[Link["Boardgame"]] = []
 
     class Settings:

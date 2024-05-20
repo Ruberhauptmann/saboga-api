@@ -1,9 +1,9 @@
 from typing import List
 
-from beanie import DeleteRules, PydanticObjectId, WriteRules
+from beanie import DeleteRules, PydanticObjectId
 from fastapi import APIRouter, Depends, HTTPException
 
-from sabogaapi.api_v1.models import Boardgame, Play, User
+from sabogaapi.api_v1.models import Boardgame, User
 from sabogaapi.api_v1.schemas import (
     BoardgameCreate,
     BoardgamePublic,

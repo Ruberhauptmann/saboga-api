@@ -1,18 +1,10 @@
 from typing import List, Sequence
 
-from beanie import DeleteRules, PydanticObjectId, WriteRules
-from fastapi import APIRouter, Depends, HTTPException
+from beanie import PydanticObjectId
+from fastapi import APIRouter, HTTPException
 
-from sabogaapi.api_v1.models import Boardgame, Collection, Play, User
-from sabogaapi.api_v1.schemas import (
-    CollectionCreate,
-    CollectionPublic,
-    CollectionUpdate,
-    PlayCreate,
-    PlayPublic,
-    PlayUpdate,
-)
-from sabogaapi.api_v1.users import current_active_user
+from sabogaapi.api_v1.models import Collection
+from sabogaapi.api_v1.schemas import CollectionPublic
 
 router = APIRouter(
     prefix="/collections",
