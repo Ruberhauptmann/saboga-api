@@ -1,5 +1,5 @@
 import datetime
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 from beanie import PydanticObjectId
 from fastapi_users import schemas
@@ -81,7 +81,7 @@ class BoardgameUpdate(BaseModel):
 
 
 class BoardgamePublicWithPlays(BoardgamePublic):
-    plays: list[PlayPublic] = []
+    plays: List[PlayPublic] = []
 
     @computed_field  # type: ignore
     @property
@@ -110,8 +110,26 @@ class BoardgamePublicWithPlays(BoardgamePublic):
             return 0
 
 
-# class PlayPublicWithBoardgames(PlayPublic):
-#    games_played: list[BoardgamePublic] = []
+class PlayPublicWithBoardgames(PlayPublic):
+    games_played: list[BoardgamePublic] = []
+
+
+class BaseCollection(BaseModel):
+    name: str
+
+
+class CollectionPublic(BaseCollection):
+    id: PydanticObjectId
+    user: "UserRead"
+    games: List[BoardgamePublic] = []
+
+
+class CollectionCreate(BaseCollection):
+    pass
+
+
+class CollectionUpdate(BaseModel):
+    name: str | None = None
 
 
 class UserRead(schemas.BaseUser[PydanticObjectId]):

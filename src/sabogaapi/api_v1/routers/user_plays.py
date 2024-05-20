@@ -3,20 +3,20 @@ from typing import List, Sequence
 from beanie import DeleteRules, PydanticObjectId, WriteRules
 from fastapi import APIRouter, Depends, HTTPException
 
-from sabogaapi.api_v1.models import Play, User
+from sabogaapi.api_v1.models import Boardgame, Play, User
 from sabogaapi.api_v1.schemas import PlayCreate, PlayPublic, PlayUpdate
 from sabogaapi.api_v1.users import current_active_user
 
 router = APIRouter(
-    prefix="/plays",
-    tags=["plays"],
+    prefix="/{id}/plays",
+    tags=["User Ressources"],
     responses={404: {"description": "Not found"}},
 )
 
 
 @router.get("/", response_model=List[PlayPublic])
-async def read_all_plays() -> Sequence[Play]:
-    plays = await Play.find_all(fetch_links=True).to_list()
+async def read_all_plays(user: User = Depends(current_active_user)) -> Sequence[Play]:
+    plays = await Play.find_all(Play.user.id == user.id, fetch_links=True).to_list()
     if not plays:
         raise HTTPException(status_code=404, detail="No plays in database")
     return plays
@@ -39,6 +39,10 @@ async def read_play(
     play = await Play.get(play_id, fetch_links=True)
     if not play:
         raise HTTPException(status_code=404, detail="Play not found")
+    if not play.user == user:
+        raise HTTPException(
+            status_code=401, detail="This play does not belong to this user"
+        )
     return play
 
 
@@ -73,3 +77,25 @@ async def update_play(
         setattr(db_play, key, value)
     await db_play.save()
     return db_play
+
+
+@router.put("/{play_id}/games/{game_id}/", response_model=PlayPublic)
+async def add_play_to_boardgame(
+    game_id: PydanticObjectId,
+    play_id: PydanticObjectId,
+    user: User = Depends(current_active_user),
+) -> Play:
+    game = await Boardgame.get(game_id, fetch_links=True)
+    play = await Play.get(play_id, fetch_links=True)
+    if not play:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if not game:
+        raise HTTPException(status_code=404, detail="Play not found")
+    if not play.user == user:
+        raise HTTPException(
+            status_code=401, detail="This play does not belong to this user"
+        )
+
+    play.games_played.append(game)
+    await play.save(link_rule=WriteRules.WRITE)
+    return play

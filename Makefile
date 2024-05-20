@@ -28,9 +28,6 @@ ifeq (True,$(HAS_CONDA))
 ifneq ("$(wildcard $(MY_ENV_DIR))","") # check if the directory is there
 	$(MAKE) build
 	cd api-testing && docker compose up -d --build
-	#-docker exec -i saboga-database mariadb -umysql -pmysql database -e 'truncate table database.boardgame'
-	#docker exec -w /app/migrations saboga-api alembic upgrade head
-	#docker exec -i saboga-database mariadb -umysql -pmysql database < ./api-testing/boardgame.sql
 	$(MAKE) clean
 else
 	@echo ">>> Please setup the environment first with 'make environment'"

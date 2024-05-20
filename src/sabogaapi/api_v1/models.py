@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Optional
 
 from beanie import Document, Link
 from fastapi_users.db import BeanieBaseUser
@@ -7,6 +7,15 @@ from fastapi_users.db import BeanieBaseUser
 
 class User(BeanieBaseUser, Document):
     role: str = "user"
+
+
+class Collection(Document):
+    name: str
+    user: Optional[Link[User]] = None
+    games: List[Link["Boardgame"]] = []
+
+    class Settings:
+        name = "collections"
 
 
 class Boardgame(Document):
@@ -19,8 +28,6 @@ class Boardgame(Document):
     player_max: int | None = None
     player_recommended_max: int | None = None
 
-    plays: List[Link["Play"]] = []
-
     class Settings:
         name = "boardgames"
 
@@ -31,6 +38,8 @@ class Play(Document):
     date: datetime.date
     won: bool
     user: Link[User] | None = None
+
+    games_played: List[Link[Boardgame]] = []
 
     class Settings:
         name = "plays"
