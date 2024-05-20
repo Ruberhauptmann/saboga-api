@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 
-from sabogaapi.api_v1.routers import boardgames, plays
+from sabogaapi.api_v1.routers import (
+    boardgames,
+    collections,
+    user_collections,
+    user_plays,
+)
 from sabogaapi.api_v1.schemas import UserCreate, UserRead, UserUpdate
 from sabogaapi.api_v1.users import auth_backend, fastapi_users
 
@@ -13,29 +18,32 @@ def hello_world() -> str:
 
 
 api_v1.include_router(boardgames.router)
-api_v1.include_router(plays.router)
+api_v1.include_router(collections.router)
 
 
 api_v1.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
+    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["Auth"]
 )
 api_v1.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
-    tags=["auth"],
+    tags=["Auth"],
 )
 api_v1.include_router(
     fastapi_users.get_reset_password_router(),
     prefix="/auth",
-    tags=["auth"],
+    tags=["Auth"],
 )
 api_v1.include_router(
     fastapi_users.get_verify_router(UserRead),
     prefix="/auth",
-    tags=["auth"],
+    tags=["Auth"],
 )
+user_router = fastapi_users.get_users_router(UserRead, UserUpdate)
+user_router.include_router(user_collections.router)
+user_router.include_router(user_plays.router)
 api_v1.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
+    user_router,
     prefix="/users",
-    tags=["users"],
+    tags=["Users"],
 )

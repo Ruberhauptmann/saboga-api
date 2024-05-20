@@ -10,7 +10,8 @@ class User(BeanieBaseUser, Document):
 
 
 class Collection(Document):
-    user: Link[User] | None = None
+    name: str
+    user: Link[User] = None
     games: List[Link["Boardgame"]] = []
 
     class Settings:
