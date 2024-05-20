@@ -11,7 +11,7 @@ Added
 ^^^^^
 
 - Collections of games to user accounts
-..
+
 .. Changed
 .. ^^^^^^^
 ..
