@@ -25,6 +25,17 @@ class BasePlay(BaseModel):
     won: bool
 
 
+class BaseCollection(BaseModel):
+    name: str
+
+
+class BaseResults(BaseModel):
+    player_name: str
+    points: Optional[float] = None
+    position: Optional[int] = None
+    is_winner: bool
+
+
 class PlayPublic(BasePlay):
     id: PydanticObjectId
     user: Optional["UserRead"]
@@ -51,8 +62,8 @@ class PlayUpdate(BaseModel):
     won: bool | None = None
 
 
-class BoardgameCreate(BaseBoardgame):
-    pass
+class PlayPublicWithBoardgames(PlayPublic):
+    games_played: List["BoardgamePublic"] = []
 
 
 class BoardgamePublic(BaseBoardgame):
@@ -67,17 +78,6 @@ class BoardgamePublic(BaseBoardgame):
     @property
     def link(self) -> dict[str, str]:
         return {"self": f"/boardgames/{self.id}"}
-
-
-class BoardgameUpdate(BaseModel):
-    name: str | None = None
-    bgg_rating: int | None = None
-    bgg_id: int | None = None
-    bgg_weight: float | None = None
-    player_min: int | None = None
-    player_recommended_min: int | None = None
-    player_max: int | None = None
-    player_recommended_max: None | int = None
 
 
 class BoardgamePublicWithPlays(BoardgamePublic):
@@ -110,12 +110,19 @@ class BoardgamePublicWithPlays(BoardgamePublic):
             return 0
 
 
-class PlayPublicWithBoardgames(PlayPublic):
-    games_played: list[BoardgamePublic] = []
+class BoardgameCreate(BaseBoardgame):
+    pass
 
 
-class BaseCollection(BaseModel):
-    name: str
+class BoardgameUpdate(BaseModel):
+    name: str | None = None
+    bgg_rating: int | None = None
+    bgg_id: int | None = None
+    bgg_weight: float | None = None
+    player_min: int | None = None
+    player_recommended_min: int | None = None
+    player_max: int | None = None
+    player_recommended_max: None | int = None
 
 
 class CollectionPublic(BaseCollection):
@@ -132,7 +139,14 @@ class CollectionUpdate(BaseModel):
     name: str | None = None
 
 
+class ResultsPublic(BaseResults):
+    id: PydanticObjectId
+    player: Optional["UserRead"] = None
+    games_played: List["BoardgamePublic"] = []
+
+
 class UserRead(schemas.BaseUser[PydanticObjectId]):
+    id: PydanticObjectId
     role: str = "user"
 
 

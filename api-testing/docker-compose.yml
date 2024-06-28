@@ -42,9 +42,9 @@ services:
       - "127.0.0.1:27017:27017"
     env_file:
       - .env
-    volumes:
-      - ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
-      - ./dump:/dump
+    #volumes:
+      #- ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
+      #- ./dump:/dump
     networks:
       - saboga-api
 

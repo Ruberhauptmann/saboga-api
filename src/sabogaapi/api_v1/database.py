@@ -1,5 +1,5 @@
 import os
-from typing import AsyncGenerator
+from typing import Any, AsyncGenerator, Mapping
 
 from beanie import init_beanie
 from fastapi_users.db import BeanieUserDatabase
@@ -14,8 +14,9 @@ async def get_user_db() -> AsyncGenerator[BeanieUserDatabase[User], None]:
 
 async def init_db() -> None:
     db_password = os.getenv("MONGODB_API_USER")
-    client = AsyncIOMotorClient(
-        f"mongodb://api-user:{db_password}@saboga-database:27017/boardgames"
+    client: AsyncIOMotorClient[Mapping[str, Any]] = AsyncIOMotorClient(
+        f"mongodb://api-user:{db_password}@saboga-database:27017/"
+        "boardgames?authSource=boardgames"
     )
     await init_beanie(
         database=client.get_database(),

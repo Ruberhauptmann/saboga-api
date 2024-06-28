@@ -32,13 +32,24 @@ class Boardgame(Document):
         name = "boardgames"
 
 
+class Result(Document):
+    player_name: str
+    player: Optional[Link[User]] = None
+    points: Optional[float] = None
+    position: Optional[int] = None
+    is_winner: bool
+    games_played: List[Link[Boardgame]] = []
+
+    class Settings:
+        name = "results"
+
+
 class Play(Document):
     playtime_s: int
     rating: float
     date: datetime.date
-    won: bool
     user: Link[User] | None = None
-
+    results: List[Result] = []
     games_played: List[Link[Boardgame]] = []
 
     class Settings:
