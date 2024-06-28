@@ -8,7 +8,7 @@ on:
 jobs:
   check_version:
     runs-on: ubuntu-latest
-    container: ghcr.io/ruberhauptmann/saboga-api:0.0.10
+    container: ghcr.io/ruberhauptmann/saboga-api:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
