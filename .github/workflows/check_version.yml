@@ -2,13 +2,14 @@ name: Make sure that the version is bumped
 
 on:
   pull_request:
-    branches:
-      - 'release-*'
 
 jobs:
   check_version:
     runs-on: ubuntu-latest
-    container: ghcr.io/ruberhauptmann/saboga-api:0.0.10
+    container:
+      image: ghcr.io/ruberhauptmann/saboga-api:latest
+      options: --user root
+    if: ${{ startsWith(github.head_ref, 'release') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
