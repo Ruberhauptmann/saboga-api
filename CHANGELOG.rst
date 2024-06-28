@@ -1,4 +1,25 @@
 
+.. _changelog-0.0.11:
+
+0.0.11 — 2024-06-28
+-------------------
+
+Added
+^^^^^
+
+- Add account creation and login via fastapi-users
+
+- Collections of games to user accounts
+
+- Interface to read all collections
+
+Changed
+^^^^^^^
+
+- Moved plays into user accounts
+
+- Add results
+
 .. _changelog-0.0.8:
 
 0.0.8 — 2024-05-15
