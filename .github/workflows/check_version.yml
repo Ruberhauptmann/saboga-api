@@ -6,7 +6,9 @@ on:
 jobs:
   check_version:
     runs-on: ubuntu-latest
-    container: ghcr.io/ruberhauptmann/saboga-api:latest
+    container:
+      image: ghcr.io/ruberhauptmann/saboga-api:latest
+      options: --user root
     if: ${{ startsWith(github.head_ref, 'release') }}
     steps:
       - name: Checkout repository
