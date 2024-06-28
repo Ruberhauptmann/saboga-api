@@ -2,8 +2,6 @@ name: Make sure that the version is bumped
 
 on:
   pull_request:
-    branches:
-      - 'release-*'
 
 jobs:
   check_version:
