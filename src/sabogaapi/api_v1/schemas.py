@@ -141,7 +141,7 @@ class CollectionUpdate(BaseModel):
 
 class ResultsPublic(BaseResults):
     id: PydanticObjectId
-    player: "UserRead" = None
+    player: Optional["UserRead"] = None
     games_played: List["BoardgamePublic"] = []
 
 
