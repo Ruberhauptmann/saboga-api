@@ -7,9 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from sabogaapi.api_v1 import api_v1
 
-os.getenv("FASTAPI-USERS-SECRET")
-
-SECRET = "SECRET"
+SECRET = os.getenv("FASTAPI-USERS-SECRET")
 
 
 def create_app(
