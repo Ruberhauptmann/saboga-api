@@ -6,12 +6,12 @@ services:
       - "--api.insecure=true"
       - "--providers.docker"
       - "--log.level=DEBUG"
-      - "--providers.docker.network=reverse-proxy"
+      - "--providers.docker.network=api-testing_reverse-proxy"
     ports:
       # The HTTP port
-      - "127.0.0.1:8008:80"
+      - "80:80"
       # The Web UI (enabled by --api.insecure=true)
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     volumes:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
@@ -25,33 +25,32 @@ services:
     image: saboga-api:latest
     container_name: saboga-api
     labels:
-      - "traefik.http.routers.saboga-api.rule=Host(`api.saboga.localhost`)"
-    ports:
-      - "127.0.0.1:8000:8000"
+      - "traefik.http.routers.saboga-api.rule=Host(`api.saboga.docker.localhost`)"
+    expose:
+      - "8000"
     env_file:
       - .env
+    depends_on:
+      - reverse-proxy
     networks:
       - reverse-proxy
       - saboga-api
 
 
-  database:
+  saboga-database:
     image: mongo:jammy
     container_name: saboga-database
-    ports:
-      - "127.0.0.1:27017:27017"
     env_file:
       - .env
-    #volumes:
-      #- ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
-      #- ./dump:/dump
+    volumes:
+      - ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
+      - ./dump:/dump
     networks:
       - saboga-api
 
 networks:
   saboga-api:
-    name: saboga-api
     driver: bridge
+    internal: true
   reverse-proxy:
-    name: reverse-proxy
     driver: bridge
