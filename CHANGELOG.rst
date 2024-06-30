@@ -1,4 +1,19 @@
 
+.. _changelog-0.0.12:
+
+0.0.12 — 2024-06-30
+-------------------
+
+Changed
+^^^^^^^
+
+- Ability to create results for plays
+
+Security
+^^^^^^^^
+
+- Fix reading of secret token from environment variable
+
 .. _changelog-0.0.11:
 
 0.0.11 — 2024-06-28
