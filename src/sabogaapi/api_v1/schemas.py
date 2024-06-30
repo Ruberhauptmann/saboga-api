@@ -18,54 +18,6 @@ class BaseBoardgame(BaseModel):
     player_recommended_max: int | None = None
 
 
-class BasePlay(BaseModel):
-    playtime_s: int
-    rating: float
-    date: datetime.date
-    won: bool
-
-
-class BaseCollection(BaseModel):
-    name: str
-
-
-class BaseResults(BaseModel):
-    player_name: str
-    points: Optional[float] = None
-    position: Optional[int] = None
-    is_winner: bool
-
-
-class PlayPublic(BasePlay):
-    id: PydanticObjectId
-    user: Optional["UserRead"]
-
-    @computed_field  # type: ignore
-    @property
-    def type(self) -> str:
-        return "play"
-
-    @computed_field  # type: ignore
-    @property
-    def link(self) -> dict[str, str]:
-        return {"self": f"/plays/{self.id}"}
-
-
-class PlayCreate(BasePlay):
-    pass
-
-
-class PlayUpdate(BaseModel):
-    playtime_s: int | None = None
-    rating: float | None = None
-    date: datetime.date | None = None
-    won: bool | None = None
-
-
-class PlayPublicWithBoardgames(PlayPublic):
-    games_played: List["BoardgamePublic"] = []
-
-
 class BoardgamePublic(BaseBoardgame):
     id: PydanticObjectId
 
@@ -81,25 +33,12 @@ class BoardgamePublic(BaseBoardgame):
 
 
 class BoardgamePublicWithPlays(BoardgamePublic):
-    plays: List[PlayPublic] = []
+    plays: List["PlayPublic"] = []
 
     @computed_field  # type: ignore
     @property
     def number_of_plays(self) -> int:
         return len(self.plays)
-
-    @computed_field  # type: ignore
-    @property
-    def number_of_wins(self) -> int:
-        return sum(play.won for play in self.plays)
-
-    @computed_field  # type: ignore
-    @property
-    def win_percentage(self) -> float:
-        if self.number_of_plays > 0:
-            return self.number_of_wins / self.number_of_plays * 100
-        else:
-            return 0
 
     @computed_field  # type: ignore
     @property
@@ -125,6 +64,36 @@ class BoardgameUpdate(BaseModel):
     player_recommended_max: None | int = None
 
 
+class BasePlay(BaseModel):
+    playtime_s: int
+    rating: float
+    date: datetime.date
+
+
+class PlayPublic(BasePlay):
+    id: PydanticObjectId
+    user: Optional["UserRead"]
+    results: List["ResultPublic"]
+
+
+class PlayCreate(BasePlay):
+    pass
+
+
+class PlayUpdate(BaseModel):
+    playtime_s: int | None = None
+    rating: float | None = None
+    date: datetime.date | None = None
+
+
+class PlayPublicWithBoardgames(PlayPublic):
+    games_played: List["BoardgamePublic"] = []
+
+
+class BaseCollection(BaseModel):
+    name: str
+
+
 class CollectionPublic(BaseCollection):
     id: PydanticObjectId
     user: "UserRead"
@@ -139,10 +108,28 @@ class CollectionUpdate(BaseModel):
     name: str | None = None
 
 
-class ResultsPublic(BaseResults):
+class BaseResult(BaseModel):
+    player_name: str
+    points: Optional[float] = None
+    position: Optional[int] = None
+    is_winner: bool
+
+
+class ResultPublic(BaseResult):
     id: PydanticObjectId
     player: Optional["UserRead"] = None
     games_played: List["BoardgamePublic"] = []
+
+
+class ResultCreate(BaseResult):
+    pass
+
+
+class ResultUpdate(BaseModel):
+    player_name: Optional[str] = None
+    points: Optional[float] = None
+    position: Optional[int] = None
+    is_winner: Optional[bool] = None
 
 
 class UserRead(schemas.BaseUser[PydanticObjectId]):

@@ -3,12 +3,18 @@ from typing import List, Sequence
 from beanie import DeleteRules, PydanticObjectId, WriteRules
 from fastapi import APIRouter, Depends, HTTPException
 
-from sabogaapi.api_v1.models import Boardgame, Play, User
-from sabogaapi.api_v1.schemas import PlayCreate, PlayPublic, PlayUpdate
+from sabogaapi.api_v1.models import Boardgame, Play, Result, User
+from sabogaapi.api_v1.schemas import (
+    PlayCreate,
+    PlayPublic,
+    PlayUpdate,
+    ResultCreate,
+    ResultPublic,
+)
 from sabogaapi.api_v1.users import current_active_user
 
 router = APIRouter(
-    prefix="/{id}/plays",
+    prefix="/{user_id}/plays",
     tags=["User Ressources"],
     responses={404: {"description": "Not found"}},
 )
@@ -16,7 +22,7 @@ router = APIRouter(
 
 @router.get("/", response_model=List[PlayPublic])
 async def read_all_plays(user: User = Depends(current_active_user)) -> Sequence[Play]:
-    plays = await Play.find_all(Play.user.id == user.id, fetch_links=True).to_list()
+    plays = await Play.find(Play.user.id == user.id, fetch_links=True).to_list()
     if not plays:
         raise HTTPException(status_code=404, detail="No plays in database")
     return plays
@@ -30,6 +36,16 @@ async def create_play(
     play_response.user = user
     await play_response.save(link_rule=WriteRules.WRITE)
     return play_response
+
+
+@router.post("/{play_id}/results", response_model=ResultPublic)
+async def create_result(
+    result: ResultCreate, user: User = Depends(current_active_user)
+) -> Result:
+    result_response: Result = await Result.model_validate(
+        result, from_attributes=True
+    ).create()
+    return result_response
 
 
 @router.get("/{play_id}", response_model=PlayPublic)

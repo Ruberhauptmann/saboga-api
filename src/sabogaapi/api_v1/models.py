@@ -38,7 +38,6 @@ class Result(Document):
     points: Optional[float] = None
     position: Optional[int] = None
     is_winner: bool
-    games_played: List[Link[Boardgame]] = []
 
     class Settings:
         name = "results"

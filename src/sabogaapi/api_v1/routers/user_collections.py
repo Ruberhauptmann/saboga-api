@@ -12,7 +12,7 @@ from sabogaapi.api_v1.schemas import (
 from sabogaapi.api_v1.users import current_active_user
 
 router = APIRouter(
-    prefix="/{id}/collections",
+    prefix="/{user_id}/collections",
     tags=["User Ressources"],
     responses={404: {"description": "Not found"}},
 )
