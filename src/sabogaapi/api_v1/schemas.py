@@ -42,19 +42,6 @@ class BoardgamePublicWithPlays(BoardgamePublic):
 
     @computed_field  # type: ignore
     @property
-    def number_of_wins(self) -> int:
-        return sum(play.won for play in self.plays)
-
-    @computed_field  # type: ignore
-    @property
-    def win_percentage(self) -> float:
-        if self.number_of_plays > 0:
-            return self.number_of_wins / self.number_of_plays * 100
-        else:
-            return 0
-
-    @computed_field  # type: ignore
-    @property
     def average_rating(self) -> float:
         if self.number_of_plays > 0:
             return sum(play.rating for play in self.plays) / self.number_of_plays
@@ -139,10 +126,10 @@ class ResultCreate(BaseResult):
 
 
 class ResultUpdate(BaseModel):
-    player_name: str = None
+    player_name: Optional[str] = None
     points: Optional[float] = None
     position: Optional[int] = None
-    is_winner: bool = None
+    is_winner: Optional[bool] = None
 
 
 class UserRead(schemas.BaseUser[PydanticObjectId]):
