@@ -25,4 +25,4 @@ RUN adduser user && chown -R user /app
 # run command as user
 USER user
 
-CMD uvicorn sabogaapi.main:app --workers 1 --host 0.0.0.0 --port 8000
+CMD uvicorn app:app --root-path /api --workers 1 --host 0.0.0.0 --port 8000

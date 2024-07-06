@@ -7,7 +7,7 @@ from sabogaapi.api_v1.routers import (
     user_plays,
 )
 from sabogaapi.api_v1.schemas import UserCreate, UserRead, UserUpdate
-from sabogaapi.api_v1.users import auth_backend, fastapi_users
+from sabogaapi.api_v1.users import bearer_backend, cookie_backend, fastapi_users
 
 api_v1 = FastAPI()
 
@@ -22,7 +22,10 @@ api_v1.include_router(collections.router)
 
 
 api_v1.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["Auth"]
+    fastapi_users.get_auth_router(bearer_backend), prefix="/auth/bearer", tags=["Auth"]
+)
+api_v1.include_router(
+    fastapi_users.get_auth_router(cookie_backend), prefix="/auth", tags=["Auth"]
 )
 api_v1.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
@@ -34,14 +37,10 @@ api_v1.include_router(
     prefix="/auth",
     tags=["Auth"],
 )
-api_v1.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix="/auth",
-    tags=["Auth"],
-)
 user_router = fastapi_users.get_users_router(UserRead, UserUpdate)
 user_router.include_router(user_collections.router)
 user_router.include_router(user_plays.router)
+
 api_v1.include_router(
     user_router,
     prefix="/users",

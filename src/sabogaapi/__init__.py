@@ -49,10 +49,9 @@ def create_app(
     app.mount("/v1", api_v1)
     app.mount("/latest", api_v1)
 
-    origins = ["https://saboga.tjarksievers.de" "https://api.saboga.tjarksievers.de"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=origins,
+        allow_origins=[],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
