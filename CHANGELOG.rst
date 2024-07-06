@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.13:
+
+0.0.13 — 2024-07-06
+-------------------
+
+Changed
+^^^^^^^
+
+- Auth system with cookies for frontend
+
 .. _changelog-0.0.12:
 
 0.0.12 — 2024-06-30
