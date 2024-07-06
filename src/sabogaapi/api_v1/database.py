@@ -14,7 +14,7 @@ async def get_user_db() -> AsyncGenerator[BeanieUserDatabase[User], None]:
 
 async def init_db() -> None:
     db_password = os.getenv("MONGODB_API_USER")
-    client: AsyncIOMotorClient = AsyncIOMotorClient(
+    client = AsyncIOMotorClient(  #  type: ignore
         f"mongodb://api-user:{db_password}@saboga-database:27017/"
         "boardgames?authSource=boardgames"
     )
