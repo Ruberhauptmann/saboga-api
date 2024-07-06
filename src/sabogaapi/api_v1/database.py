@@ -5,7 +5,7 @@ from beanie import init_beanie
 from fastapi_users.db import BeanieUserDatabase
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from sabogaapi.api_v1.models import Boardgame, Collection, Play, User
+from sabogaapi.api_v1.models import Boardgame, Collection, Play, Result, User
 
 
 async def get_user_db() -> AsyncGenerator[BeanieUserDatabase[User], None]:
@@ -20,5 +20,5 @@ async def init_db() -> None:
     )
     await init_beanie(
         database=client.get_database(),
-        document_models=[Boardgame, Play, User, Collection],
+        document_models=[Boardgame, Play, User, Collection, Result],
     )

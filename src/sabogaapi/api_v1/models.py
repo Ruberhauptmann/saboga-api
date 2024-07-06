@@ -34,7 +34,7 @@ class Boardgame(Document):
 
 class Result(Document):
     player_name: str
-    player: Optional[Link[User]] = None
+    player_username: Optional[str] = None
     points: Optional[float] = None
     position: Optional[int] = None
     is_winner: bool

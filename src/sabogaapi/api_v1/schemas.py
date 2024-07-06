@@ -110,6 +110,7 @@ class CollectionUpdate(BaseModel):
 
 class BaseResult(BaseModel):
     player_name: str
+    player_username: Optional[str] = None
     points: Optional[float] = None
     position: Optional[int] = None
     is_winner: bool
@@ -117,8 +118,6 @@ class BaseResult(BaseModel):
 
 class ResultPublic(BaseResult):
     id: PydanticObjectId
-    player: Optional["UserRead"] = None
-    games_played: List["BoardgamePublic"] = []
 
 
 class ResultCreate(BaseResult):

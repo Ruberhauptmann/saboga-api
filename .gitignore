@@ -16,3 +16,5 @@ doctrees/
 coverage.xml
 .coverage
 report.xml
+
+**/*.pem

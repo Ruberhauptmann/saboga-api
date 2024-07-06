@@ -40,11 +40,17 @@ async def create_play(
 
 @router.post("/{play_id}/results", response_model=ResultPublic)
 async def create_result(
-    result: ResultCreate, user: User = Depends(current_active_user)
+    play_id: PydanticObjectId,
+    result: ResultCreate,
+    user: User = Depends(current_active_user),
 ) -> Result:
+    print(play_id, flush=True)
     result_response: Result = await Result.model_validate(
         result, from_attributes=True
     ).create()
+    play: Play = await Play.get(play_id)
+    play.results.append(result_response)
+    await play.save(link_rule=WriteRules.WRITE)
     return result_response
 
 
@@ -79,7 +85,9 @@ async def delete_play(
 
 @router.patch("/{play_id}", response_model=PlayPublic)
 async def update_play(
-    play_id: int, play: PlayUpdate, user: User = Depends(current_active_user)
+    play_id: PydanticObjectId,
+    play: PlayUpdate,
+    user: User = Depends(current_active_user),
 ) -> Play:
     db_play = await Play.get(play_id, fetch_links=True)
     if not db_play:

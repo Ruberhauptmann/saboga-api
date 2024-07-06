@@ -1,0 +1,6 @@
+tls:
+  certificates:
+    - certFile: /etc/certs/traefik.localhost.pem
+      keyFile: /etc/certs/traefik.localhost-key.pem
+    - certFile: /etc/certs/saboga.localhost.pem
+      keyFile: /etc/certs/saboga.localhost-key.pem
