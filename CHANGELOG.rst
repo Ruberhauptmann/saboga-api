@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.14:
+
+0.0.14 — 2024-07-18
+-------------------
+
+Changed
+^^^^^^^
+
+- Removed everything, only boardgames overview with connection to BoardGameGeek
+
 .. _changelog-0.0.13:
 
 0.0.13 — 2024-07-06
