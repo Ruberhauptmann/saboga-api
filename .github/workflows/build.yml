@@ -1,4 +1,4 @@
-name: Publish Python package and docker image
+name: Publish Docker image
 
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:

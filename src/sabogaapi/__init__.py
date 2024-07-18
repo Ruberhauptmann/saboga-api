@@ -18,34 +18,23 @@ def create_app(
     description = """
     Boardgame storage
     """
-    tags_metadata = [
-        {
-            "name": "v1",
-            "description": "API version 1, check link on the right",
-            "externalDocs": {
-                "description": "sub-docs",
-                "url": "https://api.saboga.tjarksievers.de/api/v1/docs",
-            },
-        }
-    ]
 
     app = FastAPI(
-        title="My Server",
+        title="Saboga",
         description=description,
         contact={
-            "name": "Hello World Jr",
-            "url": "https://api.saboga.tjarksievers.de",
+            "name": "Tjark Sievers",
+            "url": "https://tjarksievers.de/about",
             "email": "tjarksievers@icloud.com",
         },
         license_info={
             "name": "MIT",
             "url": "https://github.com/Ruberhauptmann/saboga-api/blob/main/LICENSE.md",
         },
-        openapi_tags=tags_metadata,
         lifespan=lifespan,
+        root_path_in_servers=False,
     )
 
-    # app.mount("/", api_v1)
     app.mount("/v1", api_v1)
     app.mount("/latest", api_v1)
 
