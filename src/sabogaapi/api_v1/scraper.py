@@ -15,7 +15,7 @@ class BoardgameBGGIDs(BaseModel):
     bgg_id: int
 
 
-async def ascrape_full() -> None:
+async def ascrape_full(step: int) -> None:
     await init_db()
 
     boardgame_settings = await BoardgameSettings.find_all().first_or_none()
@@ -34,7 +34,6 @@ async def ascrape_full() -> None:
             print("Waiting")
             time.sleep(10)
 
-        step = 200
         ids = list(range(last_scraped_id + 1, last_scraped_id + (step + 1)))
 
         r = requests.get(f"https://boardgamegeek.com/xmlapi2/thing?id={ids[0:50]}")
@@ -119,7 +118,7 @@ async def ascrape_full() -> None:
     await boardgame_settings.save()
 
 
-async def ascrape_update() -> None:
+async def ascrape_update(step: int) -> None:
     await init_db()
 
     sync_finished = False
@@ -128,7 +127,6 @@ async def ascrape_update() -> None:
     last_scraped_id = 0
 
     while sync_finished is False:
-        step = 200
         ids = (
             await Boardgame.find_all()
             .project(BoardgameBGGIDs)
@@ -201,9 +199,10 @@ async def ascrape_update() -> None:
 def scrape() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--step", type=int)
     args = parser.parse_args()
 
     if args.full is True:
-        asyncio.run(ascrape_full())
+        asyncio.run(ascrape_full(step=args.step))
     else:
-        asyncio.run(ascrape_update())
+        asyncio.run(ascrape_update(step=args.step))
