@@ -1,4 +1,4 @@
-FROM thehale/python-poetry:1.8.3-py3.12-slim as builder
+FROM thehale/python-poetry:1.8.3-py3.12-slim AS builder
 
 COPY src/ /build/src
 COPY pyproject.toml /build
