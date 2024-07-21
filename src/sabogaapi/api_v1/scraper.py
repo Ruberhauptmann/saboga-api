@@ -36,82 +36,90 @@ async def ascrape_full(step: int) -> None:
 
         ids = list(range(last_scraped_id + 1, last_scraped_id + (step + 1)))
 
-        r = requests.get(f"https://boardgamegeek.com/xmlapi2/thing?id={ids[0:50]}")
-        xml = ElementTree.fromstring(r.text)
-        items = xml.findall("item")
-        if len(items) == 0:
-            sync_finished = True
-        else:
+        try:
             r = requests.get(
-                f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}&stats=1&type=boardgame"
+                f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids[0:40]))}"
             )
             xml = ElementTree.fromstring(r.text)
             items = xml.findall("item")
-            print(f"Scraping {ids}", flush=True)
-            bgg_id = 0
-            for item in items:
-                bgg_id = item.get("id")
-                if bgg_id is not None:
-                    bgg_id = int(bgg_id)
-                name = ""
-                for name_element in item.iter("name"):
-                    if name_element.attrib["type"] == "primary":
-                        name = name_element.get("value")
-                ratings = item.find("statistics").find("ratings")
-                average_rating = ratings.find("average").get("value")
-                if average_rating == "":
-                    average_rating = None
-                else:
-                    average_rating = float(average_rating)
-                geek_rating = ratings.find("bayesaverage").get("value")
-                if geek_rating == "":
-                    geek_rating = None
-                else:
-                    geek_rating = float(geek_rating)
-
-                rank = None
-                for rank_element in ratings.iter("rank"):
-                    if rank_element.attrib["name"] == "boardgame":
-                        if rank_element.get("value") == "Not Ranked":
-                            rank = None
-                        else:
-                            rank = int(rank_element.get("value"))
-
-                boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
-
-                if boardgame is None:
-                    boardgame = Boardgame(
-                        bgg_id=bgg_id,
-                        name=name,
-                        bgg_rank=rank,
-                        bgg_rank_change=0,
-                        bgg_geek_rating=geek_rating,
-                        bgg_geek_rating_change=0,
-                        bgg_average_rating=average_rating,
-                        bgg_average_rating_change=0,
+            if len(items) == 0:
+                sync_finished = True
+            else:
+                try:
+                    r = requests.get(
+                        f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}&stats=1&type=boardgame"
                     )
-                    await boardgame.insert()
-                else:
-                    if (
-                        boardgame.bgg_rank != rank
-                        or boardgame.bgg_average_rating != average_rating
-                        or boardgame.bgg_geek_rating != geek_rating
-                    ):
-                        print("Updating")
-                        boardgame.bgg_rank_change = rank - boardgame.bgg_rank
-                        boardgame.bgg_geek_rating_change = (
-                            geek_rating - boardgame.bgg_geek_rating
-                        )
-                        boardgame.bgg_average_rating = (
-                            average_rating - boardgame.bgg_average_rating
-                        )
-                        boardgame.bgg_rank = rank
-                        boardgame.bgg_geek_rating = geek_rating
-                        boardgame.bgg_average_rating = average_rating
-                        await boardgame.save()
+                    xml = ElementTree.fromstring(r.text)
+                    items = xml.findall("item")
+                    print(f"Scraping {ids}", flush=True)
+                    bgg_id = 0
+                    for item in items:
+                        bgg_id = item.get("id")
+                        if bgg_id is not None:
+                            bgg_id = int(bgg_id)
+                        name = ""
+                        for name_element in item.iter("name"):
+                            if name_element.attrib["type"] == "primary":
+                                name = name_element.get("value")
+                        ratings = item.find("statistics").find("ratings")
+                        average_rating = ratings.find("average").get("value")
+                        if average_rating == "":
+                            average_rating = None
+                        else:
+                            average_rating = float(average_rating)
+                        geek_rating = ratings.find("bayesaverage").get("value")
+                        if geek_rating == "":
+                            geek_rating = None
+                        else:
+                            geek_rating = float(geek_rating)
 
-            last_scrape_date = datetime.now()
-            last_scraped_id = bgg_id
+                        rank = None
+                        for rank_element in ratings.iter("rank"):
+                            if rank_element.attrib["name"] == "boardgame":
+                                if rank_element.get("value") == "Not Ranked":
+                                    rank = None
+                                else:
+                                    rank = int(rank_element.get("value"))
+
+                        boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
+
+                        if boardgame is None:
+                            boardgame = Boardgame(
+                                bgg_id=bgg_id,
+                                name=name,
+                                bgg_rank=rank,
+                                bgg_rank_change=0,
+                                bgg_geek_rating=geek_rating,
+                                bgg_geek_rating_change=0,
+                                bgg_average_rating=average_rating,
+                                bgg_average_rating_change=0,
+                            )
+                            await boardgame.insert()
+                        else:
+                            if (
+                                boardgame.bgg_rank != rank
+                                or boardgame.bgg_average_rating != average_rating
+                                or boardgame.bgg_geek_rating != geek_rating
+                            ):
+                                print("Updating")
+                                boardgame.bgg_rank_change = rank - boardgame.bgg_rank
+                                boardgame.bgg_geek_rating_change = (
+                                    geek_rating - boardgame.bgg_geek_rating
+                                )
+                                boardgame.bgg_average_rating = (
+                                    average_rating - boardgame.bgg_average_rating
+                                )
+                                boardgame.bgg_rank = rank
+                                boardgame.bgg_geek_rating = geek_rating
+                                boardgame.bgg_average_rating = average_rating
+                                await boardgame.save()
+
+                    last_scrape_date = datetime.now()
+                    last_scraped_id = bgg_id
+                except requests.exceptions.ChunkedEncodingError as e:
+                    print(f"Error: {e}, retrying.")
+        except requests.exceptions.ChunkedEncodingError as e:
+            print(f"Error: {e}, retrying.")
 
     boardgame_settings.last_bgg_scrape = datetime.now()
     boardgame_settings.last_scraped_id = last_scraped_id
@@ -144,53 +152,56 @@ async def ascrape_update(step: int) -> None:
         if len(ids) == 0:
             sync_finished = True
         else:
-            r = requests.get(
-                f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}&stats=1&type=boardgame"
-            )
-            xml = ElementTree.fromstring(r.text)
-            items = xml.findall("item")
-            print(f"Scraping {ids}", flush=True)
-            bgg_id = 0
-            for item in items:
-                bgg_id = int(item.get("id"))
-                ratings = item.find("statistics").find("ratings")
-                average_rating = ratings.find("average").get("value")
-                if average_rating == "":
-                    average_rating = None
-                else:
-                    average_rating = float(average_rating)
-                geek_rating = ratings.find("bayesaverage").get("value")
-                if geek_rating == "":
-                    geek_rating = None
-                else:
-                    geek_rating = float(geek_rating)
+            try:
+                r = requests.get(
+                    f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}&stats=1&type=boardgame"
+                )
+                xml = ElementTree.fromstring(r.text)
+                items = xml.findall("item")
+                print(f"Scraping {ids}", flush=True)
+                bgg_id = 0
+                for item in items:
+                    bgg_id = int(item.get("id"))
+                    ratings = item.find("statistics").find("ratings")
+                    average_rating = ratings.find("average").get("value")
+                    if average_rating == "":
+                        average_rating = None
+                    else:
+                        average_rating = float(average_rating)
+                    geek_rating = ratings.find("bayesaverage").get("value")
+                    if geek_rating == "":
+                        geek_rating = None
+                    else:
+                        geek_rating = float(geek_rating)
 
-                rank = None
-                for rank_element in ratings.iter("rank"):
-                    if rank_element.attrib["name"] == "boardgame":
-                        if rank_element.get("value") == "Not Ranked":
-                            rank = None
-                        else:
-                            rank = int(rank_element.get("value"))
+                    rank = None
+                    for rank_element in ratings.iter("rank"):
+                        if rank_element.attrib["name"] == "boardgame":
+                            if rank_element.get("value") == "Not Ranked":
+                                rank = None
+                            else:
+                                rank = int(rank_element.get("value"))
 
-                boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
+                    boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
 
-                if (
-                    boardgame.bgg_rank != rank
-                    or boardgame.bgg_average_rating != average_rating
-                    or boardgame.bgg_geek_rating != geek_rating
-                ):
-                    boardgame.bgg_rank_change = rank - boardgame.bgg_rank
-                    boardgame.bgg_geek_rating_change = (
-                        geek_rating - boardgame.bgg_geek_rating
-                    )
-                    boardgame.bgg_average_rating = (
-                        average_rating - boardgame.bgg_average_rating
-                    )
-                    boardgame.bgg_rank = rank
-                    boardgame.bgg_geek_rating = geek_rating
-                    boardgame.bgg_average_rating = average_rating
-                    await boardgame.save()
+                    if (
+                        boardgame.bgg_rank != rank
+                        or boardgame.bgg_average_rating != average_rating
+                        or boardgame.bgg_geek_rating != geek_rating
+                    ):
+                        boardgame.bgg_rank_change = rank - boardgame.bgg_rank
+                        boardgame.bgg_geek_rating_change = (
+                            geek_rating - boardgame.bgg_geek_rating
+                        )
+                        boardgame.bgg_average_rating = (
+                            average_rating - boardgame.bgg_average_rating
+                        )
+                        boardgame.bgg_rank = rank
+                        boardgame.bgg_geek_rating = geek_rating
+                        boardgame.bgg_average_rating = average_rating
+                        await boardgame.save()
+            except requests.exceptions.ChunkedEncodingError as e:
+                print(f"Error: {e}, retrying.")
 
             last_scrape_date = datetime.now()
             last_scraped_id = bgg_id
