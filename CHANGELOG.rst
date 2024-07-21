@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.15:
+
+0.0.15 — 2024-07-21
+-------------------
+
+Added
+^^^^^
+
+- Scraper script to regularly get all game data
+
 .. _changelog-0.0.14:
 
 0.0.14 — 2024-07-18
