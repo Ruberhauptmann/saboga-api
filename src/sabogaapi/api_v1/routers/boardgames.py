@@ -1,14 +1,8 @@
-import codecs
-import csv
 import math
-import xml.etree.ElementTree as ElementTree
-from typing import Annotated, List
+from typing import List
 
-import requests
 from beanie import PydanticObjectId
-from fastapi import APIRouter, File, HTTPException, Request, Response, UploadFile
-from pydantic import BaseModel
-from pymongo.errors import DuplicateKeyError
+from fastapi import APIRouter, HTTPException, Request, Response
 
 from sabogaapi.api_v1.models import Boardgame
 from sabogaapi.api_v1.schemas import BoardgamePublic

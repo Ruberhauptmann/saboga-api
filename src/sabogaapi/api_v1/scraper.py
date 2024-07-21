@@ -51,19 +51,21 @@ async def ascrape_full() -> None:
             print(f"Scraping {ids}", flush=True)
             bgg_id = 0
             for item in items:
-                bgg_id = int(item.get("id"))
+                bgg_id = item.get("id")
+                if bgg_id is not None:
+                    bgg_id = int(bgg_id)
                 name = ""
                 for name_element in item.iter("name"):
                     if name_element.attrib["type"] == "primary":
                         name = name_element.get("value")
                 ratings = item.find("statistics").find("ratings")
                 average_rating = ratings.find("average").get("value")
-                if average_rating is "":
+                if average_rating == "":
                     average_rating = None
                 else:
                     average_rating = float(average_rating)
                 geek_rating = ratings.find("bayesaverage").get("value")
-                if geek_rating is "":
+                if geek_rating == "":
                     geek_rating = None
                 else:
                     geek_rating = float(geek_rating)
@@ -117,7 +119,7 @@ async def ascrape_full() -> None:
     await boardgame_settings.save()
 
 
-async def ascrape_update():
+async def ascrape_update() -> None:
     await init_db()
 
     sync_finished = False
@@ -153,18 +155,14 @@ async def ascrape_update():
             bgg_id = 0
             for item in items:
                 bgg_id = int(item.get("id"))
-                name = ""
-                for name_element in item.iter("name"):
-                    if name_element.attrib["type"] == "primary":
-                        name = name_element.get("value")
                 ratings = item.find("statistics").find("ratings")
                 average_rating = ratings.find("average").get("value")
-                if average_rating is "":
+                if average_rating == "":
                     average_rating = None
                 else:
                     average_rating = float(average_rating)
                 geek_rating = ratings.find("bayesaverage").get("value")
-                if geek_rating is "":
+                if geek_rating == "":
                     geek_rating = None
                 else:
                     geek_rating = float(geek_rating)
@@ -200,7 +198,7 @@ async def ascrape_update():
             last_scraped_id = bgg_id
 
 
-def scrape():
+def scrape() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--full", action=argparse.BooleanOptionalAction)
     args = parser.parse_args()

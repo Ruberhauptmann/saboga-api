@@ -18,7 +18,7 @@ class Boardgame(Document):
     last_data_sync: datetime | None = None
 
     @after_event(ValidateOnSave)
-    def update_rank_history(self):
+    def update_rank_history(self) -> None:
         self.bgg_rank_history.append(
             RankHistory(
                 date=datetime.now(),
