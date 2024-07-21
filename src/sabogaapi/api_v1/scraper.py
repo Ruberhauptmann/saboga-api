@@ -108,7 +108,7 @@ async def ascrape_full(step: int) -> None:
                         boardgame.bgg_rank = rank
                         boardgame.bgg_geek_rating = geek_rating
                         boardgame.bgg_average_rating = average_rating
-                    await boardgame.save()
+                        await boardgame.save()
 
             last_scrape_date = datetime.now()
             last_scraped_id = bgg_id
