@@ -5,7 +5,6 @@ from datetime import datetime
 from xml.etree import ElementTree
 
 import requests
-from poetry.console.commands import self
 from pydantic import BaseModel
 
 from sabogaapi.api_v1.database import init_db
