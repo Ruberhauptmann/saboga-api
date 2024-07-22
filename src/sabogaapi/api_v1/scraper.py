@@ -103,11 +103,11 @@ async def ascrape_full(step: int) -> None:
                             ):
                                 print("Updating")
                                 boardgame.bgg_rank_change = rank - boardgame.bgg_rank
-                                boardgame.bgg_geek_rating_change = (
-                                    geek_rating - boardgame.bgg_geek_rating
+                                boardgame.bgg_geek_rating_change = round(
+                                    geek_rating - boardgame.bgg_geek_rating, 5
                                 )
-                                boardgame.bgg_average_rating = (
-                                    average_rating - boardgame.bgg_average_rating
+                                boardgame.bgg_average_rating_change = round(
+                                    average_rating - boardgame.bgg_average_rating, 5
                                 )
                                 boardgame.bgg_rank = rank
                                 boardgame.bgg_geek_rating = geek_rating
@@ -144,6 +144,7 @@ async def ascrape_update(step: int) -> None:
             .to_list()
         )
         ids = list(map(lambda x: x.bgg_id, ids))
+        print(f"Scraping {ids}", flush=True)
 
         if (datetime.now() - last_scrape_date).seconds < 10:
             print("Waiting")
@@ -158,7 +159,6 @@ async def ascrape_update(step: int) -> None:
                 )
                 xml = ElementTree.fromstring(r.text)
                 items = xml.findall("item")
-                print(f"Scraping {ids}", flush=True)
                 bgg_id = 0
                 for item in items:
                     bgg_id = int(item.get("id"))
@@ -190,21 +190,21 @@ async def ascrape_update(step: int) -> None:
                         or boardgame.bgg_geek_rating != geek_rating
                     ):
                         boardgame.bgg_rank_change = rank - boardgame.bgg_rank
-                        boardgame.bgg_geek_rating_change = (
-                            geek_rating - boardgame.bgg_geek_rating
+                        boardgame.bgg_geek_rating_change = round(
+                            geek_rating - boardgame.bgg_geek_rating, 5
                         )
-                        boardgame.bgg_average_rating = (
-                            average_rating - boardgame.bgg_average_rating
+                        boardgame.bgg_average_rating_change = round(
+                            average_rating - boardgame.bgg_average_rating, 5
                         )
                         boardgame.bgg_rank = rank
                         boardgame.bgg_geek_rating = geek_rating
                         boardgame.bgg_average_rating = average_rating
                         await boardgame.save()
+
+                last_scrape_date = datetime.now()
+                last_scraped_id = bgg_id
             except requests.exceptions.ChunkedEncodingError as e:
                 print(f"Error: {e}, retrying.")
-
-            last_scrape_date = datetime.now()
-            last_scraped_id = bgg_id
 
 
 def scrape() -> None:
