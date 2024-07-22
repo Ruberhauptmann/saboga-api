@@ -8,9 +8,11 @@ from pydantic import BaseModel
 class BaseBoardgame(BaseModel):
     bgg_id: int
     name: str
-    bgg_rank: int | None
-    bgg_geek_rating: float | None
-    bgg_average_rating: float | None
+    bgg_rank: int
+    bgg_geek_rating: float
+    bgg_geek_rating_change: float
+    bgg_average_rating: float
+    bgg_average_rating_change: float
     bgg_rank_history: List["RankHistory"]
 
 
