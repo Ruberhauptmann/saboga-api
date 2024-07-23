@@ -1,4 +1,23 @@
 
+.. _changelog-0.0.20:
+
+0.0.20 — 2024-07-23
+-------------------
+
+Changed
+^^^^^^^
+
+- Added attribution to Boardgamegeek in the API documentation
+
+- Boardgame schema now includes rank change
+
+Fixed
+^^^^^
+
+- Return correct links in the link header
+
+- Error in the scraper that caused skipping of a lot of ids
+
 .. _changelog-0.0.19:
 
 0.0.19 — 2024-07-23
