@@ -6,7 +6,9 @@ from sabogaapi.api_v1.routers import boardgames
 description = """
 Boardgame storage
 
-<a href="https://boardgamegeek.com" target="_blank"><img alt="Powered by Boardgamegeek" src="/api/v1/static/powered_by_bgg.webp" width="200"></a>
+<a href="https://boardgamegeek.com" target="_blank">
+    <img alt="Powered by Boardgamegeek" src="/api/v1/static/powered_by_bgg.webp" width="200">
+</a>
 """
 
 api_v1 = FastAPI(
