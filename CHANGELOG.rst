@@ -1,4 +1,23 @@
 
+.. _changelog-0.0.19:
+
+0.0.19 — 2024-07-23
+-------------------
+
+Changed
+^^^^^^^
+
+- Single boardgame route now takes the Boardgamegeek ID
+
+- Boardgame list view can now display historical data
+
+- Boardgame schema now includes rating change
+
+Fixed
+^^^^^
+
+- A bug in the scraper that caused shut it down when the first scrape did not get an answer at first
+
 .. _changelog-0.0.15:
 
 0.0.15 — 2024-07-21

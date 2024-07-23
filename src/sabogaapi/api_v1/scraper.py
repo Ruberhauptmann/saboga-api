@@ -138,9 +138,9 @@ async def ascrape_update(step: int) -> None:
         ids = (
             await Boardgame.find_all()
             .project(BoardgameBGGIDs)
-            .limit(step)
-            .skip(last_scraped_id)
             .sort("+bgg_id")
+            .skip(last_scraped_id)
+            .limit(step)
             .to_list()
         )
         ids = list(map(lambda x: x.bgg_id, ids))

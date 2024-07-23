@@ -12,21 +12,21 @@
 ..
 .. - A bullet item for the Added category.
 ..
-.. Changed
-.. ^^^^^^^
-..
-.. - A bullet item for the Changed category.
-..
+Changed
+^^^^^^^
+
+- Boardgame schema now includes rank change
+
 .. Deprecated
 .. ^^^^^^^^^^
 ..
 .. - A bullet item for the Deprecated category.
 ..
-Fixed
-^^^^^
-
-- A bug in the scraper that caused shut it down when the first scrape did not get an answer at first
-
+.. Fixed
+.. ^^^^^
+..
+.. - A bullet item for the Fixed category.
+..
 .. Security
 .. ^^^^^^^^
 ..

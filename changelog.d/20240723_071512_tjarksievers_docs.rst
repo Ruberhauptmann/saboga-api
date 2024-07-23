@@ -15,7 +15,7 @@
 Changed
 ^^^^^^^
 
-- Boardgame list view can now display historical data
+- Added attribution to Boardgamegeek in the API documentation
 
 .. Deprecated
 .. ^^^^^^^^^^
