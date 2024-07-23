@@ -39,6 +39,8 @@ services:
       - "traefik.http.routers.saboga-api.tls=true"
     expose:
       - "8000"
+    volumes:
+      - ./static:/app/static
     env_file:
       - .env
     depends_on:
