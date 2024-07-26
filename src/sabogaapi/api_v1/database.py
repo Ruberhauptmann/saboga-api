@@ -1,3 +1,4 @@
+"""Database connection."""
 import os
 
 from beanie import init_beanie
