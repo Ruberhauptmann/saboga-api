@@ -1,3 +1,4 @@
+"""Beanie database models."""
 from datetime import datetime
 from typing import Annotated, List
 

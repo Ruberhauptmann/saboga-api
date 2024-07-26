@@ -15,18 +15,25 @@ def create_app(
     | Callable[[FastAPI], AbstractAsyncContextManager[Mapping[str, Any]]]
     | None
 ) -> FastAPI:
-    description = """
-    Boardgame storage
-    """
+    tags_metadata = [
+        {
+            "name": "v1",
+            "description": "API version 1, check link on the right",
+            "externalDocs": {
+                "description": "sub-docs",
+                "url": "https://saboga.tjarksievers.de/api/v1/docs",
+            },
+        }
+    ]
 
     app = FastAPI(
-        title="Saboga",
-        description=description,
+        title="saboga",
         contact={
             "name": "Tjark Sievers",
             "url": "https://tjarksievers.de/about",
             "email": "tjarksievers@icloud.com",
         },
+        openapi_tags=tags_metadata,
         license_info={
             "name": "MIT",
             "url": "https://github.com/Ruberhauptmann/saboga-api/blob/main/LICENSE.md",

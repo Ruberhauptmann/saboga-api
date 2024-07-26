@@ -159,6 +159,7 @@ async def ascrape_update(step: int) -> None:
                 r = requests.get(
                     f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}&stats=1&type=boardgame"
                 )
+                print(r.text, flush=True)
                 xml = ElementTree.fromstring(r.text)
                 items = xml.findall("item")
                 rank = 0
@@ -191,7 +192,7 @@ async def ascrape_update(step: int) -> None:
                         or boardgame.bgg_average_rating != average_rating
                         or boardgame.bgg_geek_rating != geek_rating
                     ):
-                        boardgame.bgg_rank_change = rank - boardgame.bgg_rank
+                        boardgame.bgg_rank_change = boardgame.bgg_rank - rank
                         boardgame.bgg_geek_rating_change = round(
                             geek_rating - boardgame.bgg_geek_rating, 5
                         )
