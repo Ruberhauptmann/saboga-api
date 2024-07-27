@@ -33,6 +33,7 @@ def _apply_historic_data(game: Boardgame, date: datetime.date) -> Boardgame:
     for entry in reversed(game.bgg_rank_history):
         if entry.date.date() <= date:
             game.bgg_rank = entry.bgg_rank
+            game.bgg_rank_change = entry.bgg_rank_change
             game.bgg_average_rating = entry.bgg_average_rating
             game.bgg_average_rating_change = entry.bgg_average_rating_change
             game.bgg_geek_rating = entry.bgg_geek_rating
