@@ -152,15 +152,15 @@ async def ascrape_update(step: int) -> None:
     sync_finished = False
 
     last_scrape_date = datetime.now()
-    last_scraped_rank = 0
+    last_scraped_id = 0
 
     while sync_finished is False:
-        print(f"Last scraped before {last_scraped_rank}", flush=True)
+        print(f"Last scraped before {last_scraped_id}", flush=True)
         ids = (
             await Boardgame.find_all()
             .project(BoardgameBGGIDs)
-            .sort("+bgg_rank")
-            .skip(last_scraped_rank)
+            .sort("+bgg_id")
+            .skip(last_scraped_id)
             .limit(step)
             .to_list()
         )
@@ -181,7 +181,7 @@ async def ascrape_update(step: int) -> None:
                 )
                 xml = ElementTree.fromstring(r.text)
                 items = xml.findall("item")
-                rank = 0
+                bgg_id = 0
                 for item in items:
                     bgg_id = int(item.get("id"))
                     ratings = item.find("statistics").find("ratings")
@@ -234,8 +234,8 @@ async def ascrape_update(step: int) -> None:
                         boardgame.bgg_geek_rating = geek_rating
                         boardgame.bgg_average_rating = average_rating
                         await boardgame.save()
-                last_scraped_rank = rank
-                print(f"Last scraped after {last_scraped_rank}", flush=True)
+                last_scraped_id = bgg_id
+                print(f"Last scraped after {last_scraped_id}", flush=True)
             except requests.exceptions.ChunkedEncodingError as e:
                 print(f"Error: {e}, retrying.", flush=True)
 
