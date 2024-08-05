@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sabogaapi"
-version = "0.0.23"
+version = "0.0.24"
 description = ""
 authors = ["Tjark Sievers <tjarksievers@icloud.com>"]
 readme = "README.md"

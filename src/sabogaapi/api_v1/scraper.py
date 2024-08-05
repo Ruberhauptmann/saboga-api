@@ -39,8 +39,9 @@ async def ascrape_full(step: int) -> None:
         try:
             last_scrape_date = datetime.now()
             r = requests.get(
-                f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids[0:40]))}"
+                f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}"
             )
+            time.sleep(5)
             xml = ElementTree.fromstring(r.text)
             items = xml.findall("item")
             if len(items) == 0:
@@ -104,13 +105,32 @@ async def ascrape_full(step: int) -> None:
                                 or boardgame.bgg_geek_rating != geek_rating
                             ):
                                 print("Updating", flush=True)
-                                boardgame.bgg_rank_change = rank - boardgame.bgg_rank
-                                boardgame.bgg_geek_rating_change = round(
-                                    geek_rating - boardgame.bgg_geek_rating, 5
-                                )
-                                boardgame.bgg_average_rating_change = round(
-                                    average_rating - boardgame.bgg_average_rating, 5
-                                )
+                                if rank is None:
+                                    boardgame.bgg_rank_change = boardgame.bgg_rank
+                                else:
+                                    boardgame.bgg_rank_change = (
+                                        boardgame.bgg_rank - rank
+                                    )
+                                if (
+                                    geek_rating is None
+                                    or boardgame.bgg_geek_rating is None
+                                ):
+                                    boardgame.bgg_geek_rating_change = (
+                                        boardgame.bgg_geek_rating
+                                    )
+                                else:
+                                    boardgame.bgg_geek_rating_change = round(
+                                        geek_rating - boardgame.bgg_geek_rating, 5
+                                    )
+                                if (
+                                    average_rating is None
+                                    or boardgame.bgg_average_rating is None
+                                ):
+                                    boardgame.bgg_average_rating_change = average_rating
+                                else:
+                                    boardgame.bgg_average_rating_change = round(
+                                        average_rating - boardgame.bgg_average_rating, 5
+                                    )
                                 boardgame.bgg_rank = rank
                                 boardgame.bgg_geek_rating = geek_rating
                                 boardgame.bgg_average_rating = average_rating
@@ -159,7 +179,6 @@ async def ascrape_update(step: int) -> None:
                 r = requests.get(
                     f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}&stats=1&type=boardgame"
                 )
-                print(r.text, flush=True)
                 xml = ElementTree.fromstring(r.text)
                 items = xml.findall("item")
                 rank = 0
@@ -192,13 +211,25 @@ async def ascrape_update(step: int) -> None:
                         or boardgame.bgg_average_rating != average_rating
                         or boardgame.bgg_geek_rating != geek_rating
                     ):
-                        boardgame.bgg_rank_change = boardgame.bgg_rank - rank
-                        boardgame.bgg_geek_rating_change = round(
-                            geek_rating - boardgame.bgg_geek_rating, 5
-                        )
-                        boardgame.bgg_average_rating_change = round(
-                            average_rating - boardgame.bgg_average_rating, 5
-                        )
+                        if rank is None:
+                            boardgame.bgg_rank_change = boardgame.bgg_rank
+                        else:
+                            boardgame.bgg_rank_change = boardgame.bgg_rank - rank
+                        if geek_rating is None or boardgame.bgg_geek_rating is None:
+                            boardgame.bgg_geek_rating_change = boardgame.bgg_geek_rating
+                        else:
+                            boardgame.bgg_geek_rating_change = round(
+                                geek_rating - boardgame.bgg_geek_rating, 5
+                            )
+                        if (
+                            average_rating is None
+                            or boardgame.bgg_average_rating is None
+                        ):
+                            boardgame.bgg_average_rating_change = average_rating
+                        else:
+                            boardgame.bgg_average_rating_change = round(
+                                average_rating - boardgame.bgg_average_rating, 5
+                            )
                         boardgame.bgg_rank = rank
                         boardgame.bgg_geek_rating = geek_rating
                         boardgame.bgg_average_rating = average_rating
