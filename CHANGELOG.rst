@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.24:
+
+0.0.24 — 2024-08-05
+-------------------
+
+Fixed
+^^^^^
+
+- Error in scraper that caused failure when rank or rating is None
+
 .. _changelog-0.0.20:
 
 0.0.20 — 2024-07-23
