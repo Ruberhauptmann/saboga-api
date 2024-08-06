@@ -153,6 +153,7 @@ async def ascrape_update(step: int) -> None:
 
     last_scrape_date = datetime.now()
     last_scraped_id = 0
+    run_index = 0
 
     while sync_finished is False:
         print(f"Last scraped before {last_scraped_id}", flush=True)
@@ -160,7 +161,7 @@ async def ascrape_update(step: int) -> None:
             await Boardgame.find_all()
             .project(BoardgameBGGIDs)
             .sort("+bgg_id")
-            .skip(last_scraped_id)
+            .skip(run_index * step)
             .limit(step)
             .to_list()
         )
@@ -238,6 +239,8 @@ async def ascrape_update(step: int) -> None:
                 print(f"Last scraped after {last_scraped_id}", flush=True)
             except requests.exceptions.ChunkedEncodingError as e:
                 print(f"Error: {e}, retrying.", flush=True)
+
+        run_index += 1
 
 
 def scrape() -> None:
