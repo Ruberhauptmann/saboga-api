@@ -1,4 +1,5 @@
 """Version 1 of the saboga API."""
+
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 
@@ -27,4 +28,4 @@ api_v1 = FastAPI(
 )
 
 api_v1.include_router(boardgames.router)
-api_v1.mount("/static", StaticFiles(directory="static"), name="static")
+api_v1.mount("/static", StaticFiles(directory="static", check_dir=False), name="static")
