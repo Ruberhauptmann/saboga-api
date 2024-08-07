@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.27:
+
+0.0.27 — 2024-08-07
+-------------------
+
+Changed
+^^^^^^^
+
+- Refactor update scraper
+
 .. _changelog-0.0.24:
 
 0.0.24 — 2024-08-05

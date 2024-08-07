@@ -6,6 +6,7 @@ from xml.etree import ElementTree
 import requests
 from pydantic import BaseModel
 
+from sabogaapi.api_v1.database import init_db
 from sabogaapi.api_v1.models import Boardgame
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ def scrape_api(ids: list[int]) -> str:
             waiting_seconds = 2**number_of_tries
             number_of_tries += 1
             logger.warning(f"Error: {e}, retrying after {waiting_seconds} seconds.")
+            print(f"Error: {e}, retrying after {waiting_seconds} seconds.", flush=True)
             time.sleep(waiting_seconds)
 
 
@@ -70,10 +72,11 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
     return boardgame
 
 
-async def ascrape_update(start_id: int, stop_id: int, step: int) -> None:
+async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
+    await init_db()
     run_index = 0
     while True:
-        if start_id + run_index * step > stop_id:
+        if stop_id is not None and start_id + run_index * step > stop_id:
             break
         ids = (
             await Boardgame.find_all()
@@ -87,6 +90,7 @@ async def ascrape_update(start_id: int, stop_id: int, step: int) -> None:
         if len(ids) == 0:
             break
         logger.info(f"Scraping {ids}.")
+        print(f"Scraping {ids}.", flush=True)
         raw_xml = scrape_api(ids)
         try:
             parsed_xml = ElementTree.fromstring(raw_xml)
@@ -103,4 +107,6 @@ async def ascrape_update(start_id: int, stop_id: int, step: int) -> None:
                     await boardgame.save()
         except ElementTree.ParseError as e:
             logger.error(f"Error parsing xml: {e}, trying next batch.")
+            print(f"Error parsing xml: {e}, trying next batch.", flush=True)
         run_index += 1
+        time.sleep(5)
