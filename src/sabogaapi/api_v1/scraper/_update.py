@@ -16,17 +16,18 @@ class BoardgameBGGIDs(BaseModel):
     bgg_id: int
 
 
-def scrape_api(ids: list[int]) -> str:
+def scrape_api(ids: list[int]) -> ElementTree.Element:
     number_of_tries = 0
     while True:
         try:
             r = requests.get(
                 f"https://boardgamegeek.com/xmlapi2/thing?id={','.join(map(str, ids))}&stats=1&type=boardgame"
             )
-            return r.text
+            return ElementTree.fromstring(r.text)
         except (
             requests.exceptions.ChunkedEncodingError,
             requests.exceptions.ConnectionError,
+            ElementTree.ParseError,
         ) as e:
             waiting_seconds = 2**number_of_tries
             number_of_tries += 1
@@ -36,7 +37,7 @@ def scrape_api(ids: list[int]) -> str:
 
 
 def _map_to(func: Callable[[Any], Any], value: str) -> Any | None:
-    if value == "":
+    if value == "" or value == "Not Ranked":
         return None
     else:
         return func(value)
@@ -91,22 +92,17 @@ async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
             break
         logger.info(f"Scraping {ids}.")
         print(f"Scraping {ids}.", flush=True)
-        raw_xml = scrape_api(ids)
-        try:
-            parsed_xml = ElementTree.fromstring(raw_xml)
-            items = parsed_xml.findall("item")
-            for item in items:
-                boardgame = await analyse_api_response(item)
-                if (
-                    boardgame.bgg_rank is None
-                    or boardgame.bgg_geek_rating is None
-                    or boardgame.bgg_average_rating is None
-                ):
-                    await boardgame.delete()
-                else:
-                    await boardgame.save()
-        except ElementTree.ParseError as e:
-            logger.error(f"Error parsing xml: {e}, trying next batch.")
-            print(f"Error parsing xml: {e}, trying next batch.", flush=True)
+        parsed_xml = scrape_api(ids)
+        items = parsed_xml.findall("item")
+        for item in items:
+            boardgame = await analyse_api_response(item)
+            if (
+                boardgame.bgg_rank is None
+                or boardgame.bgg_geek_rating is None
+                or boardgame.bgg_average_rating is None
+            ):
+                await boardgame.delete()
+            else:
+                await boardgame.save()
         run_index += 1
         time.sleep(5)
