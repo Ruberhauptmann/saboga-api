@@ -57,10 +57,6 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
     if boardgame is None:
         boardgame = Boardgame(bgg_id=bgg_id)
 
-    boardgame.bgg_rank = rank
-    boardgame.bgg_geek_rating = geek_rating
-    boardgame.bgg_average_rating = average_rating
-
     if rank is not None and average_rating is not None and geek_rating is not None:
         boardgame.bgg_rank_change = boardgame.bgg_rank - rank
         boardgame.bgg_average_rating_change = round(
@@ -69,6 +65,10 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
         boardgame.bgg_geek_rating_change = round(
             geek_rating - boardgame.bgg_geek_rating, 5
         )
+
+    boardgame.bgg_rank = rank
+    boardgame.bgg_geek_rating = geek_rating
+    boardgame.bgg_average_rating = average_rating
 
     return boardgame
 
