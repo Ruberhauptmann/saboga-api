@@ -49,7 +49,7 @@ def _apply_historic_data(game: Boardgame, date: datetime.date) -> Boardgame:
 async def read_all_games(
     response: Response,
     request: Request,
-    date: datetime.date = datetime.date.today(),
+    date: datetime.date | None = None,
     page: int = 1,
     per_page: int = 100,
 ) -> List[Boardgame]:
@@ -70,6 +70,8 @@ async def read_all_games(
     List[BoardgamePublic]: List of boardgames from the database.
 
     """
+    if date is None:
+        date = datetime.date.today()
     total_count = await Boardgame.count()
     skip = (page - 1) * per_page
     games = (
@@ -84,13 +86,13 @@ async def read_all_games(
     last_page = math.ceil(total_count / per_page)
     response.headers["link"] = ""
     if page > 2:
-        response.headers[
-            "link"
-        ] += f'<{request.url_for("read_all_games").include_query_params(page=page-1, per_page=per_page)}>; rel="prev",'
+        response.headers["link"] += (
+            f'<{request.url_for("read_all_games").include_query_params(page=page-1, per_page=per_page)}>; rel="prev",'
+        )
     if page < last_page:
-        response.headers[
-            "link"
-        ] += f'<{request.url_for("read_all_games").include_query_params(page=page+1, per_page=per_page)}>; rel="next",'
+        response.headers["link"] += (
+            f'<{request.url_for("read_all_games").include_query_params(page=page+1, per_page=per_page)}>; rel="next",'
+        )
     response.headers["link"] += (
         f'<{request.url_for("read_all_games").include_query_params(page=last_page, per_page=per_page)}>; rel="last",'
         f'<{request.url_for("read_all_games").include_query_params(page=1, per_page=per_page)}>; rel="first"'
