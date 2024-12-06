@@ -7,7 +7,7 @@ import requests
 from pydantic import BaseModel
 
 from sabogaapi.api_v1.database import init_db
-from sabogaapi.api_v1.models import Boardgame
+from sabogaapi.api_v1.models import Boardgame, RankHistory
 
 logger = logging.getLogger(__name__)
 
@@ -57,18 +57,13 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
     if boardgame is None:
         boardgame = Boardgame(bgg_id=bgg_id)
 
-    if rank is not None and average_rating is not None and geek_rating is not None:
-        boardgame.bgg_rank_change = boardgame.bgg_rank - rank
-        boardgame.bgg_average_rating_change = round(
-            average_rating - boardgame.bgg_average_rating, 5
+    boardgame.bgg_rank_history.append(
+        RankHistory(
+            bgg_rank=rank,
+            bgg_geek_rating=geek_rating,
+            bgg_average_rating=average_rating,
         )
-        boardgame.bgg_geek_rating_change = round(
-            geek_rating - boardgame.bgg_geek_rating, 5
-        )
-
-    boardgame.bgg_rank = rank
-    boardgame.bgg_geek_rating = geek_rating
-    boardgame.bgg_average_rating = average_rating
+    )
 
     return boardgame
 
@@ -96,13 +91,6 @@ async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
         items = parsed_xml.findall("item")
         for item in items:
             boardgame = await analyse_api_response(item)
-            if (
-                boardgame.bgg_rank is None
-                or boardgame.bgg_geek_rating is None
-                or boardgame.bgg_average_rating is None
-            ):
-                await boardgame.delete()
-            else:
-                await boardgame.save()
+            await boardgame.save()
         run_index += 1
         time.sleep(5)

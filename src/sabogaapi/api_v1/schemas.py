@@ -1,5 +1,5 @@
 """Schemas for saboga API."""
-from beanie import PydanticObjectId
+
 from pydantic import BaseModel
 
 
@@ -15,4 +15,4 @@ class BaseBoardgame(BaseModel):
 
 
 class BoardgamePublic(BaseBoardgame):
-    id: PydanticObjectId
+    pass
