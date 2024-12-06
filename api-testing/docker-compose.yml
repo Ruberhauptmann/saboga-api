@@ -6,7 +6,7 @@ services:
       - "--api.dashboard=true"
       - "--providers.docker"
       - "--log.level=DEBUG"
-      - "--providers.docker.network=api-testing_reverse-proxy"
+      - "--providers.docker.network=saboga-reverse-proxy"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
@@ -26,7 +26,7 @@ services:
       - ./traefik-certs.yaml:/etc/traefik/dynamic/certs-traefik.yaml
       - ./certs/:/etc/certs/
     networks:
-      - reverse-proxy
+      - saboga-reverse-proxy
 
   saboga-api:
     build:
@@ -37,16 +37,17 @@ services:
     labels:
       - "traefik.http.routers.saboga-api.rule=Host(`saboga.localhost`) && PathPrefix(`/api`)"
       - "traefik.http.routers.saboga-api.tls=true"
-    expose:
-      - "8000"
+      - "traefik.docker.network=saboga-reverse-proxy"
     volumes:
       - ./static:/app/static
+    expose:
+      - "8000"
     env_file:
       - .env
     depends_on:
       - reverse-proxy
     networks:
-      - reverse-proxy
+      - saboga-reverse-proxy
       - saboga-api
 
 
@@ -55,8 +56,6 @@ services:
     container_name: saboga-database
     env_file:
       - .env
-    expose:
-      - "27017"
     volumes:
       - ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
       - ./dump:/dump
@@ -67,5 +66,6 @@ networks:
   saboga-api:
     driver: bridge
     internal: true
-  reverse-proxy:
+  saboga-reverse-proxy:
     driver: bridge
+    name: saboga-reverse-proxy

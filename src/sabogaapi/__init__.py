@@ -13,7 +13,7 @@ SECRET = os.getenv("FASTAPI-USERS-SECRET")
 def create_app(
     lifespan: Callable[[FastAPI], AbstractAsyncContextManager[None]]
     | Callable[[FastAPI], AbstractAsyncContextManager[Mapping[str, Any]]]
-    | None
+    | None,
 ) -> FastAPI:
     tags_metadata = [
         {

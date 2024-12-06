@@ -1,4 +1,12 @@
+import time
+from datetime import datetime
+from xml.etree import ElementTree
+
+import requests
 from pydantic import BaseModel
+
+from sabogaapi.api_v1.database import init_db
+from sabogaapi.api_v1.models import Boardgame, BoardgameSettings
 
 
 class BoardgameBGGIDs(BaseModel):
@@ -6,8 +14,6 @@ class BoardgameBGGIDs(BaseModel):
 
 
 async def ascrape_full(step: int) -> None:
-    pass
-    """
     await init_db()
 
     boardgame_settings = await BoardgameSettings.find_all().first_or_none()
@@ -92,20 +98,20 @@ async def ascrape_full(step: int) -> None:
                             await boardgame.insert()
                         else:
                             if (
-                                    boardgame.bgg_rank != rank
-                                    or boardgame.bgg_average_rating != average_rating
-                                    or boardgame.bgg_geek_rating != geek_rating
+                                boardgame.bgg_rank != rank
+                                or boardgame.bgg_average_rating != average_rating
+                                or boardgame.bgg_geek_rating != geek_rating
                             ):
                                 print("Updating", flush=True)
                                 if rank is None:
                                     boardgame.bgg_rank_change = boardgame.bgg_rank
                                 else:
                                     boardgame.bgg_rank_change = (
-                                            boardgame.bgg_rank - rank
+                                        boardgame.bgg_rank - rank
                                     )
                                 if (
-                                        geek_rating is None
-                                        or boardgame.bgg_geek_rating is None
+                                    geek_rating is None
+                                    or boardgame.bgg_geek_rating is None
                                 ):
                                     boardgame.bgg_geek_rating_change = (
                                         boardgame.bgg_geek_rating
@@ -115,8 +121,8 @@ async def ascrape_full(step: int) -> None:
                                         geek_rating - boardgame.bgg_geek_rating, 5
                                     )
                                 if (
-                                        average_rating is None
-                                        or boardgame.bgg_average_rating is None
+                                    average_rating is None
+                                    or boardgame.bgg_average_rating is None
                                 ):
                                     boardgame.bgg_average_rating_change = average_rating
                                 else:
@@ -136,4 +142,3 @@ async def ascrape_full(step: int) -> None:
     boardgame_settings.last_bgg_scrape = datetime.now()
     boardgame_settings.last_scraped_id = last_scraped_id
     await boardgame_settings.save()
-    """
