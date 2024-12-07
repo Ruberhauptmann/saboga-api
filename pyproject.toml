@@ -22,13 +22,15 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "pre-commit>=4.0.1",
+    "pytest>=8.3.4",
     "scriv>=1.5.1",
     "tox>=4.23.2",
 ]
 test = [
     "mongomock-motor>=0.0.34",
-    "pytest>=8.3.4",
+    "pytest-integration>=0.2.3",
     "pytest-cov>=6.0.0",
+    "pytest>=8.3.4",
 ]
 lint = [
     "ruff>=0.8.2",

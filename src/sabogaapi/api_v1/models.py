@@ -1,7 +1,7 @@
 """Beanie database models."""
 
 from datetime import datetime, timedelta
-from typing import Annotated, List, Optional
+from typing import Annotated, List, Optional, Tuple
 
 from beanie import Document, Indexed
 from pydantic import BaseModel
@@ -27,7 +27,7 @@ class Boardgame(Document):
     @staticmethod
     async def get_date_range_from_week_year(
         week_year: str, compare_to: str | None
-    ) -> (datetime, datetime, datetime, datetime):
+    ) -> Tuple[datetime, datetime]:
         year, week = map(int, week_year.split("/"))
         date = datetime.fromisocalendar(year, week, 7)
         if compare_to is None:

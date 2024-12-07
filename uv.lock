@@ -702,6 +702,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-integration"
+version = "0.2.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/35/e0/c823048dc0866f2e0fa2e4a34cd6ec290697b238b7672b30cb07c65e59cc/pytest_integration-0.2.3.tar.gz", hash = "sha256:b00988a5de8a6826af82d4c7a3485b43fbf32c11235e9f4a8b7225eef5fbcf65", size = 3295 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1b/41/9b393be6252635e4d39c3e62805018c42bfcc486b42246b582b755ff9ad3/pytest_integration-0.2.3-py3-none-any.whl", hash = "sha256:7f59ed1fa1cc8cb240f9495b68bc02c0421cce48589f78e49b7b842231604b12", size = 4456 },
+]
+
+[[package]]
 name = "python-dotenv"
 version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -835,6 +844,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit" },
+    { name = "pytest" },
     { name = "scriv" },
     { name = "tox" },
 ]
@@ -845,6 +855,7 @@ test = [
     { name = "mongomock-motor" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "pytest-integration" },
 ]
 type = [
     { name = "mypy" },
@@ -863,6 +874,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "pre-commit", specifier = ">=4.0.1" },
+    { name = "pytest", specifier = ">=8.3.4" },
     { name = "scriv", specifier = ">=1.5.1" },
     { name = "tox", specifier = ">=4.23.2" },
 ]
@@ -871,6 +883,7 @@ test = [
     { name = "mongomock-motor", specifier = ">=0.0.34" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
+    { name = "pytest-integration", specifier = ">=0.2.3" },
 ]
 type = [
     { name = "mypy", specifier = ">=1.13.0" },

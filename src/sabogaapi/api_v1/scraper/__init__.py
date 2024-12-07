@@ -1,7 +1,6 @@
 import argparse
 import asyncio
 
-from ._full import ascrape_full
 from ._update import ascrape_update
 
 
@@ -14,7 +13,7 @@ def scrape() -> None:
     args = parser.parse_args()
 
     if args.full is True:
-        asyncio.run(ascrape_full(step=args.step))
+        print("Full scraper not implemented.", flush=True)
     else:
         asyncio.run(
             ascrape_update(step=args.step, start_id=args.start, stop_id=args.stop)
