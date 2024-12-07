@@ -35,6 +35,8 @@ jobs:
           python-version: ${{ matrix.py }}
       - name: Install tox and uv
         run: python -m pip install uv
+      - name: Setup uv
+        run: uv venv
       - name: Install tox-uv
         run: uv tool install tox --with tox-uv
       - name: Install tox-gh
