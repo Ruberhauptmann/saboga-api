@@ -31,7 +31,7 @@ clean: # Clean up build files.
 environment: # Install the development environment.
 ifeq (True,$(HAS_UV))
 	@echo ">>> Installing "
-	#uv pip install .
+	uv sync
 	uv run pre-commit install
 	@echo ">>> Everything installed."
 else
