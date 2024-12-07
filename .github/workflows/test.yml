@@ -1,0 +1,56 @@
+name: Unit tests
+
+on:
+  workflow_call:
+  pull_request:
+  push:
+    branches:
+      - 'main'
+
+concurrency:
+  group: unit-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  pull-requests: write
+
+jobs:
+  test:
+    name: test with ${{ matrix.py }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        py:
+          - "3.12"
+        os:
+          - ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup python for test ${{ matrix.py }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.py }}
+      - name: Install tox
+        run: python -m pip install tox-gh>=1.2 uv
+      - name: Setup test suite
+        run: tox -vv --notest
+      - name: Run test suite
+        run: tox --skip-pkg-install -- --without-slow-integration
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel: true
+          flag-name: py${{ matrix.python-version }}
+
+  finish:
+    needs: test
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true

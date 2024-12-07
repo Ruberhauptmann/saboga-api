@@ -123,15 +123,6 @@ class Boardgame(Document):
                     },
                 }
             },
-            {
-                "$unset": [
-                    "_id",
-                    "current_rank_data",
-                    "previous_rank_data",
-                    "bgg_rank_history",
-                    "last_data_sync",
-                ]
-            },
         ]
 
         rank_data = await Boardgame.aggregate(
