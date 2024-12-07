@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   test:
-    name: test with ${{ matrix.py }} on ${{ matrix.os }}
+    name: Unit test with ${{ matrix.py }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
