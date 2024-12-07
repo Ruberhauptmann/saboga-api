@@ -1,4 +1,19 @@
 
+.. _changelog-0.0.30:
+
+0.0.30 — 2024-12-07
+-------------------
+
+Changed
+^^^^^^^
+
+- Boardgame overview route now returns historical data as a comparison between two dates
+
+Fixed
+^^^^^
+
+- Fix default date argument in boardgame list
+
 .. _changelog-0.0.27:
 
 0.0.27 — 2024-08-07
