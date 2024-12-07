@@ -12,7 +12,6 @@ from sabogaapi.api_v1.models import Boardgame, BoardgameSettings
 from sabogaapi.main import create_app
 
 
-@pytest.fixture()
 async def init_db():
     Path("static").mkdir(exist_ok=True, parents=True)
     client = AsyncMongoMockClient()

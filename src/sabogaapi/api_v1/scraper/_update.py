@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import datetime
 from typing import Any, Callable
 from xml.etree import ElementTree
 
@@ -44,14 +45,34 @@ def _map_to(func: Callable[[Any], Any], value: str) -> Any | None:
 
 
 async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
-    bgg_id = int(item.get("id"))
-    ratings = item.find("statistics").find("ratings")
-    average_rating = _map_to(float, ratings.find("average").get("value"))
-    geek_rating = _map_to(float, ratings.find("bayesaverage").get("value"))
+    bgg_id = int(item.get("id", default="-1"))
+
+    statistics = item.find("statistics")
+    assert statistics is not None
+
+    ratings = statistics.find("ratings")
+    assert ratings is not None
+
+    average_rating_element = ratings.find("average")
+    assert average_rating_element is not None
+    average_rating = average_rating_element.get("value")
+    assert average_rating is not None
+    average_rating = _map_to(float, average_rating)
+
+    bayesaverage_rating_element = ratings.find("bayesaverage")
+    assert bayesaverage_rating_element is not None
+    geek_rating = bayesaverage_rating_element.get("value")
+    assert geek_rating is not None
+    geek_rating = _map_to(float, geek_rating)
+
     rank = None
     for rank_element in ratings.iter("rank"):
         if rank_element.attrib["name"] == "boardgame":
-            rank = _map_to(int, rank_element.get("value"))
+            assert rank is not None
+            rank = rank.element.get("value")
+            assert rank is not None
+            rank = _map_to(int, rank)
+    assert rank is not None
 
     boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
     if boardgame is None:
@@ -62,6 +83,7 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
             bgg_rank=rank,
             bgg_geek_rating=geek_rating,
             bgg_average_rating=average_rating,
+            date=datetime.today(),
         )
     )
 
@@ -82,12 +104,12 @@ async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
             .limit(step)
             .to_list()
         )
-        ids = list(map(lambda x: x.bgg_id, ids))
+        ids_int: list[int] = list(map(lambda x: x.bgg_id, ids))
         if len(ids) == 0:
             break
         logger.info(f"Scraping {ids}.")
         print(f"Scraping {ids}.", flush=True)
-        parsed_xml = scrape_api(ids)
+        parsed_xml = scrape_api(ids_int)
         items = parsed_xml.findall("item")
         for item in items:
             boardgame = await analyse_api_response(item)

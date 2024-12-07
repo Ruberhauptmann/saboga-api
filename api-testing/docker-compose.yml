@@ -29,15 +29,17 @@ services:
       - saboga-reverse-proxy
 
   saboga-api:
+    image: saboga-api:latest
     build:
       context: ../
       dockerfile: api-testing/Dockerfile
-    image: saboga-api:latest
     container_name: saboga-api
     labels:
       - "traefik.http.routers.saboga-api.rule=Host(`saboga.localhost`) && PathPrefix(`/api`)"
       - "traefik.http.routers.saboga-api.tls=true"
       - "traefik.docker.network=saboga-reverse-proxy"
+      - "traefik.http.routers.saboga-api.middlewares=strip-api-prefix"
+      - "traefik.http.middlewares.strip-api-prefix.stripPrefix.prefixes=/api"
     volumes:
       - ./static:/app/static
     expose:
@@ -49,7 +51,15 @@ services:
     networks:
       - saboga-reverse-proxy
       - saboga-api
-
+    develop:
+      watch:
+        - action: sync
+          path: ../
+          target: /app
+          ignore:
+            - ../.venv/
+        - action: rebuild
+          path: ../pyproject.toml
 
   saboga-database:
     image: mongo:jammy
