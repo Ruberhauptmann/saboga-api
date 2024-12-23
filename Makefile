@@ -1,15 +1,15 @@
 SHELL:=/bin/bash
 
-#CONDA_ENV_NAME := saboga-api
+CONDA_ENV_NAME := saboga-api
 
 # Variables to test the conda environment
-ifeq (,$(shell which uv))
-	HAS_UV=False
+ifeq (,$(shell which conda))
+	HAS_CONDA=False
 else
-	HAS_UV=True
-	#ENV_DIR=$(shell conda info --base)
-	#MY_ENV_DIR=$(ENV_DIR)/envs/$(CONDA_ENV_NAME)
-	#CONDA_ACTIVATE=. $$(conda info --base)/etc/profile.d/conda.sh ; conda activate
+	HAS_CONDA=True
+	ENV_DIR=$(shell conda info --base)
+	MY_ENV_DIR=$(ENV_DIR)/envs/$(CONDA_ENV_NAME)
+	CONDA_ACTIVATE=. $$(conda info --base)/etc/profile.d/conda.sh ; conda activate
 endif
 
 build:
@@ -29,12 +29,26 @@ clean: # Clean up build files.
 	@rm -r dist/
 
 environment: # Install the development environment.
-ifeq (True,$(HAS_UV))
-	@echo ">>> Installing "
-	uv sync
-	uv run pre-commit install
-	@echo ">>> Everything installed."
+ifeq (True,$(HAS_CONDA))
+ifneq ("$(wildcard $(MY_ENV_DIR))","") # check if the directory is there
+	@echo ">>> Found $(CONDA_ENV_NAME) environment in $(MY_ENV_DIR)."
+	@conda env update -f conda_env.yaml -n $(CONDA_ENV_NAME)
 else
-	@echo ">>> Install uv first."
+	@echo ">>> Detected conda, but $(CONDA_ENV_NAME) is missing in $(ENV_DIR). Installing ..."
+	@conda env create -f conda_env.yaml -n $(CONDA_ENV_NAME)
+endif
+	@conda run -n $(CONDA_ENV_NAME) uv sync
+	@conda run -n $(CONDA_ENV_NAME) uv run pre-commit install
+	@echo ">>> Everything installed, use 'conda activate $(CONDA_ENV_NAME)' to use the environment."
+ifeq ("$(wildcard api-testing/certs/*)","")
+	@echo ">>> Certificates for local TLS are not installed, installing them now."
+	cd api-testing && mkdir -p certs
+	cd api-testing/certs && conda run -n $(CONDA_ENV_NAME) mkcert verleihnix.localhost
+	cd api-testing/certs && conda run -n $(CONDA_ENV_NAME) mkcert traefik.localhost
+else
+	@echo ">>> Certificates for local TLS are installed."
+endif
+else
+	@echo ">>> Install conda first."
 	exit
 endif

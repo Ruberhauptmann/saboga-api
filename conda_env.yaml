@@ -1,0 +1,9 @@
+name: saboga-api
+channels:
+  - defaults
+  - conda-forge
+  - memfault
+dependencies:
+  - python=3.12.3
+  - pip
+  - mkcert=1.4.4
