@@ -68,8 +68,7 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
     rank = None
     for rank_element in ratings.iter("rank"):
         if rank_element.attrib["name"] == "boardgame":
-            assert rank is not None
-            rank = rank.element.get("value")
+            rank = rank_element.get("value")
             assert rank is not None
             rank = _map_to(int, rank)
     assert rank is not None
