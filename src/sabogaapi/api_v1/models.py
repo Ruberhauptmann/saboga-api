@@ -23,6 +23,7 @@ class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     name: str
     last_data_sync: Optional[datetime] = None
+    bgg_rank_history: List["RankHistory"] = []
 
     @staticmethod
     async def get_date_range_from_week_year(

@@ -24,7 +24,6 @@ jobs:
       matrix:
         py:
           - "3.12"
-          - "3.11"
         os:
           - ubuntu-latest
     steps:
