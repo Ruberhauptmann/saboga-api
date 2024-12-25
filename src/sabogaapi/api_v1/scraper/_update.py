@@ -37,7 +37,7 @@ def scrape_api(ids: list[int]) -> ElementTree.Element:
             time.sleep(waiting_seconds)
 
 
-def _map_to(func: Callable[[Any], Any], value: str) -> Any | None:
+def _map_to[T](func: Callable[[Any], T], value: str) -> T | None:
     if value == "" or value == "Not Ranked":
         return None
     else:
@@ -55,23 +55,22 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
 
     average_rating_element = ratings.find("average")
     assert average_rating_element is not None
-    average_rating = average_rating_element.get("value")
-    assert average_rating is not None
-    average_rating = _map_to(float, average_rating)
+    average_rating_str = average_rating_element.get("value")
+    assert average_rating_str is not None
+    average_rating = _map_to(float, average_rating_str)
 
     bayesaverage_rating_element = ratings.find("bayesaverage")
     assert bayesaverage_rating_element is not None
-    geek_rating = bayesaverage_rating_element.get("value")
-    assert geek_rating is not None
-    geek_rating = _map_to(float, geek_rating)
+    geek_rating_str = bayesaverage_rating_element.get("value")
+    assert geek_rating_str is not None
+    geek_rating = _map_to(float, geek_rating_str)
 
-    rank: int = 0
+    rank = None
     for rank_element in ratings.iter("rank"):
         if rank_element.attrib["name"] == "boardgame":
             rank_str = rank_element.get("value")
-            assert rank is not None
+            assert rank_str is not None
             rank = _map_to(int, rank_str)
-    assert rank != 0
 
     boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
     if boardgame is None:

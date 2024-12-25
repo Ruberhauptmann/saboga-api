@@ -4,6 +4,8 @@ channels:
   - conda-forge
   - memfault
 dependencies:
-  - python=3.12.3
+  - python=3.12
   - pip
   - mkcert=1.4.4
+  - pip:
+    - uv

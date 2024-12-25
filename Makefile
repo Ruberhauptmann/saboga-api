@@ -39,6 +39,7 @@ else
 endif
 	@conda run -n $(CONDA_ENV_NAME) uv sync
 	@conda run -n $(CONDA_ENV_NAME) uv run pre-commit install
+	@conda run -n $(CONDA_ENV_NAME) uv tool install tox --with tox-uv
 	@echo ">>> Everything installed, use 'conda activate $(CONDA_ENV_NAME)' to use the environment."
 ifeq ("$(wildcard api-testing/certs/*)","")
 	@echo ">>> Certificates for local TLS are not installed, installing them now."
