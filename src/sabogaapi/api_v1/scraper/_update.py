@@ -45,7 +45,7 @@ def _map_to[T](func: Callable[[Any], T], value: str) -> T | None:
 
 
 async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
-    bgg_id = int(item.get("id", default="-1"))
+    bgg_id = int(item.get("id", 0))
 
     statistics = item.find("statistics")
     assert statistics is not None
@@ -94,6 +94,7 @@ async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
     while True:
         if stop_id is not None and start_id + run_index * step > stop_id:
             break
+
         ids = (
             await Boardgame.find_all()
             .project(BoardgameBGGIDs)
@@ -103,6 +104,7 @@ async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
             .to_list()
         )
         ids_int: list[int] = list(map(lambda x: x.bgg_id, ids))
+
         if len(ids) == 0:
             break
         logger.info(f"Scraping {ids}.")

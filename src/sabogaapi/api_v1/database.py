@@ -5,7 +5,7 @@ import os
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from sabogaapi.api_v1.models import Boardgame, BoardgameSettings
+from sabogaapi.api_v1.models import Boardgame
 
 
 async def init_db() -> None:
@@ -16,5 +16,5 @@ async def init_db() -> None:
     )
     await init_beanie(
         database=client.get_database(),
-        document_models=[Boardgame, BoardgameSettings],
+        document_models=[Boardgame],
     )
