@@ -45,7 +45,7 @@ def _map_to[T](func: Callable[[Any], T], value: str) -> T | None:
 
 
 async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
-    bgg_id = int(item.get("id"))
+    bgg_id = int(item.get("id", 0))
 
     statistics = item.find("statistics")
     assert statistics is not None
