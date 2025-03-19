@@ -1,7 +1,7 @@
 """Beanie database models."""
 
-from datetime import datetime, timedelta
-from typing import Annotated, List, Optional, Tuple
+import datetime
+from typing import Annotated, List, Optional
 
 from beanie import Document, Indexed
 from pydantic import BaseModel
@@ -16,37 +16,21 @@ class BoardgameHistoricalData(BaseModel):
     bgg_geek_rating_change: float
     bgg_average_rating: float
     bgg_average_rating_change: float
-    bgg_rank_history: List["RankHistory"] = []
 
 
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     name: str
-    last_data_sync: Optional[datetime] = None
+    last_data_sync: Optional[datetime.datetime] = None
     bgg_rank_history: List["RankHistory"] = []
 
     @staticmethod
-    async def get_date_range_from_week_year(
-        week_year: str, compare_to: str | None
-    ) -> Tuple[datetime, datetime]:
-        year, week = map(int, week_year.split("/"))
-        date = datetime.fromisocalendar(year, week, 7)
-        if compare_to is None:
-            previous_date = date - timedelta(weeks=1)
-        else:
-            year, week = map(int, compare_to.split("/"))
-            previous_date = datetime.fromisocalendar(year, week, 7)
-        return date, previous_date
-
-    @staticmethod
     async def get_top_ranked_boardgames(
-        week_year: str, compare_to: str | None, page: int = 1, page_size: int = 10
+        date: datetime.datetime,
+        compare_to: datetime.datetime,
+        page: int = 1,
+        page_size: int = 10,
     ) -> List[BoardgameHistoricalData]:
-        date, date_previous = await Boardgame.get_date_range_from_week_year(
-            week_year, compare_to
-        )
-        print(date, date_previous, flush=True)
-
         pipeline = [
             {
                 "$addFields": {
@@ -76,7 +60,7 @@ class Boardgame(Document):
                                 "$filter": {
                                     "input": "$bgg_rank_history",
                                     "as": "history",
-                                    "cond": {"$lte": ["$$history.date", date_previous]},
+                                    "cond": {"$lte": ["$$history.date", compare_to]},
                                 }
                             },
                             -1,
@@ -91,8 +75,8 @@ class Boardgame(Document):
                         "$ifNull": [
                             {
                                 "$subtract": [
-                                    "$current_rank_data.bgg_rank",
                                     "$previous_rank_data.bgg_rank",
+                                    "$current_rank_data.bgg_rank",
                                 ]
                             },
                             0,
@@ -136,16 +120,8 @@ class Boardgame(Document):
         name = "boardgames"
 
 
-class BoardgameSettings(Document):
-    last_bgg_scrape: datetime
-    last_scraped_id: int
-
-    class Settings:
-        name = "boardgames.settings"
-
-
 class RankHistory(BaseModel):
-    date: datetime
+    date: datetime.datetime
     bgg_rank: int | None
     bgg_geek_rating: float | None
     bgg_average_rating: float | None

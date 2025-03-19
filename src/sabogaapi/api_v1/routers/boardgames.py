@@ -20,8 +20,8 @@ router = APIRouter(
 async def read_all_games(
     response: Response,
     request: Request,
-    date: str | None = None,
-    compare_to: str | None = None,
+    date: datetime.date | None = None,
+    compare_to: datetime.date | None = None,
     page: int = 1,
     per_page: int = 100,
 ) -> List[BoardgamePublic]:
@@ -43,11 +43,17 @@ async def read_all_games(
     List[BoardgamePublic]: List of boardgames from the database.
 
     """
-
     if date is None:
-        date = datetime.date.today().strftime("%Y/%W")
+        date = datetime.datetime.now()
+    else:
+        date = datetime.datetime.combine(date, datetime.datetime.min.time())
+    if compare_to is None:
+        compare_to = date - datetime.timedelta(weeks=1)
+    else:
+        compare_to = datetime.datetime.combine(compare_to, datetime.datetime.min.time())
+
     top_ranked_data = await Boardgame.get_top_ranked_boardgames(
-        week_year=date, compare_to=compare_to, page=page, page_size=per_page
+        date=date, compare_to=compare_to, page=page, page_size=per_page
     )
 
     games = [BoardgamePublic(**game.dict()) for game in top_ranked_data]
