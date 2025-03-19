@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from mongomock_motor import AsyncMongoMockClient
 
-from sabogaapi.api_v1.models import Boardgame, BoardgameSettings
+from sabogaapi.api_v1.models import Boardgame
 from sabogaapi.main import create_app
 
 
@@ -16,7 +16,7 @@ async def init_db():
     Path("static").mkdir(exist_ok=True, parents=True)
     client = AsyncMongoMockClient()
     await init_beanie(
-        document_models=[Boardgame, BoardgameSettings],
+        document_models=[Boardgame],
         database=client.get_database(name="boardgames"),
     )
 
