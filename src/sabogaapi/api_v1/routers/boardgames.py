@@ -7,7 +7,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from sabogaapi.api_v1.models import Boardgame
-from sabogaapi.api_v1.schemas import BoardgamePublic
+from sabogaapi.api_v1.schemas import BoardgameComparison, BoardgameWithHistoricalData
 
 router = APIRouter(
     prefix="/boardgames",
@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[BoardgamePublic])
+@router.get("/", response_model=List[BoardgameComparison])
 async def read_all_games(
     response: Response,
     request: Request,
@@ -24,7 +24,7 @@ async def read_all_games(
     compare_to: datetime.date | None = None,
     page: int = 1,
     per_page: int = 100,
-) -> List[BoardgamePublic]:
+) -> List[BoardgameComparison]:
     """Returns a list of boardgames from the database, sorted by rank.
 
     \f
@@ -56,7 +56,7 @@ async def read_all_games(
         date=date, compare_to=compare_to, page=page, page_size=per_page
     )
 
-    games = [BoardgamePublic(**game.dict()) for game in top_ranked_data]
+    games = [BoardgameComparison(**game.dict()) for game in top_ranked_data]
 
     total_count = await Boardgame.find_all().count()
     last_page = math.ceil(total_count / per_page)
@@ -77,8 +77,13 @@ async def read_all_games(
     return games
 
 
-@router.get("/{bgg_id}", response_model=BoardgamePublic)
-async def read_game(bgg_id: int) -> Boardgame:
+@router.get("/{bgg_id}", response_model=BoardgameWithHistoricalData)
+async def read_game(
+    bgg_id: int,
+    start_date: datetime.date | None = None,
+    end_date: datetime.date | None = None,
+    mode: str = "auto",
+) -> Boardgame:
     """Returns a single board game from the database.
 
     \f
@@ -91,7 +96,17 @@ async def read_game(bgg_id: int) -> Boardgame:
     Boardgame: The board game from the database.
 
     """
-    game = await Boardgame.find(Boardgame.bgg_id == bgg_id).first_or_none()
+    if end_date is None:
+        end_date = datetime.datetime.now()
+    else:
+        end_date = datetime.datetime.combine(end_date, datetime.datetime.min.time())
+    if start_date is None:
+        start_date = end_date - datetime.timedelta(days=30)
+    else:
+        start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+    game = await Boardgame.get_boardgame_with_historical_data(
+        bgg_id=bgg_id, start_date=start_date, end_date=end_date, mode=mode
+    )
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
