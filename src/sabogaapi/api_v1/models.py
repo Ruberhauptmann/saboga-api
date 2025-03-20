@@ -27,6 +27,13 @@ class BoardgameWithHistoricalData(BaseModel):
     bgg_rank_history: List["RankHistory"]
 
 
+class RankHistory(BaseModel):
+    date: datetime.datetime
+    bgg_rank: int | None
+    bgg_geek_rating: float | None
+    bgg_average_rating: float | None
+
+
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     name: str
@@ -187,14 +194,13 @@ class Boardgame(Document):
 
         # Apply mode filtering to bgg_rank_history in Python
         history = boardgame_data.bgg_rank_history
-
         if mode == "weekly":
             history = history[::7]  # Every 7th entry
         elif mode == "yearly":
             seen_years = set()
             yearly_history = []
             for entry in history:
-                year = entry["date"].year
+                year = entry.date.year
                 if year not in seen_years:
                     yearly_history.append(entry)
                     seen_years.add(year)
@@ -205,10 +211,3 @@ class Boardgame(Document):
 
     class Settings:
         name = "boardgames"
-
-
-class RankHistory(BaseModel):
-    date: datetime.datetime
-    bgg_rank: int | None
-    bgg_geek_rating: float | None
-    bgg_average_rating: float | None
