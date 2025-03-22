@@ -18,5 +18,7 @@ jobs:
         run: python -m pip install uv
       - name: Setup uv
         run: uv venv
+      - name: Setup uv
+        run: uv sync
       - name: Check version
         run: ./check_version.sh
