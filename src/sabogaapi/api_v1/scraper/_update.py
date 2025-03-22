@@ -54,9 +54,10 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
     if boardgame is None:
         boardgame = Boardgame(bgg_id=bgg_id)
 
-    bgg_image_url = item.find("image")
-    if bgg_image_url is not None:
-        bgg_image_url = bgg_image_url.text
+    bgg_image_url_element = item.find("image")
+    if bgg_image_url_element is not None:
+        bgg_image_url = bgg_image_url_element.text
+        assert bgg_image_url is not None
 
         image_filename = f"{bgg_id}.jpg"
         image_url = f"/img/{image_filename}"
@@ -79,9 +80,11 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
         boardgame.image_url = image_url
         boardgame.thumbnail_url = thumbnail_url
 
-    description = item.find("description")
-    assert description is not None
-    description = html.unescape(description.text)
+    description_element = item.find("description")
+    assert description_element is not None
+    description_text = description_element.text
+    assert description_text is not None
+    description = html.unescape(description_text)
     boardgame.description = description
 
     statistics = item.find("statistics")
