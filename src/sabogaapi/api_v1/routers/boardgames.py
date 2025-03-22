@@ -3,8 +3,10 @@
 import datetime
 import math
 from typing import List
+from zipfile import ZipFile
 
-from fastapi import APIRouter, HTTPException, Request, Response
+import pandas as pd
+from fastapi import APIRouter, HTTPException, Request, Response, UploadFile
 
 from sabogaapi.api_v1.models import Boardgame
 from sabogaapi.api_v1.schemas import BoardgameComparison, BoardgameWithHistoricalData
@@ -110,3 +112,21 @@ async def read_game(
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+
+
+@router.post("/uploadfile/")
+async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
+    with ZipFile(csv_zip_file.file) as csv_zip:
+        with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
+            df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 10]
+
+    new_ids = df["id"]
+    existing_ids = {
+        doc.bgg_id async for doc in Boardgame.find({"bgg_id": {"$in": new_ids}})
+    }
+    unique_ids = [Boardgame(bgg_id=id_) for id_ in new_ids if id_ not in existing_ids]
+
+    if unique_ids:
+        await Boardgame.insert_many(unique_ids)
+
+    return {"success": "ok"}

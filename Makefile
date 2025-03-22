@@ -24,6 +24,17 @@ help: # Show help for each of the Makefile recipes.
 dev: # Serve the site locally for testing.
 	cd api-testing && docker compose watch
 
+.PHONY: serve
+dev-prod: # Serve the site locally for testing (in production mode).
+	cd api-testing && docker compose up -d --build
+
+
+.PHONY: dump-dev-db
+dump-dev-db: # Dump dev database
+	docker exec saboga-database mongodump -u mongoadmin -p password --authenticationDatabase admin --db boardgames --collection boardgames
+	docker cp saboga-database:/dump/boardgames/. api-testing/dump/boardgames
+
+
 .PHONY: clean
 clean: # Clean up build files.
 	@rm -r dist/

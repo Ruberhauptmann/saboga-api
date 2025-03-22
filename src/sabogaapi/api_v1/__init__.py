@@ -1,11 +1,11 @@
 """Version 1 of the saboga API."""
 
-from pathlib import Path
-
 from fastapi import FastAPI
 from starlette.staticfiles import StaticFiles
 
 from sabogaapi.api_v1.routers import boardgames
+
+from .config import IMG_DIR, STATIC_DIR
 
 description = """
 This is a little project utilising data from Boardgamegeek to show historical rating and rank data of the ranked games.
@@ -30,6 +30,5 @@ api_v1 = FastAPI(
 )
 
 api_v1.include_router(boardgames.router)
-static_directory = Path("static")
-static_directory.mkdir(exist_ok=True)
-api_v1.mount("/static", StaticFiles(directory=static_directory), name="static")
+api_v1.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+api_v1.mount("/img", StaticFiles(directory=IMG_DIR), name="img")

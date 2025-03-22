@@ -1,3 +1,4 @@
+import html
 import logging
 import time
 from datetime import datetime
@@ -5,8 +6,10 @@ from typing import Any, Callable
 from xml.etree import ElementTree
 
 import requests
+from PIL import Image
 from pydantic import BaseModel
 
+from sabogaapi.api_v1.config import IMG_DIR
 from sabogaapi.api_v1.database import init_db
 from sabogaapi.api_v1.models import Boardgame, RankHistory
 
@@ -47,6 +50,40 @@ def _map_to[T](func: Callable[[Any], T], value: str) -> T | None:
 async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
     bgg_id = int(item.get("id", 0))
 
+    boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
+    if boardgame is None:
+        boardgame = Boardgame(bgg_id=bgg_id)
+
+    bgg_image_url = item.find("image")
+    if bgg_image_url is not None:
+        bgg_image_url = bgg_image_url.text
+
+        image_filename = f"{bgg_id}.jpg"
+        image_url = f"/img/{image_filename}"
+        image_file = IMG_DIR / image_filename
+        if not image_file.exists():
+            img_request = requests.get(bgg_image_url)
+            if img_request.status_code == 200:
+                img_data = requests.get(bgg_image_url).content
+                with open(f"{image_file}", "wb") as handler:
+                    handler.write(img_data)
+
+        thumbnail_filename = f"{image_file.stem}-thumbnail.jpg"
+        thumbnail_url = f"/img/{thumbnail_filename}"
+        thumbnail_file = IMG_DIR / thumbnail_filename
+        if not thumbnail_file.exists():
+            im = Image.open(image_file).copy().convert("RGB")
+            im.thumbnail((128, 128))
+            im.save(thumbnail_file)
+
+        boardgame.image_url = image_url
+        boardgame.thumbnail_url = thumbnail_url
+
+    description = item.find("description")
+    assert description is not None
+    description = html.unescape(description.text)
+    boardgame.description = description
+
     statistics = item.find("statistics")
     assert statistics is not None
 
@@ -72,9 +109,11 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
             assert rank_str is not None
             rank = _map_to(int, rank_str)
 
-    boardgame = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
-    if boardgame is None:
-        boardgame = Boardgame(bgg_id=bgg_id)
+    if boardgame.bgg_rank_history:
+        last_history = boardgame.bgg_rank_history[-1]
+        sync_difference = datetime.now() - last_history.date
+        if sync_difference.days < 1:
+            return boardgame
 
     boardgame.bgg_rank_history.append(
         RankHistory(
@@ -88,13 +127,10 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame:
     return boardgame
 
 
-async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
+async def ascrape_update(start_id: int, step: int) -> None:
     await init_db()
     run_index = 0
     while True:
-        if stop_id is not None and start_id + run_index * step > stop_id:
-            break
-
         ids = (
             await Boardgame.find_all()
             .project(BoardgameBGGIDs)
@@ -113,6 +149,9 @@ async def ascrape_update(start_id: int, stop_id: int | None, step: int) -> None:
         items = parsed_xml.findall("item")
         for item in items:
             boardgame = await analyse_api_response(item)
-            await boardgame.save()
+            if boardgame.bgg_rank_history[-1].bgg_rank is None:
+                await boardgame.delete()
+            else:
+                await boardgame.save()
         run_index += 1
         time.sleep(5)
