@@ -43,7 +43,7 @@ def scrape_api(ids: list[int]) -> ElementTree.Element | None:
     return None
 
 
-def _extract_rank(ratings: ElementTree.Element) -> int | None:
+def _extract_rank(ratings: ElementTree.Element | None) -> int | None:
     """Extract boardgame rank efficiently."""
     if ratings is None:
         return None
@@ -73,17 +73,17 @@ def parse_boardgame_data(item: ElementTree.Element) -> dict:
     # Ranking Data Extraction
     statistics = item.find("statistics")
     ratings = statistics.find("ratings") if statistics is not None else None
-    average_rating = (
-        _map_to(float, ratings.find("average").get("value"))
-        if ratings is not None
-        else None
-    )
-    geek_rating = (
-        _map_to(float, ratings.find("bayesaverage").get("value"))
-        if ratings is not None
-        else None
-    )
     rank = _extract_rank(ratings)
+    average_element = ratings.find("average") if ratings is not None else None
+    average_rating = (
+        _map_to(float, average_element.get("value"))
+        if average_element is not None
+        else None
+    )
+    geek_element = ratings.find("bayesaverage") if ratings is not None else None
+    geek_rating = (
+        _map_to(float, geek_element.get("value")) if geek_element is not None else None
+    )
 
     return {
         "bgg_id": bgg_id,
@@ -166,10 +166,11 @@ async def ascrape_update(start_id: int, step: int) -> None:
         logger.info(f"Scraping {ids_int}.")
         print(f"Scraping {ids_int}.", flush=True)
         parsed_xml = scrape_api(ids_int)
-        items = parsed_xml.findall("item")
-        for item in items:
-            boardgame = await analyse_api_response(item)
-            if boardgame:
-                await boardgame.save()
+        if parsed_xml:
+            items = parsed_xml.findall("item")
+            for item in items:
+                boardgame = await analyse_api_response(item)
+                if boardgame:
+                    await boardgame.save()
         run_index += 1
         time.sleep(5)
