@@ -1,1 +1,4 @@
 .venv
+.tox
+api-testing/img
+api-testing/dump

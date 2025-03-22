@@ -1,0 +1,30 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    expose:
+      - "9090"
+    labels:
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.localhost`)"
+      - "traefik.http.routers.prometheus.tls=true"
+      - "traefik.docker.network=saboga-reverse-proxy"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - saboga-reverse-proxy
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    expose:
+      - "3000"
+    labels:
+      - "traefik.http.routers.grafana.rule=Host(`grafana.localhost`)"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.docker.network=saboga-reverse-proxy"
+    networks:
+      - saboga-reverse-proxy
+    volumes:
+      - ./grafana_data:/var/lib/grafana
