@@ -4,3 +4,7 @@ tls:
       keyFile: /etc/certs/traefik.localhost-key.pem
     - certFile: /etc/certs/saboga.localhost.pem
       keyFile: /etc/certs/saboga.localhost-key.pem
+    - certFile: /etc/certs/prometheus.localhost.pem
+      keyFile: /etc/certs/prometheus.localhost-key.pem
+    - certFile: /etc/certs/grafana.localhost.pem
+      keyFile: /etc/certs/grafana.localhost-key.pem

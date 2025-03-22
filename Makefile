@@ -20,13 +20,13 @@ help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
 
 
-.PHONY: serve
+.PHONY: dev
 dev: # Serve the site locally for testing.
 	cd api-testing && docker compose watch
 
-.PHONY: serve
+.PHONY: dev-prod
 dev-prod: # Serve the site locally for testing (in production mode).
-	cd api-testing && docker compose up -d --build
+	cd api-testing && docker compose up -f api-testing/docker-compose.yml -f docker-compose.monitoring.yml -d --build
 
 
 .PHONY: dump-dev-db
@@ -55,8 +55,9 @@ endif
 ifeq ("$(wildcard api-testing/certs/*)","")
 	@echo ">>> Certificates for local TLS are not installed, installing them now."
 	cd api-testing && mkdir -p certs
-	cd api-testing/certs && conda run -n $(CONDA_ENV_NAME) mkcert verleihnix.localhost
+	cd api-testing/certs && conda run -n $(CONDA_ENV_NAME) mkcert saboga.localhost
 	cd api-testing/certs && conda run -n $(CONDA_ENV_NAME) mkcert traefik.localhost
+	cd api-testing/certs && conda run -n $(CONDA_ENV_NAME) mkcert prometheus.monitoring.localhost
 else
 	@echo ">>> Certificates for local TLS are installed."
 endif

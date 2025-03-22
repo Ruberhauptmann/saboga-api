@@ -17,4 +17,6 @@ coverage.xml
 .coverage
 report.xml
 
+api-testing/grafana_data
+
 **/*.pem
