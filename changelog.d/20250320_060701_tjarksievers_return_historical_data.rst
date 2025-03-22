@@ -7,14 +7,8 @@
 ..
 .. - A bullet item for the Removed category.
 ..
-.. Added
-.. ^^^^^
-..
-.. - A bullet item for the Added category.
-..
-Changed
-^^^^^^^
-
+Added
+^^^^^
 - Return historical data for a single game
 
 .. Deprecated

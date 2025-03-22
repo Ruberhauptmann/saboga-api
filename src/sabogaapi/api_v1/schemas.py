@@ -16,6 +16,9 @@ class RankHistory(BaseModel):
 class BaseBoardgame(BaseModel):
     bgg_id: int
     name: str
+    description: str | None
+    image_url: str | None
+    thumbnail_url: str | None
     bgg_rank: int
     bgg_geek_rating: float
     bgg_average_rating: float

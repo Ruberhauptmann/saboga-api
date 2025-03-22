@@ -15,6 +15,4 @@ def scrape() -> None:
     if args.full is True:
         print("Full scraper not implemented.", flush=True)
     else:
-        asyncio.run(
-            ascrape_update(step=args.step, start_id=args.start, stop_id=args.stop)
-        )
+        asyncio.run(ascrape_update(step=args.step, start_id=args.start))

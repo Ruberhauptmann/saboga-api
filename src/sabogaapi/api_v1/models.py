@@ -1,7 +1,7 @@
 """Beanie database models."""
 
 import datetime
-from typing import Annotated, List, Optional
+from typing import Annotated, List
 
 from beanie import Document, Indexed
 from pydantic import BaseModel
@@ -9,7 +9,10 @@ from pydantic import BaseModel
 
 class BoardgameComparison(BaseModel):
     bgg_id: int
-    name: str
+    name: str = ""
+    description: str | None = None
+    image_url: str | None = None
+    thumbnail_url: str | None = None
     bgg_rank: int
     bgg_rank_change: int
     bgg_geek_rating: float
@@ -20,7 +23,10 @@ class BoardgameComparison(BaseModel):
 
 class BoardgameWithHistoricalData(BaseModel):
     bgg_id: int
-    name: str
+    name: str = ""
+    description: str | None = None
+    image_url: str | None = None
+    thumbnail_url: str | None = None
     bgg_rank: int
     bgg_geek_rating: float
     bgg_average_rating: float
@@ -36,8 +42,10 @@ class RankHistory(BaseModel):
 
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
-    name: str
-    last_data_sync: Optional[datetime.datetime] = None
+    name: str = ""
+    description: str | None = None
+    image_url: str | None = None
+    thumbnail_url: str | None = None
     bgg_rank_history: List["RankHistory"] = []
 
     @staticmethod
@@ -139,7 +147,6 @@ class Boardgame(Document):
         end_date: datetime.datetime,
         mode: str,
     ) -> BoardgameWithHistoricalData | None:
-        # Determine dynamic granularity if "auto" is selected
         date_diff = (end_date - start_date).days
         if mode == "auto":
             if date_diff <= 30:
@@ -161,26 +168,27 @@ class Boardgame(Document):
             {
                 "$group": {
                     "_id": "$bgg_id",
-                    "name": {"$first": "$name"},
-                    "bgg_rank_history": {
-                        "$push": "$bgg_rank_history"
-                    },  # Push all rank history entries
                     "latest_rank": {
                         "$last": "$bgg_rank_history"
-                    },  # Get the last entry in the array (latest rank)
+                    },  # Get latest rank entry
+                    "bgg_rank_history": {
+                        "$push": "$bgg_rank_history"
+                    },  # Keep all history
+                    "doc": {"$first": "$$ROOT"},  # Store the full document
                 }
             },
             {
                 "$project": {
                     "_id": 0,
-                    "bgg_id": "$_id",
-                    "name": 1,
-                    "bgg_rank": "$latest_rank.bgg_rank",
-                    "bgg_geek_rating": "$latest_rank.bgg_geek_rating",
-                    "bgg_average_rating": "$latest_rank.bgg_average_rating",
-                    "bgg_rank_history": 1,
+                    **{"bgg_id": "$_id"},  # Include the original _id as bgg_id
+                    **{"bgg_rank": "$latest_rank.bgg_rank"},
+                    **{"bgg_geek_rating": "$latest_rank.bgg_geek_rating"},
+                    **{"bgg_average_rating": "$latest_rank.bgg_average_rating"},
+                    **{"bgg_rank_history": 1},
+                    **{"doc": 1},  # Include all other fields from the original document
                 }
             },
+            {"$replaceRoot": {"newRoot": {"$mergeObjects": ["$doc", "$$ROOT"]}}},
         ]
 
         result = await Boardgame.aggregate(
@@ -192,7 +200,7 @@ class Boardgame(Document):
 
         boardgame_data = result[0]
 
-        # Apply mode filtering to bgg_rank_history in Python
+        # Apply mode filtering to bgg_rank_history
         history = boardgame_data.bgg_rank_history
         if mode == "weekly":
             history = history[::7]  # Every 7th entry
