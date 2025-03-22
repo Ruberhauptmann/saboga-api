@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euxo pipefail
 
 current_version=$(uv pip show sabogaapi | grep "Version: " | awk '{print $2}')
 registry_version=$(docker image inspect ghcr.io/ruberhauptmann/saboga-api:latest | jq -r '.[0].Config.Labels."org.opencontainers.image.version"')
