@@ -1,4 +1,22 @@
 
+.. _changelog-0.0.32:
+
+0.0.32 — 2025-03-22
+-------------------
+
+Added
+^^^^^
+
+- Return historical data for a single game
+
+Changed
+^^^^^^^
+
+- Scrape images and create thumbnail versions
+
+- Only save scraped game when last save was more than one day old
+
+
 .. _changelog-0.0.30:
 
 0.0.30 — 2024-12-07

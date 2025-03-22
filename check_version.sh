@@ -1,7 +1,9 @@
 #!/bin/bash
-set -e
+set -euxo pipefail
 
 current_version=$(uv pip show sabogaapi | grep "Version: " | awk '{print $2}')
+
+docker pull ghcr.io/ruberhauptmann/saboga-api:latest
 registry_version=$(docker image inspect ghcr.io/ruberhauptmann/saboga-api:latest | jq -r '.[0].Config.Labels."org.opencontainers.image.version"')
 
 if [[ "$current_version" != "$registry_version" ]];
