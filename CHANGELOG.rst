@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.33:
+
+0.0.33 — 2025-03-22
+-------------------
+
+Added
+^^^^^
+
+- Prometheus for exporting metrics
+
 .. _changelog-0.0.32:
 
 0.0.32 — 2025-03-22
