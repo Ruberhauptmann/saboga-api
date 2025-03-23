@@ -26,7 +26,7 @@ dev: # Serve the site locally for testing.
 
 .PHONY: dev-prod
 dev-prod: # Serve the site locally for testing (in production mode).
-	cd api-testing && docker compose up -f api-testing/docker-compose.yml -f docker-compose.monitoring.yml -d --build
+	cd api-testing && docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --build
 
 
 .PHONY: dump-dev-db

@@ -13,6 +13,15 @@ class BoardgameComparison(BaseModel):
     description: str | None = None
     image_url: str | None = None
     thumbnail_url: str | None = None
+    year_published: int | None = None
+    minplayers: int | None = None
+    maxplayers: int | None = None
+    playingtime: int | None = None
+    minplaytime: int | None = None
+    maxplaytime: int | None = None
+    categories: List["Category"] = []
+    designers: List["Designer"] = []
+    mechanics: List["Mechanic"] = []
     bgg_rank: int
     bgg_rank_change: int
     bgg_geek_rating: float
@@ -27,6 +36,15 @@ class BoardgameWithHistoricalData(BaseModel):
     description: str | None = None
     image_url: str | None = None
     thumbnail_url: str | None = None
+    year_published: int | None = None
+    minplayers: int | None = None
+    maxplayers: int | None = None
+    playingtime: int | None = None
+    minplaytime: int | None = None
+    maxplaytime: int | None = None
+    categories: List["Category"] = []
+    designers: List["Designer"] = []
+    mechanics: List["Mechanic"] = []
     bgg_rank: int
     bgg_geek_rating: float
     bgg_average_rating: float
@@ -40,12 +58,36 @@ class RankHistory(BaseModel):
     bgg_average_rating: float | None
 
 
+class Category(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Mechanic(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Designer(BaseModel):
+    name: str
+    bgg_id: int
+
+
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     name: str = ""
     description: str | None = None
     image_url: str | None = None
     thumbnail_url: str | None = None
+    year_published: int | None = None
+    minplayers: int | None = None
+    maxplayers: int | None = None
+    playingtime: int | None = None
+    minplaytime: int | None = None
+    maxplaytime: int | None = None
+    categories: List[Category] = []
+    mechanics: List[Mechanic] = []
+    designers: List[Designer] = []
     bgg_rank_history: List["RankHistory"] = []
 
     @staticmethod
@@ -56,6 +98,14 @@ class Boardgame(Document):
         page_size: int = 10,
     ) -> List[BoardgameComparison]:
         pipeline = [
+            {
+                "$lookup": {
+                    "from": "categories",  # The collection name of Category
+                    "localField": "category_ids",  # The field in Boardgame
+                    "foreignField": "_id",  # The matching field in Category
+                    "as": "categories",  # Output field
+                }
+            },
             {
                 "$addFields": {
                     "current_rank_data": {
@@ -130,6 +180,7 @@ class Boardgame(Document):
                             0,
                         ]
                     },
+                    "categories": "$categories",
                 }
             },
         ]
@@ -180,12 +231,12 @@ class Boardgame(Document):
             {
                 "$project": {
                     "_id": 0,
-                    **{"bgg_id": "$_id"},  # Include the original _id as bgg_id
-                    **{"bgg_rank": "$latest_rank.bgg_rank"},
-                    **{"bgg_geek_rating": "$latest_rank.bgg_geek_rating"},
-                    **{"bgg_average_rating": "$latest_rank.bgg_average_rating"},
-                    **{"bgg_rank_history": 1},
-                    **{"doc": 1},  # Include all other fields from the original document
+                    "bgg_id": "$_id",
+                    "bgg_rank": "$latest_rank.bgg_rank",
+                    "bgg_geek_rating": "$latest_rank.bgg_geek_rating",
+                    "bgg_average_rating": "$latest_rank.bgg_average_rating",
+                    "doc": 1,  # Keep full document data
+                    "bgg_rank_history": 1,
                 }
             },
             {"$replaceRoot": {"newRoot": {"$mergeObjects": ["$doc", "$$ROOT"]}}},
@@ -194,6 +245,7 @@ class Boardgame(Document):
         result = await Boardgame.aggregate(
             aggregation_pipeline=pipeline, projection_model=BoardgameWithHistoricalData
         ).to_list()
+        print(result)
 
         if not result:
             return None
