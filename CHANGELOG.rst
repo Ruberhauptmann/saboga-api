@@ -1,4 +1,19 @@
 
+.. _changelog-0.0.34:
+
+0.0.34 — 2025-03-23
+-------------------
+
+Added
+^^^^^
+
+- Logger that sends to a loki instance
+
+Fixed
+^^^^^
+
+- Fix error in csv upload, added a lot of things that were not ranked
+
 .. _changelog-0.0.33:
 
 0.0.33 — 2025-03-22
