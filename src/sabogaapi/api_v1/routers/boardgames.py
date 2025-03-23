@@ -46,13 +46,16 @@ async def read_all_games(
 
     """
     if date is None:
-        date = datetime.datetime.now()
+        date = datetime.datetime.today()
     else:
         date = datetime.datetime.combine(date, datetime.datetime.min.time())
     if compare_to is None:
         compare_to = date - datetime.timedelta(weeks=1)
     else:
         compare_to = datetime.datetime.combine(compare_to, datetime.datetime.min.time())
+
+    date = date.replace(hour=23, minute=59, second=59, microsecond=999999)
+    compare_to = compare_to.replace(hour=0, minute=0, second=0, microsecond=0)
 
     top_ranked_data = await Boardgame.get_top_ranked_boardgames(
         date=date, compare_to=compare_to, page=page, page_size=per_page

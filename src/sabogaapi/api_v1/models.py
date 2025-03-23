@@ -134,10 +134,10 @@ class Boardgame(Document):
                                 "$filter": {
                                     "input": "$bgg_rank_history",
                                     "as": "history",
-                                    "cond": {"$lte": ["$$history.date", compare_to]},
+                                    "cond": {"$gte": ["$$history.date", compare_to]},
                                 }
                             },
-                            -1,
+                            0,
                         ]
                     },
                 }
