@@ -22,10 +22,10 @@ help: # Show help for each of the Makefile recipes.
 
 .PHONY: dev
 dev: # Serve the site locally for testing.
-	cd api-testing && docker compose watch
+	cd api-testing && docker compose -f docker-compose.yml -f docker-compose.monitoring.yml watch
 
 .PHONY: dev-prod
-dev-prod: # Serve the site locally for testing (in production mode).
+dev-prod: # Serve the site locally for testing.
 	cd api-testing && docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --build
 
 

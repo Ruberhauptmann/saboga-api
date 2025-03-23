@@ -118,7 +118,7 @@ async def read_game(
 async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
     with ZipFile(csv_zip_file.file) as csv_zip:
         with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
-            df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 10]
+            df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
 
     new_ids = df["id"]
     existing_ids = {

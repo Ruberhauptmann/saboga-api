@@ -1,9 +1,20 @@
 import logging
 
+from loki_logger_handler.loki_logger_handler import LokiLoggerHandler
 
-def configure_logger() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        handlers=[logging.StreamHandler()],
-        format="%(asctime)s - %(levelname)s - %(message)s",
+
+def configure_logger() -> logging.Logger:
+    logger = logging.getLogger("loki_logger")
+    logger.setLevel(logging.DEBUG)
+
+    logger.propagate = False
+
+    loki_handler = LokiLoggerHandler(
+        url="http://loki:3100/loki/api/v1/push",
+        labels={"application": "Saboga"},
+        label_keys={},
+        timeout=10,
     )
+    logger.addHandler(loki_handler)
+
+    return logger

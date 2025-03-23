@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -7,6 +6,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 from sabogaapi import create_app
 from sabogaapi.api_v1.database import init_db
+from sabogaapi.logger import configure_logger
 
 
 @asynccontextmanager
@@ -16,6 +16,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
 
-logger = logging.getLogger(__name__)
+logger = configure_logger()
 app = create_app(lifespan=lifespan)
 Instrumentator().instrument(app).expose(app)

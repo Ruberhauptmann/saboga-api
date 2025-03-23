@@ -245,7 +245,6 @@ class Boardgame(Document):
         result = await Boardgame.aggregate(
             aggregation_pipeline=pipeline, projection_model=BoardgameWithHistoricalData
         ).to_list()
-        print(result)
 
         if not result:
             return None
