@@ -13,12 +13,36 @@ class RankHistory(BaseModel):
     bgg_average_rating: float | None
 
 
+class Category(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Person(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Mechanic(BaseModel):
+    name: str
+    bgg_id: int
+
+
 class BaseBoardgame(BaseModel):
     bgg_id: int
     name: str
     description: str | None
     image_url: str | None
     thumbnail_url: str | None
+    year_published: int | None
+    minplayers: int | None
+    maxplayers: int | None
+    playingtime: int | None
+    minplaytime: int | None
+    maxplaytime: int | None
+    categories: List[Category]
+    designers: List[Person]
+    mechanics: List[Mechanic]
     bgg_rank: int
     bgg_geek_rating: float
     bgg_average_rating: float
