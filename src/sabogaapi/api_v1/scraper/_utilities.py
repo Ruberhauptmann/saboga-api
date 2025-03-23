@@ -92,17 +92,17 @@ def parse_boardgame_data(item: ElementTree.Element) -> dict:
     categories = []
     for link in item.findall(".//link[@type='boardgamecategory']"):
         category = link.get("value")
-        category_value_id = link.get("id") if category is None else None
+        category_value_id = link.get("id") if category is not None else None
         category_id = int(category_value_id) if category_value_id is not None else None
-        if category:
+        if category and category_id:
             categories.append((category_id, category))
 
     mechanics = []
     for link in item.findall(".//link[@type='boardgamemechanic']"):
         mechanic = link.get("value")
-        mechanic_value_id = link.get("id") if mechanic is None else None
+        mechanic_value_id = link.get("id") if mechanic is not None else None
         mechanic_id = int(mechanic_value_id) if mechanic_value_id is not None else None
-        if mechanic:
+        if mechanic and mechanic_id:
             mechanics.append((mechanic_id, mechanic))
 
     return {

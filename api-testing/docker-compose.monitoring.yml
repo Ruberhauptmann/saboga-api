@@ -26,5 +26,31 @@ services:
       - "traefik.docker.network=saboga-reverse-proxy"
     networks:
       - saboga-reverse-proxy
+      - loki
     volumes:
       - ./grafana_data:/var/lib/grafana
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    expose:
+      - "3100"
+    networks:
+      - loki
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    networks:
+      - loki
+
+networks:
+  loki:
+    driver: bridge
+    internal: true
