@@ -20,6 +20,7 @@ class BoardgameComparison(BaseModel):
     minplaytime: int | None = None
     maxplaytime: int | None = None
     categories: List["Category"] = []
+    families: List["Family"] = []
     designers: List["Designer"] = []
     mechanics: List["Mechanic"] = []
     bgg_rank: int
@@ -43,6 +44,7 @@ class BoardgameWithHistoricalData(BaseModel):
     minplaytime: int | None = None
     maxplaytime: int | None = None
     categories: List["Category"] = []
+    families: List["Family"] = []
     designers: List["Designer"] = []
     mechanics: List["Mechanic"] = []
     bgg_rank: int
@@ -59,6 +61,11 @@ class RankHistory(BaseModel):
 
 
 class Category(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Family(BaseModel):
     name: str
     bgg_id: int
 
@@ -86,6 +93,7 @@ class Boardgame(Document):
     minplaytime: int | None = None
     maxplaytime: int | None = None
     categories: List[Category] = []
+    families: List["Family"] = []
     mechanics: List[Mechanic] = []
     designers: List[Designer] = []
     bgg_rank_history: List["RankHistory"] = []
