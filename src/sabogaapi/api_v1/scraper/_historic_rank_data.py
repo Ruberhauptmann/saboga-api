@@ -16,7 +16,7 @@ class BoardgameBGGIDs(BaseModel):
     bgg_id: int
 
 
-def scrape_api(id) -> requests.Response:
+def scrape_api(id) -> requests.Response | None:
     payload = {"objectid": id, "objecttype": "thing", "rankobjectid": 1}
     url = "https://api.geekdo.com/api/historicalrankgraph"
 
@@ -30,6 +30,8 @@ def scrape_api(id) -> requests.Response:
             number_of_tries += 1
             logger.warning(f"Error: {e}, retrying after {waiting_seconds} seconds.")
             time.sleep(waiting_seconds)
+
+    return None
 
 
 async def update_boardgame_rank_history(bgg_id: int, historic_data: list) -> Boardgame:
@@ -66,10 +68,10 @@ async def ascrape_historic_rank_data() -> None:
 
     for id in ids_int:
         response = scrape_api(id)
-        list_of_data = response.json()["data"]
-        boardgame = await update_boardgame_rank_history(
-            bgg_id=id, historic_data=list_of_data
-        )
-        await boardgame.save()
-        print("Saved", flush=True)
-        time.sleep(1)
+        if response:
+            list_of_data = response.json()["data"]
+            boardgame = await update_boardgame_rank_history(
+                bgg_id=id, historic_data=list_of_data
+            )
+            await boardgame.save()
+            time.sleep(1)
