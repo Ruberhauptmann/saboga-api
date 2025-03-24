@@ -56,3 +56,15 @@ class BoardgameComparison(BaseBoardgame):
 
 class BoardgameWithHistoricalData(BaseBoardgame):
     bgg_rank_history: List[RankHistory]
+
+
+class Prediction(BaseModel):
+    date: datetime.date
+    rank_prediction: int
+    rank_confidence_interval: tuple[float, float]
+
+
+class ForecastData(BaseModel):
+    bgg_id: int
+    game_name: str
+    prediction: List[Prediction]
