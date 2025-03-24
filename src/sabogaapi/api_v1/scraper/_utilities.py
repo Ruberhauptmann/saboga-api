@@ -43,6 +43,24 @@ def _map_to[T](func: Callable[[str], T], value: str | None) -> T | None:
     return None if not value or value == "Not Ranked" else func(value)
 
 
+def _extract_list(item: ElementTree.Element, key: str):
+    return_list = []
+    for link in item.findall(f".//link[@type='{key}']"):
+        element = link.get("value")
+        value_id = link.get("id") if element is not None else None
+        id_ = int(value_id) if value_id is not None else None
+        if element and id_:
+            return_list.append((id_, element))
+    return return_list
+
+
+def _extract_int(item: ElementTree.Element, key: str) -> int | None:
+    element = item.find(key)
+    value = element.get("value") if element is not None else None
+    value_int = int(value) if value is not None else None
+    return value_int
+
+
 def parse_boardgame_data(item: ElementTree.Element) -> dict:
     """Extract relevant boardgame data from XML response."""
     bgg_id = int(item.get("id", 0))
@@ -73,37 +91,17 @@ def parse_boardgame_data(item: ElementTree.Element) -> dict:
         _map_to(float, geek_element.get("value")) if geek_element is not None else None
     )
 
-    year_published_element = item.find("yearpublished")
-    year_published_value = (
-        year_published_element.get("value")
-        if year_published_element is not None
-        else None
-    )
-    year_published = (
-        int(year_published_value) if year_published_value is not None else None
-    )
+    year_published = _extract_int(item, "yearpublished")
+    minplayers = _extract_int(item, "minplayers")
+    maxplayers = _extract_int(item, "maxplayers")
+    playingtime = _extract_int(item, "playingtime")
+    minplaytime = _extract_int(item, "minplaytime")
+    maxplaytime = _extract_int(item, "maxplaytime")
 
-    designers = []
-    for link in item.findall(".//link[@type='boardgamedesigner']"):
-        designer = link.get("value")
-        if designer:
-            designers.append(designer)
-
-    categories = []
-    for link in item.findall(".//link[@type='boardgamecategory']"):
-        category = link.get("value")
-        category_value_id = link.get("id") if category is not None else None
-        category_id = int(category_value_id) if category_value_id is not None else None
-        if category and category_id:
-            categories.append((category_id, category))
-
-    mechanics = []
-    for link in item.findall(".//link[@type='boardgamemechanic']"):
-        mechanic = link.get("value")
-        mechanic_value_id = link.get("id") if mechanic is not None else None
-        mechanic_id = int(mechanic_value_id) if mechanic_value_id is not None else None
-        if mechanic and mechanic_id:
-            mechanics.append((mechanic_id, mechanic))
+    designers = _extract_list(item, "boardgamedesigner")
+    categories = _extract_list(item, "boardgamecategory")
+    mechanics = _extract_list(item, "boardgamemechanic")
+    families = _extract_list(item, "boardgamefamily")
 
     return {
         "bgg_id": bgg_id,
@@ -114,7 +112,13 @@ def parse_boardgame_data(item: ElementTree.Element) -> dict:
         "average_rating": average_rating,
         "geek_rating": geek_rating,
         "year_published": year_published,
+        "minplayers": minplayers,
+        "maxplayers": maxplayers,
+        "playingtime": playingtime,
+        "minplaytime": minplaytime,
+        "maxplaytime": maxplaytime,
         "categories": categories,
+        "families": families,
         "mechanics": mechanics,
         "designers": designers,
     }

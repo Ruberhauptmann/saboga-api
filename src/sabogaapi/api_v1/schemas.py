@@ -18,6 +18,11 @@ class Category(BaseModel):
     bgg_id: int
 
 
+class Family(BaseModel):
+    name: str
+    bgg_id: int
+
+
 class Person(BaseModel):
     name: str
     bgg_id: int
@@ -41,6 +46,7 @@ class BaseBoardgame(BaseModel):
     minplaytime: int | None
     maxplaytime: int | None
     categories: List[Category]
+    families: List[Family]
     designers: List[Person]
     mechanics: List[Mechanic]
     bgg_rank: int

@@ -8,7 +8,14 @@ from pydantic import BaseModel
 
 from sabogaapi.api_v1.config import IMG_DIR
 from sabogaapi.api_v1.database import init_db
-from sabogaapi.api_v1.models import Boardgame, Category, Mechanic, RankHistory
+from sabogaapi.api_v1.models import (
+    Boardgame,
+    Category,
+    Designer,
+    Family,
+    Mechanic,
+    RankHistory,
+)
 from sabogaapi.api_v1.scraper._utilities import parse_boardgame_data, scrape_api
 from sabogaapi.logger import configure_logger
 
@@ -36,6 +43,11 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame | None:
     # Simple fields
     boardgame.description = data["description"]
     boardgame.year_published = data["year_published"]
+    boardgame.minplayers = data["minplayers"]
+    boardgame.maxplayers = data["maxplayers"]
+    boardgame.playingtime = data["playingtime"]
+    boardgame.minplaytime = data["minplaytime"]
+    boardgame.maxplaytime = data["maxplaytime"]
 
     # Process image
     if data["image_url"]:
@@ -64,11 +76,25 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame | None:
             Category(name=name, bgg_id=bgg_id) for bgg_id, name in category_names_ids
         ]
 
+    # Process families
+    family_names_ids = data["families"]
+    if family_names_ids:
+        boardgame.families = [
+            Family(name=name, bgg_id=bgg_id) for bgg_id, name in family_names_ids
+        ]
+
     # Process mechanics
     mechanic_names_ids = data["mechanics"]
     if mechanic_names_ids:
         boardgame.mechanics = [
             Mechanic(name=name, bgg_id=bgg_id) for bgg_id, name in mechanic_names_ids
+        ]
+
+    # Process designers
+    designer_names_ids = data["designers"]
+    if designer_names_ids:
+        boardgame.designers = [
+            Designer(name=name, bgg_id=bgg_id) for bgg_id, name in designer_names_ids
         ]
 
     # Process rank history

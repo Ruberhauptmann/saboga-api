@@ -15,6 +15,9 @@ from sabogaapi.api_v1.schemas import (
     ForecastData,
 )
 from sabogaapi.api_v1.statistics.predict import forecast_game_ranking
+from sabogaapi.logger import configure_logger
+
+logger = configure_logger()
 
 router = APIRouter(
     prefix="/boardgames",
@@ -109,7 +112,7 @@ async def read_game(
     if end_date is None:
         end_date = datetime.datetime.now()
     else:
-        end_date = datetime.datetime.combine(end_date, datetime.datetime.min.time())
+        end_date = datetime.datetime.combine(end_date, datetime.datetime.max.time())
     if start_date is None:
         start_date = end_date - datetime.timedelta(days=30)
     else:
@@ -152,6 +155,8 @@ async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
         doc.bgg_id async for doc in Boardgame.find({"bgg_id": {"$in": new_ids}})
     }
     unique_ids = [Boardgame(bgg_id=id_) for id_ in new_ids if id_ not in existing_ids]
+
+    logger.info(f"Added: {unique_ids}")
 
     if unique_ids:
         await Boardgame.insert_many(unique_ids)
