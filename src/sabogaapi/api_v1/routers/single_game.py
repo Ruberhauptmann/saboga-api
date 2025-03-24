@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=BoardgameWithHistoricalData)
+@router.get("", response_model=BoardgameWithHistoricalData)
 async def read_game(
     bgg_id: int,
     start_date: datetime.date | None = None,

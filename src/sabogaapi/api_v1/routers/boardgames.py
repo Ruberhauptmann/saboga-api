@@ -21,7 +21,7 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("")
 async def read_all_games():
     return {"status": "not yet implemented"}
 
@@ -125,7 +125,7 @@ async def recommend_games_for_user() -> dict[str, str]:
     return {"status": "not yet implemented"}
 
 
-@router.post("/uploadfile/")
+@router.post("/uploadfile")
 async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
     with ZipFile(csv_zip_file.file) as csv_zip:
         with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:

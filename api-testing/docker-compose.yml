@@ -71,8 +71,12 @@ services:
     volumes:
       - ./init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
       - ./dump:/dump
+      - saboga_db_data:/data/db
     networks:
       - saboga-api
+
+volumes:
+  saboga_db_data:
 
 networks:
   saboga-api:
