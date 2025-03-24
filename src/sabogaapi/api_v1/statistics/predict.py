@@ -11,11 +11,9 @@ async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Predict
     df = pd.DataFrame(
         [{"date": entry.date.date(), "rank": entry.bgg_rank} for entry in rank_history]
     )
-    df["date"] = pd.to_datetime(df["date"])
-
+    df["date"] = df["date"].to_period("D")
     df.set_index("date", inplace=True)
     df = df.groupby(df.index).last()
-    df.index = df.index.to_period("D")
     df.sort_index(inplace=True)
 
     fh = np.arange(1, 31)
