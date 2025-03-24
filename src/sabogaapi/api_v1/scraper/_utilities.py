@@ -26,7 +26,6 @@ def scrape_api(ids: list[int]) -> ElementTree.Element | None:
             waiting_seconds = min(2**number_of_tries, 600)
             number_of_tries += 1
             logger.warning(f"Error: {e}, retrying after {waiting_seconds} seconds.")
-            print(f"Error: {e}, retrying after {waiting_seconds} seconds.", flush=True)
             time.sleep(waiting_seconds)
 
     return None
