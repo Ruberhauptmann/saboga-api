@@ -1,4 +1,32 @@
 
+.. _changelog-0.0.35:
+
+0.0.35 — 2025-03-24
+-------------------
+
+Added
+^^^^^
+
+- Prediction of future rank data
+
+- Placeholders for remaining routes
+
+- Simple search function for boardgames
+
+- Scraper to get full historical ranking data
+
+Changed
+^^^^^^^
+
+- Expose metric with the number of boardgames that dont have a rank
+
+- Scrape more data
+
+Fixed
+^^^^^
+
+- API response for the boardgame overview returns changes in ranks and ratings between the correct dates
+
 .. _changelog-0.0.34:
 
 0.0.34 — 2025-03-23
