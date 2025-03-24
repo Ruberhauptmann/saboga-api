@@ -9,7 +9,12 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Request, Response, UploadFile
 
 from sabogaapi.api_v1.models import Boardgame
-from sabogaapi.api_v1.schemas import BoardgameComparison, BoardgameWithHistoricalData
+from sabogaapi.api_v1.schemas import (
+    BoardgameComparison,
+    BoardgameWithHistoricalData,
+    ForecastData,
+)
+from sabogaapi.api_v1.statistics.predict import forecast_game_ranking
 
 router = APIRouter(
     prefix="/boardgames",
@@ -115,6 +120,25 @@ async def read_game(
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+
+
+@router.get("/{bgg_id}/forecast")
+async def forecast(
+    bgg_id: int,
+) -> ForecastData:
+    game = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    if not game.bgg_rank_history:
+        raise HTTPException(status_code=404, detail="No historical data")
+
+    prediction = await forecast_game_ranking(game.bgg_rank_history)
+
+    return ForecastData(
+        bgg_id=bgg_id,
+        game_name=game.name,
+        prediction=prediction,
+    )
 
 
 @router.post("/uploadfile/")
