@@ -54,10 +54,10 @@ class BoardgameWithHistoricalData(BaseModel):
 
 
 class RankHistory(BaseModel):
-    date: datetime.datetime
-    bgg_rank: int | None
-    bgg_geek_rating: float | None
-    bgg_average_rating: float | None
+    date: Annotated[datetime.datetime, Indexed()]
+    bgg_rank: int | None = None
+    bgg_geek_rating: float | None = None
+    bgg_average_rating: float | None = None
 
 
 class Category(BaseModel):
