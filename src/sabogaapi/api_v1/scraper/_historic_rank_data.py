@@ -25,7 +25,10 @@ def scrape_api(id) -> requests.Response | None:
         try:
             response = requests.get(url, params=payload)
             return response
-        except requests.exceptions.ConnectionError as e:
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ChunkedEncodingError,
+        ) as e:
             waiting_seconds = min(2**number_of_tries, 600)
             number_of_tries += 1
             logger.warning(f"Error: {e}, retrying after {waiting_seconds} seconds.")
