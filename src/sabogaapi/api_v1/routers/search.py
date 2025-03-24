@@ -17,7 +17,7 @@ class SearchResult(BaseModel):
     name: str
 
 
-@router.get("/", response_model=List[SearchResult])
+@router.get("", response_model=List[SearchResult])
 async def search(query: str, limit: int = 10) -> List[SearchResult]:
     results = (
         await Boardgame.find({"name": {"$regex": query, "$options": "i"}})

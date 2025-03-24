@@ -13,6 +13,6 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("")
 async def read_all_designers() -> dict[str, str]:
     return {"status": "not yet implemented"}
