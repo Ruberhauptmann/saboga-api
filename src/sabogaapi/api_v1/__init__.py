@@ -9,6 +9,7 @@ from sabogaapi.api_v1.routers import (
     designers,
     families,
     mechanics,
+    search,
     single_game,
 )
 
@@ -38,9 +39,12 @@ api_v1 = FastAPI(
 
 api_v1.include_router(boardgames.router)
 api_v1.include_router(single_game.router)
+
 api_v1.include_router(categories.router)
 api_v1.include_router(designers.router)
 api_v1.include_router(families.router)
 api_v1.include_router(mechanics.router)
+
+api_v1.include_router(search.router)
 api_v1.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 api_v1.mount("/img", StaticFiles(directory=IMG_DIR), name="img")
