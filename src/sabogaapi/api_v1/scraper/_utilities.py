@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def _timeout(e: str, number_of_tries: int) -> None:
     waiting_seconds = min(2**number_of_tries, 0.1)
-    logger.warning(f"Error: {e}, retrying after {waiting_seconds} seconds.")
+    logger.warning(f"{e}. Retrying after {waiting_seconds} seconds.")
     time.sleep(waiting_seconds)
 
 
@@ -29,7 +29,7 @@ def scrape_api(ids: list[int]) -> ElementTree.Element | None:
             requests.exceptions.ConnectionError,
             ElementTree.ParseError,
         ) as e:
-            _timeout(e, number_of_tries)
+            _timeout(repr(e), number_of_tries)
             number_of_tries += 1
 
     return None
