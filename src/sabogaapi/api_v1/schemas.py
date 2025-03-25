@@ -66,8 +66,12 @@ class BoardgameWithHistoricalData(BaseBoardgame):
 
 class Prediction(BaseModel):
     date: datetime.date
-    rank_prediction: int
-    rank_confidence_interval: tuple[float, float]
+    bgg_rank: int
+    bgg_rank_confidence_interval: tuple[float, float]
+    bgg_average_rating: float
+    bgg_average_rating_confidence_interval: tuple[float, float]
+    bgg_geek_rating: float
+    bgg_geek_rating_confidence_interval: tuple[float, float]
 
 
 class ForecastData(BaseModel):
