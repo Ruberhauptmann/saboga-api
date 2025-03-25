@@ -48,7 +48,7 @@ async def read_game(
     return game
 
 
-@router.get("/forecast")
+@router.get("/forecast", response_model=ForecastData)
 async def forecast(
     bgg_id: int,
 ) -> ForecastData:

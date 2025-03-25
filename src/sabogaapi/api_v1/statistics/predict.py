@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, cast
 
 import numpy as np
 import pandas as pd
@@ -8,33 +8,50 @@ from sabogaapi.api_v1.schemas import Prediction, RankHistory
 
 
 async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Prediction]:
-    df = pd.DataFrame(
-        [{"date": entry.date.date(), "rank": entry.bgg_rank} for entry in rank_history]
-    )
-    df["date"] = df["date"].to_period("D")
-    df.set_index("date", inplace=True)
+    df = pd.DataFrame([entry.model_dump() for entry in rank_history])
+    df.set_index("date", inplace=True, drop=True)
+    df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).last()
     df.sort_index(inplace=True)
+    df.index = cast(pd.DatetimeIndex, df.index).to_period("D")
 
     fh = np.arange(1, 31)
 
     forecaster = StatsForecastAutoARIMA()
     forecaster.fit(df)
-    y_pred = forecaster.predict(fh=fh).round(0).astype(int)
+    y_pred = forecaster.predict(fh=fh)
     interval = 0.95
     conf_int = forecaster.predict_interval(fh=fh, coverage=interval)
+    conf_int.columns = [
+        "_".join(map(str, col)) if isinstance(col, tuple) else col
+        for col in conf_int.columns
+    ]
 
-    merged_df = pd.merge(
-        y_pred, conf_int["rank", f"{interval}"], left_index=True, right_index=True
-    )
+    merged_df = pd.merge(y_pred, conf_int, left_index=True, right_index=True)
     predictions = [
         Prediction(
-            date=row.to_timestamp(),
-            rank_prediction=rank,
-            rank_confidence_interval=(lower, upper),
+            date=date.to_timestamp(),
+            bgg_rank=int(round(rank, 0)),
+            bgg_rank_confidence_interval=(rank_lower, rank_upper),
+            bgg_average_rating=average_rating,
+            bgg_average_rating_confidence_interval=(
+                average_rating_lower,
+                average_rating_upper,
+            ),
+            bgg_geek_rating=geek_rating,
+            bgg_geek_rating_confidence_interval=(geek_rating_lower, geek_rating_upper),
         )
-        for row, rank, lower, upper in zip(
-            merged_df.index, merged_df["rank"], merged_df["lower"], merged_df["upper"]
+        for date, rank, rank_lower, rank_upper, average_rating, average_rating_lower, average_rating_upper, geek_rating, geek_rating_lower, geek_rating_upper in zip(
+            merged_df.index,
+            merged_df["bgg_rank"],
+            merged_df[f"bgg_rank_{interval}_lower"],
+            merged_df[f"bgg_rank_{interval}_upper"],
+            merged_df["bgg_average_rating"],
+            merged_df[f"bgg_average_rating_{interval}_lower"],
+            merged_df[f"bgg_average_rating_{interval}_upper"],
+            merged_df["bgg_geek_rating"],
+            merged_df[f"bgg_geek_rating_{interval}_lower"],
+            merged_df[f"bgg_geek_rating_{interval}_upper"],
         )
     ]
 
