@@ -52,7 +52,6 @@ services:
     networks:
       - saboga-reverse-proxy
       - saboga-api
-      - loki
     develop:
       watch:
         - action: sync+restart
