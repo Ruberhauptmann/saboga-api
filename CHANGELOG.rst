@@ -1,4 +1,21 @@
 
+.. _changelog-0.0.36:
+
+0.0.36 — 2025-03-27
+-------------------
+
+Changed
+^^^^^^^
+
+- Forecast also includes predictions for ratings
+
+Fixed
+^^^^^
+
+- Removed '/' after root paths (e.g. /boardgames instead of /boardgames/)
+
+- Fix forecast route
+
 .. _changelog-0.0.35:
 
 0.0.35 — 2025-03-24
