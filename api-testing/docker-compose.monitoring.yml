@@ -50,6 +50,10 @@ services:
     networks:
       - loki
 
+  saboga-api:
+    networks:
+      - loki
+
 networks:
   loki:
     driver: bridge
