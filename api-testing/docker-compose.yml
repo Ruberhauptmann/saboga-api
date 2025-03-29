@@ -54,7 +54,7 @@ services:
       - saboga-api
     develop:
       watch:
-        - action: sync+restart
+        - action: sync
           path: ../
           target: /app
           ignore:
