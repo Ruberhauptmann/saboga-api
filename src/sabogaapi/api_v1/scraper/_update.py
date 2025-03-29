@@ -26,7 +26,9 @@ class BoardgameBGGIDs(BaseModel):
     bgg_id: int
 
 
-async def analyse_api_response(item: ElementTree.Element) -> Boardgame | None:
+async def analyse_api_response(
+    item: ElementTree.Element,
+) -> tuple[None, None] | tuple[Boardgame, None] | tuple[Boardgame, RankHistory]:
     data = parse_boardgame_data(item)
 
     # Get boardgame from database or create a new one
@@ -35,7 +37,7 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame | None:
         if boardgame is not None:
             await boardgame.delete()
             logger.info(f"Deleted boardgame {data['bgg_id']} due to missing rank.")
-        return None  # Don't process further
+        return None, None  # Don't process further
 
     if boardgame is None:
         boardgame = Boardgame(bgg_id=data["bgg_id"])
@@ -98,21 +100,27 @@ async def analyse_api_response(item: ElementTree.Element) -> Boardgame | None:
         ]
 
     # Process rank history
-    if boardgame.bgg_rank_history:
-        last_history = boardgame.bgg_rank_history[-1]
-        if (datetime.now() - last_history.date).days < 1:
-            return boardgame
+    last_rank_history = (
+        await RankHistory.find({"bgg_id": boardgame.bgg_id})
+        .sort(-RankHistory.date)
+        .limit(1)
+        .first_or_none()
+    )
+    if last_rank_history and (datetime.now() - last_rank_history.date).days < 1:
+        return boardgame, None
 
-    boardgame.bgg_rank_history.append(
-        RankHistory(
-            bgg_rank=data["rank"],
-            bgg_geek_rating=data["geek_rating"],
-            bgg_average_rating=data["average_rating"],
-            date=datetime.today(),
-        )
+    boardgame.bgg_rank = data["rank"]
+    boardgame.bgg_geek_rating = data["geek_rating"]
+    boardgame.bgg_average_rating = data["average_rating"]
+    rank_history = RankHistory(
+        bgg_id=boardgame.bgg_id,
+        bgg_rank=data["rank"],
+        bgg_geek_rating=data["geek_rating"],
+        bgg_average_rating=data["average_rating"],
+        date=datetime.today(),
     )
 
-    return boardgame
+    return boardgame, rank_history
 
 
 async def ascrape_update(step: int) -> None:
@@ -135,9 +143,13 @@ async def ascrape_update(step: int) -> None:
         parsed_xml = scrape_api(ids_int)
         if parsed_xml:
             items = parsed_xml.findall("item")
+            rank_histories = []
             for item in items:
-                boardgame = await analyse_api_response(item)
+                boardgame, rank_history = await analyse_api_response(item)
                 if boardgame:
                     await boardgame.save()
+                if rank_history:
+                    rank_histories.append(rank_history)
+            await RankHistory.insert_many(rank_histories)
         run_index += 1
         time.sleep(5)

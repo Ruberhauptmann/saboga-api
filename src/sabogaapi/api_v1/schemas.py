@@ -35,20 +35,20 @@ class Mechanic(BaseModel):
 
 class BaseBoardgame(BaseModel):
     bgg_id: int
-    name: str
-    description: str | None
-    image_url: str | None
-    thumbnail_url: str | None
-    year_published: int | None
-    minplayers: int | None
-    maxplayers: int | None
-    playingtime: int | None
-    minplaytime: int | None
-    maxplaytime: int | None
-    categories: List[Category]
-    families: List[Family]
-    designers: List[Person]
-    mechanics: List[Mechanic]
+    name: str | None = None
+    description: str | None = None
+    image_url: str | None = None
+    thumbnail_url: str | None = None
+    year_published: int | None = None
+    minplayers: int | None = None
+    maxplayers: int | None = None
+    playingtime: int | None = None
+    minplaytime: int | None = None
+    maxplaytime: int | None = None
+    categories: List[Category] = []
+    families: List[Family] = []
+    designers: List[Person] = []
+    mechanics: List[Mechanic] = []
     bgg_rank: int
     bgg_geek_rating: float
     bgg_average_rating: float

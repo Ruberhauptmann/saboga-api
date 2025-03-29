@@ -30,7 +30,6 @@ async def read_all_games():
 async def read_games_with_rank_changes(
     response: Response,
     request: Request,
-    date: datetime.date | None = None,
     compare_to: datetime.date | None = None,
     page: int = 1,
     per_page: int = 100,
@@ -53,23 +52,17 @@ async def read_games_with_rank_changes(
     List[BoardgamePublic]: List of boardgames from the database.
 
     """
-    if date is None:
-        date = datetime.datetime.today()
-    else:
-        date = datetime.datetime.combine(date, datetime.datetime.min.time())
     if compare_to is None:
-        compare_to = date - datetime.timedelta(weeks=1)
+        compare_to = datetime.datetime.now() - datetime.timedelta(weeks=1)
     else:
         compare_to = datetime.datetime.combine(compare_to, datetime.datetime.min.time())
 
-    date = date.replace(hour=23, minute=59, second=59, microsecond=999999)
     compare_to = compare_to.replace(hour=0, minute=0, second=0, microsecond=0)
 
     top_ranked_data = await Boardgame.get_top_ranked_boardgames(
-        date=date, compare_to=compare_to, page=page, page_size=per_page
+        compare_to=compare_to, page=page, page_size=per_page
     )
-
-    games = [BoardgameComparison(**game.dict()) for game in top_ranked_data]
+    games = [BoardgameComparison(**game) for game in top_ranked_data]
 
     total_count = await Boardgame.find_all().count()
     last_page = math.ceil(total_count / per_page)

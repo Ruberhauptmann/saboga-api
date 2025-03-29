@@ -1,34 +1,10 @@
 """Beanie database models."""
 
 import datetime
-from typing import Annotated, List
+from typing import Annotated, Any, List
 
-from beanie import Document, Indexed
-from pydantic import BaseModel
-
-
-class BoardgameComparison(BaseModel):
-    bgg_id: int
-    name: str = ""
-    description: str | None = None
-    image_url: str | None = None
-    thumbnail_url: str | None = None
-    year_published: int | None = None
-    minplayers: int | None = None
-    maxplayers: int | None = None
-    playingtime: int | None = None
-    minplaytime: int | None = None
-    maxplaytime: int | None = None
-    categories: List["Category"] = []
-    families: List["Family"] = []
-    designers: List["Designer"] = []
-    mechanics: List["Mechanic"] = []
-    bgg_rank: int
-    bgg_rank_change: int
-    bgg_geek_rating: float
-    bgg_geek_rating_change: float
-    bgg_average_rating: float
-    bgg_average_rating_change: float
+from beanie import Document, Indexed, TimeSeriesConfig
+from pydantic import BaseModel, Field
 
 
 class BoardgameWithHistoricalData(BaseModel):
@@ -50,11 +26,28 @@ class BoardgameWithHistoricalData(BaseModel):
     bgg_rank: int
     bgg_geek_rating: float
     bgg_average_rating: float
-    bgg_rank_history: List["RankHistory"]
+    bgg_rank_history: List["RankHistorySingleGame"]
 
 
-class RankHistory(BaseModel):
-    date: Annotated[datetime.datetime, Indexed()]
+class RankHistory(Document):
+    date: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    bgg_id: int
+    bgg_rank: int | None = None
+    bgg_geek_rating: float | None = None
+    bgg_average_rating: float | None = None
+
+    class Settings:
+        timeseries = TimeSeriesConfig(
+            time_field="date",
+            meta_field="bgg_id",
+            bucketRoundingSeconds=86400,
+            bucketMaxSpanSeconds=86400,
+        )
+        name = "rank_history"
+
+
+class RankHistorySingleGame(BaseModel):
+    date: datetime.datetime
     bgg_rank: int | None = None
     bgg_geek_rating: float | None = None
     bgg_average_rating: float | None = None
@@ -83,6 +76,9 @@ class Designer(BaseModel):
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     name: str = ""
+    bgg_rank: int | None = None
+    bgg_geek_rating: float | None = None
+    bgg_average_rating: float | None = None
     description: str | None = None
     image_url: str | None = None
     thumbnail_url: str | None = None
@@ -96,106 +92,61 @@ class Boardgame(Document):
     families: List["Family"] = []
     mechanics: List[Mechanic] = []
     designers: List[Designer] = []
-    bgg_rank_history: List["RankHistory"] = []
 
     @staticmethod
     async def get_top_ranked_boardgames(
-        date: datetime.datetime,
         compare_to: datetime.datetime,
         page: int = 1,
-        page_size: int = 10,
-    ) -> List[BoardgameComparison]:
-        pipeline = [
-            {
-                "$lookup": {
-                    "from": "categories",  # The collection name of Category
-                    "localField": "category_ids",  # The field in Boardgame
-                    "foreignField": "_id",  # The matching field in Category
-                    "as": "categories",  # Output field
-                }
-            },
-            {
-                "$addFields": {
-                    "current_rank_data": {
-                        "$arrayElemAt": [
-                            {
-                                "$filter": {
-                                    "input": "$bgg_rank_history",
-                                    "as": "history",
-                                    "cond": {"$lte": ["$$history.date", date]},
-                                }
-                            },
-                            -1,
-                        ]
-                    }
-                }
-            },
-            {"$match": {"current_rank_data.bgg_rank": {"$ne": None}}},
-            {"$sort": {"current_rank_data.bgg_rank": 1}},
-            {"$skip": (page - 1) * page_size},
+        page_size: int = 100,
+    ) -> List[dict[str, Any]]:
+        find_rank_comparison = [
+            {"$addFields": {"sortrank": {"$ifNull": ["$bgg_rank", True]}}},
+            {"$sort": {"sortrank": 1}},
+            {"$skip": page * page_size},
             {"$limit": page_size},
             {
-                "$addFields": {
-                    "previous_rank_data": {
-                        "$arrayElemAt": [
-                            {
-                                "$filter": {
-                                    "input": "$bgg_rank_history",
-                                    "as": "history",
-                                    "cond": {"$gte": ["$$history.date", compare_to]},
-                                }
-                            },
-                            0,
-                        ]
-                    },
+                "$lookup": {
+                    "from": f"{RankHistory.Settings.name}",
+                    "let": {"bgg_id": "$bgg_id"},
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
+                                "date": {"$lte": compare_to},
+                            }
+                        },
+                        {"$sort": {"date": -1}},
+                        {"$limit": 1},
+                    ],
+                    "as": "rank_history",
                 }
             },
+            {"$set": {"rank_history": {"$arrayElemAt": ["$rank_history", 0]}}},
             {
-                "$addFields": {
-                    "bgg_rank": "$current_rank_data.bgg_rank",
+                "$set": {
                     "bgg_rank_change": {
-                        "$ifNull": [
-                            {
-                                "$subtract": [
-                                    "$previous_rank_data.bgg_rank",
-                                    "$current_rank_data.bgg_rank",
-                                ]
-                            },
-                            0,
-                        ]
+                        "$subtract": ["$bgg_rank", "$rank_history.bgg_rank"]
                     },
-                    "bgg_geek_rating": "$current_rank_data.bgg_geek_rating",
-                    "bgg_geek_rating_change": {
-                        "$ifNull": [
-                            {
-                                "$subtract": [
-                                    "$current_rank_data.bgg_geek_rating",
-                                    "$previous_rank_data.bgg_geek_rating",
-                                ]
-                            },
-                            0,
-                        ]
-                    },
-                    "bgg_average_rating": "$current_rank_data.bgg_average_rating",
                     "bgg_average_rating_change": {
-                        "$ifNull": [
-                            {
-                                "$subtract": [
-                                    "$current_rank_data.bgg_average_rating",
-                                    "$previous_rank_data.bgg_average_rating",
-                                ]
-                            },
-                            0,
+                        "$subtract": [
+                            "$bgg_average_rating",
+                            "$rank_history.bgg_average_rating",
                         ]
                     },
-                    "categories": "$categories",
+                    "bgg_geek_rating_change": {
+                        "$subtract": [
+                            "$bgg_geek_rating",
+                            "$rank_history.bgg_geek_rating",
+                        ]
+                    },
                 }
             },
         ]
 
         rank_data = await Boardgame.aggregate(
-            aggregation_pipeline=pipeline, projection_model=BoardgameComparison
+            aggregation_pipeline=find_rank_comparison
         ).to_list()
+        print(rank_data)
 
         return rank_data
 
