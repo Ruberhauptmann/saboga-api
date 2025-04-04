@@ -1,0 +1,1 @@
+{"options":{"timeseries":{"timeField":"date","metaField":"bgg_id","granularity":"seconds","bucketMaxSpanSeconds":{"$numberInt":"3600"}}},"indexes":[{"v":{"$numberInt":"2"},"key":{"bgg_id":{"$numberInt":"1"},"date":{"$numberInt":"1"}},"name":"bgg_id_1_date_1"}],"collectionName":"rank_history","type":"timeseries"}

@@ -50,18 +50,18 @@ class BaseBoardgame(BaseModel):
     designers: List[Person] = []
     mechanics: List[Mechanic] = []
     bgg_rank: int
-    bgg_geek_rating: float
-    bgg_average_rating: float
+    bgg_geek_rating: float | None = None
+    bgg_average_rating: float | None = None
 
 
 class BoardgameComparison(BaseBoardgame):
-    bgg_rank_change: int
-    bgg_geek_rating_change: float
-    bgg_average_rating_change: float
+    bgg_rank_change: int | None = None
+    bgg_geek_rating_change: float | None = None
+    bgg_average_rating_change: float | None = None
 
 
 class BoardgameWithHistoricalData(BaseBoardgame):
-    bgg_rank_history: List[RankHistory]
+    bgg_rank_history: List[RankHistory] = []
 
 
 class Prediction(BaseModel):
@@ -76,5 +76,4 @@ class Prediction(BaseModel):
 
 class ForecastData(BaseModel):
     bgg_id: int
-    game_name: str
     prediction: List[Prediction]
