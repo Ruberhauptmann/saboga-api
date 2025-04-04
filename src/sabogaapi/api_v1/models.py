@@ -7,28 +7,6 @@ from beanie import Document, Indexed, TimeSeriesConfig
 from pydantic import BaseModel, Field
 
 
-class BoardgameWithHistoricalData(BaseModel):
-    bgg_id: int
-    name: str = ""
-    description: str | None = None
-    image_url: str | None = None
-    thumbnail_url: str | None = None
-    year_published: int | None = None
-    minplayers: int | None = None
-    maxplayers: int | None = None
-    playingtime: int | None = None
-    minplaytime: int | None = None
-    maxplaytime: int | None = None
-    categories: List["Category"] = []
-    families: List["Family"] = []
-    designers: List["Designer"] = []
-    mechanics: List["Mechanic"] = []
-    bgg_rank: int
-    bgg_geek_rating: float
-    bgg_average_rating: float
-    bgg_rank_history: List["RankHistorySingleGame"]
-
-
 class RankHistory(Document):
     date: datetime.datetime = Field(default_factory=datetime.datetime.now)
     bgg_id: int
@@ -76,7 +54,7 @@ class Designer(BaseModel):
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     name: str = ""
-    bgg_rank: int | None = None
+    bgg_rank: Annotated[int, Indexed()] | None = None
     bgg_geek_rating: float | None = None
     bgg_average_rating: float | None = None
     description: str | None = None
@@ -97,12 +75,11 @@ class Boardgame(Document):
     async def get_top_ranked_boardgames(
         compare_to: datetime.datetime,
         page: int = 1,
-        page_size: int = 100,
+        page_size: int = 50,
     ) -> List[dict[str, Any]]:
         find_rank_comparison = [
-            {"$addFields": {"sortrank": {"$ifNull": ["$bgg_rank", True]}}},
-            {"$sort": {"sortrank": 1}},
-            {"$skip": page * page_size},
+            {"$sort": {"bgg_rank": 1}},
+            {"$skip": (page - 1) * page_size},
             {"$limit": page_size},
             {
                 "$lookup": {
@@ -115,13 +92,13 @@ class Boardgame(Document):
                                 "date": {"$lte": compare_to},
                             }
                         },
-                        {"$sort": {"date": -1}},
+                        {"$sort": {"date": 1}},
                         {"$limit": 1},
                     ],
                     "as": "rank_history",
                 }
             },
-            {"$set": {"rank_history": {"$arrayElemAt": ["$rank_history", 0]}}},
+            {"$unwind": {"path": "$rank_history", "preserveNullAndEmptyArrays": True}},
             {
                 "$set": {
                     "bgg_rank_change": {
@@ -146,7 +123,6 @@ class Boardgame(Document):
         rank_data = await Boardgame.aggregate(
             aggregation_pipeline=find_rank_comparison
         ).to_list()
-        print(rank_data)
 
         return rank_data
 
@@ -156,7 +132,7 @@ class Boardgame(Document):
         start_date: datetime.datetime,
         end_date: datetime.datetime,
         mode: str,
-    ) -> BoardgameWithHistoricalData | None:
+    ) -> dict | None:
         date_diff = (end_date - start_date).days
         if mode == "auto":
             if date_diff <= 30:
@@ -167,43 +143,27 @@ class Boardgame(Document):
                 mode = "yearly"
 
         pipeline = [
-            {"$match": {"bgg_id": bgg_id}},  # Match board game by ID
-            {"$unwind": "$bgg_rank_history"},  # Unwind the bgg_rank_history array
+            {"$match": {"bgg_id": bgg_id}},
             {
-                "$match": {  # Filter rank history by date range
-                    "bgg_rank_history.date": {"$gte": start_date, "$lte": end_date}
+                "$lookup": {
+                    "from": f"{RankHistory.Settings.name}",
+                    "let": {"bgg_id": "$bgg_id"},
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
+                                "date": {"$lte": end_date, "$gte": start_date},
+                            }
+                        },
+                        {"$sort": {"date": 1}},
+                        {"$limit": 30},
+                    ],
+                    "as": "bgg_rank_history",
                 }
             },
-            {"$sort": {"bgg_rank_history.date": 1}},  # Sort by date (ascending)
-            {
-                "$group": {
-                    "_id": "$bgg_id",
-                    "latest_rank": {
-                        "$last": "$bgg_rank_history"
-                    },  # Get latest rank entry
-                    "bgg_rank_history": {
-                        "$push": "$bgg_rank_history"
-                    },  # Keep all history
-                    "doc": {"$first": "$$ROOT"},  # Store the full document
-                }
-            },
-            {
-                "$project": {
-                    "_id": 0,
-                    "bgg_id": "$_id",
-                    "bgg_rank": "$latest_rank.bgg_rank",
-                    "bgg_geek_rating": "$latest_rank.bgg_geek_rating",
-                    "bgg_average_rating": "$latest_rank.bgg_average_rating",
-                    "doc": 1,  # Keep full document data
-                    "bgg_rank_history": 1,
-                }
-            },
-            {"$replaceRoot": {"newRoot": {"$mergeObjects": ["$doc", "$$ROOT"]}}},
         ]
 
-        result = await Boardgame.aggregate(
-            aggregation_pipeline=pipeline, projection_model=BoardgameWithHistoricalData
-        ).to_list()
+        result = await Boardgame.aggregate(aggregation_pipeline=pipeline).to_list()
 
         if not result:
             return None
@@ -211,7 +171,7 @@ class Boardgame(Document):
         boardgame_data = result[0]
 
         # Apply mode filtering to bgg_rank_history
-        history = boardgame_data.bgg_rank_history
+        history = boardgame_data["bgg_rank_history"]
         if mode == "weekly":
             history = history[::7]  # Every 7th entry
         elif mode == "yearly":
@@ -224,7 +184,7 @@ class Boardgame(Document):
                     seen_years.add(year)
             history = yearly_history
 
-        boardgame_data.bgg_rank_history = history
+        boardgame_data["bgg_rank_history"] = history
         return boardgame_data
 
     class Settings:

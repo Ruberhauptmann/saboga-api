@@ -7,6 +7,7 @@ from zipfile import ZipFile
 
 import pandas as pd
 from fastapi import APIRouter, Request, Response, UploadFile
+from fastapi.exceptions import HTTPException
 
 from sabogaapi.api_v1.models import Boardgame
 from sabogaapi.api_v1.schemas import BoardgameComparison
@@ -32,7 +33,7 @@ async def read_games_with_rank_changes(
     request: Request,
     compare_to: datetime.date | None = None,
     page: int = 1,
-    per_page: int = 100,
+    per_page: int = 50,
 ) -> List[BoardgameComparison]:
     """Returns a list of boardgames from the database, sorted by rank.
 
@@ -52,6 +53,11 @@ async def read_games_with_rank_changes(
     List[BoardgamePublic]: List of boardgames from the database.
 
     """
+    if page < 1:
+        raise HTTPException(
+            status_code=422, detail="Page number must be greater than 1"
+        )
+
     if compare_to is None:
         compare_to = datetime.datetime.now() - datetime.timedelta(weeks=1)
     else:
@@ -128,11 +134,14 @@ async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
     existing_ids = {
         doc.bgg_id async for doc in Boardgame.find({"bgg_id": {"$in": new_ids}})
     }
-    unique_ids = [Boardgame(bgg_id=id_) for id_ in new_ids if id_ not in existing_ids]
-
+    unique_ids = [id_ for id_ in new_ids if id_ not in existing_ids]
     logger.info(f"Added: {unique_ids}")
+    new_games_df = df[df["id"].isin(unique_ids)]
+    new_games = [
+        Boardgame(bgg_id=entry["id"], bgg_rank=entry["rank"]) for entry in new_games_df
+    ]
 
-    if unique_ids:
-        await Boardgame.insert_many(unique_ids)
+    if new_games:
+        await Boardgame.insert_many(new_games)
 
-    return {"success": "ok"}
+    return {"Inserted:": f"{unique_ids}"}

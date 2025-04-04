@@ -35,7 +35,7 @@ dev-prod-monitoring: # Serve the site locally for testing.
 
 .PHONY: dump-dev-db
 dump-dev-db: # Dump dev database
-	docker exec saboga-database mongodump -u mongoadmin -p password --authenticationDatabase admin --db boardgames --collection boardgames
+	docker exec saboga-database mongodump -u mongoadmin -p password --authenticationDatabase admin --db boardgames
 	docker cp saboga-database:/dump/boardgames/. api-testing/dump/boardgames
 
 

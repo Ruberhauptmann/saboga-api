@@ -150,6 +150,7 @@ async def ascrape_update(step: int) -> None:
                     await boardgame.save()
                 if rank_history:
                     rank_histories.append(rank_history)
-            await RankHistory.insert_many(rank_histories)
+            if rank_histories:
+                await RankHistory.insert_many(rank_histories)
         run_index += 1
         time.sleep(5)

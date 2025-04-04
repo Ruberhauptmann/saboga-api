@@ -4,11 +4,13 @@ import numpy as np
 import pandas as pd
 from sktime.forecasting.statsforecast import StatsForecastAutoARIMA
 
-from sabogaapi.api_v1.schemas import Prediction, RankHistory
+from sabogaapi.api_v1.models import RankHistory
+from sabogaapi.api_v1.schemas import Prediction
 
 
 async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Prediction]:
-    df = pd.DataFrame([entry.model_dump() for entry in rank_history])
+    df = pd.DataFrame([dict(entry) for entry in rank_history])
+    df.drop(columns=["id", "revision_id"], inplace=True)
     df.set_index("date", inplace=True, drop=True)
     df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).last()

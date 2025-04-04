@@ -2,7 +2,7 @@ import datetime
 
 from fastapi import APIRouter, HTTPException
 
-from sabogaapi.api_v1.models import Boardgame
+from sabogaapi.api_v1.models import Boardgame, RankHistory
 from sabogaapi.api_v1.schemas import BoardgameWithHistoricalData, ForecastData
 from sabogaapi.api_v1.statistics.predict import forecast_game_ranking
 
@@ -45,6 +45,8 @@ async def read_game(
     )
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
+
+    game = BoardgameWithHistoricalData(**game)
     return game
 
 
@@ -52,17 +54,14 @@ async def read_game(
 async def forecast(
     bgg_id: int,
 ) -> ForecastData:
-    game = await Boardgame.find_one(Boardgame.bgg_id == bgg_id)
-    if not game:
+    bgg_rank_history = await RankHistory.find(Boardgame.bgg_id == bgg_id).to_list()
+    if not rank_history:
         raise HTTPException(status_code=404, detail="Game not found")
-    if not game.bgg_rank_history:
-        raise HTTPException(status_code=404, detail="No historical data")
 
-    prediction = await forecast_game_ranking(game.bgg_rank_history)
+    prediction = await forecast_game_ranking(bgg_rank_history)
 
     return ForecastData(
         bgg_id=bgg_id,
-        game_name=game.name,
         prediction=prediction,
     )
 
