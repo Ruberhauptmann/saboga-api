@@ -55,7 +55,7 @@ async def forecast(
     bgg_id: int,
 ) -> ForecastData:
     bgg_rank_history = await RankHistory.find(Boardgame.bgg_id == bgg_id).to_list()
-    if not rank_history:
+    if not bgg_rank_history:
         raise HTTPException(status_code=404, detail="Game not found")
 
     prediction = await forecast_game_ranking(bgg_rank_history)
