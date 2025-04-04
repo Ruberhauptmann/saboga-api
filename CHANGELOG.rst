@@ -1,4 +1,21 @@
 
+.. _changelog-0.0.38:
+
+0.0.38 — 2025-04-04
+-------------------
+
+Changed
+^^^^^^^
+
+- Unified exceptions
+
+Fixed
+^^^^^
+
+- Pagination started at one page later than it is supposed to
+
+- Data from a single game returned correctly with new time series
+
 .. _changelog-0.0.36:
 
 0.0.36 — 2025-03-27
