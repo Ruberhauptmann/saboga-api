@@ -15,7 +15,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ./mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
+      - ./api-testing/mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
     healthcheck:
       test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
       interval: 1m30s
