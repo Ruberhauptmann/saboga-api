@@ -20,12 +20,17 @@ jobs:
           - 27017:27017
         volumes:
           - ${{ github.workspace }}/api-testing/mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
+        options: --name mqtt
     env:
       MONGODB_API_USER: test
       MONGODB_HOST: localhost
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Restart
+        uses: docker://docker
+        with:
+          args: docker restart mongodb
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
