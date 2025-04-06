@@ -7,7 +7,7 @@ services:
       context: ../
       dockerfile: api-testing/Dockerfile
     container_name: saboga-api
-    depends-on:
+    depends_on:
       saboga-db:
         condition: service_healthy
   saboga-db:
