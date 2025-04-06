@@ -1,25 +1,35 @@
 
 services:
-  saboga-api:
-    entrypoint: uv run pytest tests --codspeed
+  saboga-api-codspeed:
+    command: uv run pytest tests/ --codspeed
     build:
       context: ../../
-      dockerfile: api-testing/Dockerfile
-    container_name: saboga-api
+      dockerfile: api-testing/codspeed.Dockerfile
+    container_name: saboga-api-codspeed
+    networks:
+      - ci
+    environment:
+      - MONGODB_API_USER=test
+      - MONGODB_HOST=saboga-db-codspeed
     depends_on:
-      saboga-db:
+      saboga-db-codspeed:
         condition: service_healthy
-  saboga-db:
+
+  saboga-db-codspeed:
     image: mongo:jammy
-    container_name: saboga-db
-    ports:
-      - "27017:27017"
+    container_name: saboga-db-codspeed
     volumes:
       - ../../api-testing/mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
     healthcheck:
-      test: [ "CMD", "mongo", "--eval", "db.adminCommand('ping')" ]
+      test: mongosh --eval "db.runCommand('ping').ok"
       interval: 1m30s
       timeout: 10s
       retries: 3
       start_period: 40s
       start_interval: 5s
+    networks:
+      - ci
+
+networks:
+  ci:
+    internal: true

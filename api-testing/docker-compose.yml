@@ -74,16 +74,6 @@ services:
     networks:
       - saboga-api
 
-  saboga-database-testing:
-    image: mongo:jammy
-    container_name: saboga-database-integration-tests
-    ports:
-      - "27017:27017"
-    networks:
-      - saboga-api
-    volumes:
-      - ./mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
-
 volumes:
   saboga_db_data:
 
