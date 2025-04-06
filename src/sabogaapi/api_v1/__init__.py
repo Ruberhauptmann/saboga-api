@@ -63,7 +63,7 @@ api_v1.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 api_v1.mount("/img", StaticFiles(directory=IMG_DIR), name="img")
 
 
-fu.validation_error_response_definition = ErrorResponse.schema()
+fu.validation_error_response_definition = ErrorResponse.model_json_schema()
 
 
 @api_v1.exception_handler(HTTPException)

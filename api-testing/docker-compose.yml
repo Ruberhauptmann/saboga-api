@@ -41,7 +41,7 @@ services:
       - "traefik.http.routers.saboga-api.middlewares=strip-api-prefix"
       - "traefik.http.middlewares.strip-api-prefix.stripPrefix.prefixes=/api"
     volumes:
-      - ./static:/static
+      - ./static:/app/static
       - ./img:/app/img
     expose:
       - "8000"

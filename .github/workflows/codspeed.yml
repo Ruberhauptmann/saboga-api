@@ -1,0 +1,48 @@
+name: CodSpeed
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  benchmarks:
+    name: Run benchmarks
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: api-user
+          MONGO_INITDB_ROOT_PASSWORD: test
+        options: >-
+          --health-cmd="mongosh --eval 'db.stats()'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      MONGODB_API_USER: test
+      MONGODB_HOST: localhost
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install uv
+      - name: Install dependencies
+        run: uv venv
+      - name: Install dependencies
+        run: uv sync --group test
+      - name: Wait for MongoDB to be ready
+        run: |
+          sleep 10  # wait for container healthcheck
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          token: ${{ secrets.CODSPEED_TOKEN }}
+          run: uv run pytest tests/ --codspeed

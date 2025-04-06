@@ -54,7 +54,7 @@ class Designer(BaseModel):
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     name: str = ""
-    bgg_rank: Annotated[int, Indexed()] | None = None
+    bgg_rank: Annotated[int, Indexed()]
     bgg_geek_rating: float | None = None
     bgg_average_rating: float | None = None
     description: str | None = None
