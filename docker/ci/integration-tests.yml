@@ -1,7 +1,6 @@
 
 services:
   saboga-api:
-    image: saboga-api:latest
     entrypoint: uv run pytest tests --codspeed
     build:
       context: ../
