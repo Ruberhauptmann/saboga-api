@@ -12,17 +12,17 @@ jobs:
     name: Run benchmarks
     services:
       mongodb:
-        image: mongo:6
-        ports:
-          - 27017:27017
+        image: mongo:8
         env:
           MONGO_INITDB_ROOT_USERNAME: api-user
           MONGO_INITDB_ROOT_PASSWORD: test
+        ports:
+          - 27017:27017
         options: >-
-          --health-cmd="mongosh --eval 'db.stats()'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       MONGODB_API_USER: test
       MONGODB_HOST: localhost
