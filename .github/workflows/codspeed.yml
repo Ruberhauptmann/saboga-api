@@ -19,12 +19,7 @@ jobs:
         ports:
           - 27017:27017
         volumes:
-          - ./api-testing/mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
-        options: >-
-          --health-cmd="mongo --eval db.adminCommand('ping')"
-          --health-interval 30s
-          --health-timeout 5s
-          --health-retries 5
+          - ${{ github.workspace }}/api-testing/mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
     env:
       MONGODB_API_USER: test
       MONGODB_HOST: localhost
