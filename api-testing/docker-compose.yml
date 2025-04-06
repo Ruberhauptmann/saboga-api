@@ -79,6 +79,8 @@ services:
     container_name: saboga-database-integration-tests
     ports:
       - "27017:27017"
+    networks:
+      - saboga-api
     volumes:
       - ./mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
 
