@@ -14,4 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run integration tests
-        run: docker-compose -f docker/ci/integration-tests.yml run saboga-api
+        run: docker compose -f docker/ci/integration-tests.yml run saboga-api
