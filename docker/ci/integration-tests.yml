@@ -3,7 +3,7 @@ services:
   saboga-api:
     entrypoint: uv run pytest tests --codspeed
     build:
-      context: ./
+      context: ../../
       dockerfile: api-testing/Dockerfile
     container_name: saboga-api
     depends_on:
