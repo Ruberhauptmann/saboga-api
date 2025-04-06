@@ -41,8 +41,8 @@ services:
       - "traefik.http.routers.saboga-api.middlewares=strip-api-prefix"
       - "traefik.http.middlewares.strip-api-prefix.stripPrefix.prefixes=/api"
     volumes:
-      - ./static:/app/static
-      - ./img:/app/img
+      - ./api-testing/static:/app/static
+      - ./api-testing/img:/app/img
     expose:
       - "8000"
     env_file:
@@ -73,6 +73,14 @@ services:
       - saboga_db_data:/data/db
     networks:
       - saboga-api
+
+  saboga-database-testing:
+    image: mongo:jammy
+    container_name: saboga-database-integration-tests
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-unit-tests/mongo-init.js:/docker-entrypoint-initdb.d/init-user.js
 
 volumes:
   saboga_db_data:
