@@ -1,4 +1,5 @@
 import datetime
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 
@@ -18,7 +19,7 @@ async def read_game(
     bgg_id: int,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
-    mode: str = "auto",
+    mode: Literal["auto", "daily", "weekly", "yearly"] = "auto",
 ) -> Boardgame:
     """Returns a single board game from the database.
 

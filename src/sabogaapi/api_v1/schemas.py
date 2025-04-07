@@ -7,7 +7,7 @@ from pydantic import BaseModel
 
 
 class RankHistory(BaseModel):
-    date: datetime.datetime
+    date: datetime.date
     bgg_rank: int | None
     bgg_geek_rating: float | None
     bgg_average_rating: float | None
