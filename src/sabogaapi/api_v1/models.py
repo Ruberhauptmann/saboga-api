@@ -70,6 +70,7 @@ class Boardgame(Document):
         page: int = 1,
         page_size: int = 50,
     ) -> List[dict[str, Any]]:
+        print(compare_to, flush=True)
         find_rank_comparison = [
             {"$sort": {"bgg_rank": 1}},
             {"$skip": (page - 1) * page_size},
@@ -81,11 +82,19 @@ class Boardgame(Document):
                     "pipeline": [
                         {
                             "$match": {
-                                "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
-                                "date": {"$lte": compare_to},
+                                "$expr": {
+                                    "$and": [
+                                        {"$eq": ["$bgg_id", "$$bgg_id"]},
+                                    ]
+                                }
                             }
                         },
                         {"$sort": {"date": -1}},
+                        {
+                            "$match": {
+                                "date": {"$lt": compare_to + datetime.timedelta(days=1)}
+                            }
+                        },
                         {"$limit": 1},
                     ],
                     "as": "rank_history",
@@ -116,6 +125,7 @@ class Boardgame(Document):
         rank_data = await Boardgame.aggregate(
             aggregation_pipeline=find_rank_comparison
         ).to_list()
+        print(rank_data, flush=True)
 
         return rank_data
 
