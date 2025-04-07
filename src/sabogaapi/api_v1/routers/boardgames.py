@@ -9,7 +9,7 @@ import pandas as pd
 from fastapi import APIRouter, Request, Response, UploadFile
 from fastapi.exceptions import HTTPException
 
-from sabogaapi.api_v1.models import Boardgame
+from sabogaapi.api_v1.models import Boardgame, RankHistory
 from sabogaapi.api_v1.schemas import BoardgameComparison
 from sabogaapi.logger import configure_logger
 
@@ -126,6 +126,9 @@ async def recommend_games_for_user() -> dict[str, str]:
 
 @router.post("/uploadfile")
 async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
+    date = datetime.date.fromisoformat(
+        csv_zip_file.filename.split("_")[-1].removesuffix(".zip")
+    )
     with ZipFile(csv_zip_file.file) as csv_zip:
         with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
             df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
@@ -151,5 +154,19 @@ async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
 
     if new_games:
         await Boardgame.insert_many(new_games)
+
+    new_rank_history = [
+        RankHistory(
+            date=date,
+            bgg_id=entry.id,
+            bgg_rank=entry.rank,
+            bgg_geek_rating=entry.bayesaverage,
+            bgg_average_rating=entry.average,
+        )
+        for entry in new_games_df.itertuples()
+    ]
+
+    if new_rank_history:
+        await RankHistory.insert_many(new_rank_history)
 
     return {"Inserted:": f"{unique_ids}"}
