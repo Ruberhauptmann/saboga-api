@@ -138,7 +138,15 @@ async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
     logger.info(f"Added: {unique_ids}")
     new_games_df = df[df["id"].isin(unique_ids)]
     new_games = [
-        Boardgame(bgg_id=entry["id"], bgg_rank=entry["rank"]) for entry in new_games_df
+        Boardgame(
+            bgg_id=entry.id,
+            name=entry.name,
+            bgg_rank=entry.rank,
+            bgg_geek_rating=entry.bayesaverage,
+            bgg_average_rating=entry.average,
+            year_published=entry.yearpublished,
+        )
+        for entry in new_games_df.itertuples()
     ]
 
     if new_games:
