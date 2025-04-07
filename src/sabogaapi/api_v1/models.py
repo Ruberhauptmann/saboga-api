@@ -24,13 +24,6 @@ class RankHistory(Document):
         name = "rank_history"
 
 
-class RankHistorySingleGame(BaseModel):
-    date: datetime.datetime
-    bgg_rank: int | None = None
-    bgg_geek_rating: float | None = None
-    bgg_average_rating: float | None = None
-
-
 class Category(BaseModel):
     name: str
     bgg_id: int
@@ -92,7 +85,7 @@ class Boardgame(Document):
                                 "date": {"$lte": compare_to},
                             }
                         },
-                        {"$sort": {"date": 1}},
+                        {"$sort": {"date": -1}},
                         {"$limit": 1},
                     ],
                     "as": "rank_history",
@@ -102,7 +95,7 @@ class Boardgame(Document):
             {
                 "$set": {
                     "bgg_rank_change": {
-                        "$subtract": ["$bgg_rank", "$rank_history.bgg_rank"]
+                        "$subtract": ["$rank_history.bgg_rank", "$bgg_rank"]
                     },
                     "bgg_average_rating_change": {
                         "$subtract": [
@@ -178,13 +171,24 @@ class Boardgame(Document):
             seen_years = set()
             yearly_history = []
             for entry in history:
-                year = entry.date.year
+                year = entry["date"].year
                 if year not in seen_years:
                     yearly_history.append(entry)
                     seen_years.add(year)
             history = yearly_history
 
-        boardgame_data["bgg_rank_history"] = history
+        boardgame_data["bgg_rank_history"] = [
+            {
+                "date": entry["date"].replace(
+                    hour=0, minute=0, second=0, microsecond=0
+                ),
+                "bgg_id": entry["bgg_id"],
+                "bgg_rank": entry["bgg_rank"],
+                "bgg_geek_rating": entry["bgg_geek_rating"],
+                "bgg_average_rating": entry["bgg_average_rating"],
+            }
+            for entry in history
+        ]
         return boardgame_data
 
     class Settings:
