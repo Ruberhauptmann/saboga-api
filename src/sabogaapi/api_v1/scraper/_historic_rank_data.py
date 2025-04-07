@@ -1,5 +1,6 @@
 import datetime
 import time
+from bisect import bisect_left
 
 import requests
 from pydantic import BaseModel
@@ -39,16 +40,27 @@ def scrape_api(id) -> requests.Response | None:
 async def update_boardgame_rank_history(
     bgg_id: int, historic_data: list
 ) -> list[RankHistory]:
-    history_list = [
+    rank_history = (
+        await RankHistory.find(RankHistory.bgg_id == bgg_id).sort("-date").to_list()
+    )
+
+    if rank_history:
+        dates = [datetime.date.fromtimestamp(date / 1000) for date, _ in historic_data]
+        oldest_date = rank_history[-1].date.date()
+        idx = bisect_left(dates, oldest_date)
+    else:
+        idx = None
+
+    new_ranks = [
         RankHistory(
             bgg_id=bgg_id,
             date=datetime.datetime.fromtimestamp(date / 1000),
             bgg_rank=int(rank),
         )
-        for date, rank in historic_data
+        for date, rank in historic_data[:idx]
     ]
 
-    return history_list
+    return new_ranks
 
 
 async def ascrape_historic_rank_data() -> None:
@@ -64,5 +76,7 @@ async def ascrape_historic_rank_data() -> None:
             rank_histories = await update_boardgame_rank_history(
                 bgg_id=id, historic_data=list_of_data
             )
-            await RankHistory.insert_many(rank_histories)
+            print(f"Inserted {len(rank_histories)} rank histories", flush=True)
+            if rank_histories:
+                await RankHistory.insert_many(rank_histories)
             time.sleep(0.1)

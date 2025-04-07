@@ -149,7 +149,6 @@ class Boardgame(Document):
                             }
                         },
                         {"$sort": {"date": 1}},
-                        {"$limit": 30},
                     ],
                     "as": "bgg_rank_history",
                 }
