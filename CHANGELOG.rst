@@ -1,4 +1,27 @@
 
+.. _changelog-0.0.39:
+
+0.0.39 — 2025-04-07
+-------------------
+
+Changed
+^^^^^^^
+
+- Save names and rank information when uploading the boardgamegeek data dump
+
+- Return only date when returning rank_history
+
+- Save a rank_history entry when uploading a data dump from BGG
+
+Fixed
+^^^^^
+
+- Upload of boardgamegeek data dumps
+
+- Calculation of rank changes in the right direction
+
+- Scrape only historic rank data before the last date that is in the database
+
 .. _changelog-0.0.38:
 
 0.0.38 — 2025-04-04
