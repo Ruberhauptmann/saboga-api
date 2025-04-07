@@ -126,9 +126,8 @@ async def recommend_games_for_user() -> dict[str, str]:
 
 @router.post("/uploadfile")
 async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
-    date = datetime.date.fromisoformat(
-        csv_zip_file.filename.split("_")[-1].removesuffix(".zip")
-    )
+    filename = csv_zip_file.filename if csv_zip_file.filename is not None else ""
+    date = datetime.date.fromisoformat(filename.split("_")[-1].removesuffix(".zip"))
     with ZipFile(csv_zip_file.file) as csv_zip:
         with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
             df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
