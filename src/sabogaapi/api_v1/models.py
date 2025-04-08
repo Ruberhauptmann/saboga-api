@@ -70,7 +70,6 @@ class Boardgame(Document):
         page: int = 1,
         page_size: int = 50,
     ) -> List[dict[str, Any]]:
-        print(compare_to, flush=True)
         find_rank_comparison = [
             {"$sort": {"bgg_rank": 1}},
             {"$skip": (page - 1) * page_size},
@@ -125,7 +124,6 @@ class Boardgame(Document):
         rank_data = await Boardgame.aggregate(
             aggregation_pipeline=find_rank_comparison
         ).to_list()
-        print(rank_data, flush=True)
 
         return rank_data
 
