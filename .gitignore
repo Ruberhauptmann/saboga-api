@@ -5,6 +5,8 @@ dist/
 .tox/
 .pytest_cache/
 
+.codspeed/
+
 _autosummary/
 _build/
 doctrees/
