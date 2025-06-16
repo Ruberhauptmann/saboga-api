@@ -11,6 +11,7 @@ from sabogaapi.api_v1.schemas import Prediction
 async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Prediction]:
     df = pd.DataFrame([dict(entry) for entry in rank_history])
     df.drop(columns=["id", "revision_id"], inplace=True)
+    df.dropna(inplace=True)
     df.set_index("date", inplace=True, drop=True)
     df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).last()

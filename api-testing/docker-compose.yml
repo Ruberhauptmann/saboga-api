@@ -41,8 +41,8 @@ services:
       - "traefik.http.routers.saboga-api.middlewares=strip-api-prefix"
       - "traefik.http.middlewares.strip-api-prefix.stripPrefix.prefixes=/api"
     volumes:
-      - ./api-testing/static:/app/static
-      - ./api-testing/img:/app/img
+      - ./static:/app/static
+      - ./img:/app/img
     expose:
       - "8000"
     env_file:
@@ -63,7 +63,7 @@ services:
           path: ../pyproject.toml
 
   saboga-database:
-    image: mongo:jammy
+    image: mongo:8.0-noble
     container_name: saboga-database
     env_file:
       - .env

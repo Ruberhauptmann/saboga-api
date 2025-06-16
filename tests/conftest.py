@@ -1,23 +1,23 @@
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import Generator
 
 import pytest
 from beanie import init_beanie
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from mongomock_motor import AsyncMongoMockClient
+from motor.motor_asyncio import AsyncIOMotorClient
 
 from sabogaapi.api_v1.models import Boardgame, RankHistory
 from sabogaapi.main import create_app
 
 
 async def init_db_mock():
-    Path("static").mkdir(exist_ok=True, parents=True)
-    client = AsyncMongoMockClient()
+    client = AsyncIOMotorClient(
+        "mongodb://api-user:password@127.0.0.1/boardgames?authSource=boardgames"
+    )
     await init_beanie(
         document_models=[Boardgame, RankHistory],
-        database=client.get_database(name="boardgames"),
+        database=client.get_database(),
     )
 
 
