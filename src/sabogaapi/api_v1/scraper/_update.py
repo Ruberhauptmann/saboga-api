@@ -6,7 +6,7 @@ import requests
 from PIL import Image
 from pydantic import BaseModel
 
-from sabogaapi.api_v1.config import IMG_DIR
+from sabogaapi.api_v1.config import settings
 from sabogaapi.api_v1.database import init_db
 from sabogaapi.api_v1.models import (
     Boardgame,
@@ -55,7 +55,7 @@ async def analyse_api_response(
     # Process image
     if data["image_url"]:
         image_filename = f"{data['bgg_id']}.jpg"
-        image_file = IMG_DIR / image_filename
+        image_file = settings.IMG_DIR / image_filename
         if not image_file.exists():
             img_request = requests.get(data["image_url"])
             if img_request.status_code == 200:
@@ -63,7 +63,7 @@ async def analyse_api_response(
                     handler.write(img_request.content)
 
         thumbnail_filename = f"{image_file.stem}-thumbnail.jpg"
-        thumbnail_file = IMG_DIR / thumbnail_filename
+        thumbnail_file = settings.IMG_DIR / thumbnail_filename
         if not thumbnail_file.exists():
             im = Image.open(image_file).convert("RGB")
             im.thumbnail((128, 128))
