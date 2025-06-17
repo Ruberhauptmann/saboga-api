@@ -19,7 +19,7 @@ from sabogaapi.api_v1.routers import (
     single_game,
 )
 
-from .config import IMG_DIR, STATIC_DIR
+from .config import settings
 
 
 class ErrorResponse(BaseModel):
@@ -59,8 +59,8 @@ api_v1.include_router(families.router)
 api_v1.include_router(mechanics.router)
 
 api_v1.include_router(search.router)
-api_v1.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
-api_v1.mount("/img", StaticFiles(directory=IMG_DIR), name="img")
+api_v1.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
+api_v1.mount("/img", StaticFiles(directory=settings.img_dir), name="img")
 
 
 fu.validation_error_response_definition = ErrorResponse.model_json_schema()

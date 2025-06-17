@@ -1,8 +1,16 @@
 from pathlib import Path
 
-IMG_DIR = Path("img")
+from pydantic import MongoDsn
+from pydantic_settings import BaseSettings
 
-STATIC_DIR = Path("static")
 
-IMG_DIR.mkdir(exist_ok=True)
-STATIC_DIR.mkdir(exist_ok=True)
+class Settings(BaseSettings):
+    mongodb_uri: MongoDsn = "mongodb://localhost"
+    img_dir: Path = Path("img")
+    static_dir: Path = Path("static")
+
+
+settings = Settings()
+
+settings.img_dir.mkdir(exist_ok=True)
+settings.static_dir.mkdir(exist_ok=True)

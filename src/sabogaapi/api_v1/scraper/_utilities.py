@@ -68,6 +68,11 @@ def parse_boardgame_data(item: ElementTree.Element) -> dict:
     """Extract relevant boardgame data from XML response."""
     bgg_id = int(item.get("id", 0))
 
+    name_element = item.find("name")
+    name = None
+    if name_element is not None and name_element.get("value"):
+        name = _map_to(str, name_element.get("value"))
+
     image_url = None
     thumbnail_url = None
     bgg_image_url_element = item.find("image")
@@ -108,6 +113,7 @@ def parse_boardgame_data(item: ElementTree.Element) -> dict:
 
     return {
         "bgg_id": bgg_id,
+        "name": name,
         "image_url": image_url,
         "thumbnail_url": thumbnail_url,
         "description": description,
