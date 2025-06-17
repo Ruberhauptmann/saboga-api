@@ -11,7 +11,7 @@ from sabogaapi.api_v1.models import Boardgame, RankHistory
 from sabogaapi.main import create_app
 
 
-async def init_db_mock():
+async def init_db():
     client = AsyncIOMotorClient(
         "mongodb://api-user:password@127.0.0.1/boardgames?authSource=boardgames"
     )
@@ -23,7 +23,7 @@ async def init_db_mock():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db_mock()
+    await init_db()
     yield
 
 

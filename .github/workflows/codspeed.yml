@@ -13,5 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run integration tests
-        run: docker compose -f docker/ci/integration-tests.yml run saboga-api
+        with:
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: python-3.12
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --group=test
+      - uses: extractions/setup-just@v3
+      - name: Run test suite
+        run: just test --codspeed

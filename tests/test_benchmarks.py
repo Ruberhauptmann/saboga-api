@@ -3,8 +3,9 @@ import datetime
 
 import pytest
 
-from sabogaapi.api_v1.database import init_db
 from sabogaapi.api_v1.models import Boardgame
+
+from .conftest import init_db
 
 
 @pytest.mark.slow_integration_test
