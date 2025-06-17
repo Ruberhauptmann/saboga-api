@@ -1,10 +1,8 @@
 from contextlib import asynccontextmanager
-from typing import Generator
 
 import pytest
 from beanie import init_beanie
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from sabogaapi.api_v1.models import Boardgame, RankHistory
@@ -31,8 +29,3 @@ async def lifespan(app: FastAPI):
 def app():
     app = create_app(lifespan=lifespan)
     yield app
-
-
-@pytest.fixture()
-def client(app) -> Generator:
-    yield TestClient(app)
