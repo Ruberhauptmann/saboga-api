@@ -5,13 +5,10 @@ import pytest
 
 from sabogaapi.api_v1.models import Boardgame
 
-from .conftest import init_db
-
 
 @pytest.mark.slow_integration_test
-def test_benchmark_get_top_ranked_boardgames(benchmark):
+def test_benchmark_get_top_ranked_boardgames(benchmark, app):
     async def benchmark_get_top_ranked_boardgames():
-        await init_db()
         return await Boardgame.get_top_ranked_boardgames(
             compare_to=datetime.datetime.now(),
             page=1,
