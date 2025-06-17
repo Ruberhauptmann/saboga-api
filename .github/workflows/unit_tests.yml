@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.11", "3.12", "3.13" ]
+        python-version: [ "3.12", "3.13" ]
         os:
           - ubuntu-latest
     steps:
@@ -52,4 +52,4 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           parallel-finished: true
-          carryforward: "python-3.10,python-3.11,python-3.12,python-3.13"
+          carryforward: "python-3.12,python-3.13"
