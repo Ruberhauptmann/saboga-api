@@ -1,4 +1,18 @@
 
+.. _changelog-0.0.40:
+
+0.0.40 — 2025-06-17
+-------------------
+
+Fixed
+^^^^^
+
+- Bug in getting the time series information for the rank charts, now the information from the correct dates are chosen
+
+- Remove NaN values before applying prediction for ranks and ratings
+
+- Add name to data in scraper
+
 .. _changelog-0.0.39:
 
 0.0.39 — 2025-04-07
