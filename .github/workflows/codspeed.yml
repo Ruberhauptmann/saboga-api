@@ -8,13 +8,14 @@ on:
   workflow_dispatch:
 
 jobs:
-  benchmarks:
-    name: Run benchmarks
+  test:
+    name: Codspeed
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/checkout@v4
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
@@ -23,5 +24,8 @@ jobs:
       - name: Install the project
         run: uv sync --group=test
       - uses: extractions/setup-just@v3
-      - name: Run test suite
-        run: just test --codspeed
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          token: ${{ secrets.CODSPEED_TOKEN }}
+          run: just test --codspeed
