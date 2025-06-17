@@ -12,7 +12,6 @@ dependencies = [
     "loki-logger-handler>=1.1.1",
     "pandas>=2.2.3",
     "pillow>=11.1.0",
-    "pmdarima>=2.0.4",
     "prometheus-fastapi-instrumentator>=7.1.0",
     "requests>=2.32.3",
     "sktime>=0.36.0",
@@ -31,6 +30,7 @@ build-backend = "hatchling.build"
 dev = [
     "pre-commit>=4.0.1",
     "pytest>=8.3.4",
+    "rust-just>=1.40.0",
     "scriv>=1.5.1",
     "tox>=4.23.2",
 ]
@@ -40,6 +40,8 @@ test = [
     "pytest-cov>=6.0.0",
     "pytest>=8.3.4",
     "pytest-mock>=3.14.0",
+    "pytest-codspeed>=3.2.0",
+    "pytest-mongodb>=2.4.0",
 ]
 lint = [
     "ruff>=0.8.2",

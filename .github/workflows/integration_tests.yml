@@ -16,31 +16,41 @@ permissions:
 
 jobs:
   test:
-    name: test with ${{ matrix.py }} on ${{ matrix.os }}
+    name: Integration test with ${{ matrix.python-version }} on ${{ matrix.os }}
     if: ${{ contains(github.event.head_commit.message, 'needs-integration') || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        py:
-          - "3.12"
+        python-version: [ "3.12", "3.13" ]
         os:
           - ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup python for test ${{ matrix.py }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.py }}
-      - name: Install tox and uv
-        run: python -m pip install uv
-      - name: Setup uv
-        run: uv venv
-      - name: Install tox-uv
-        run: uv tool install tox --with tox-uv
-      - name: Install tox-gh
-        run: uv pip install tox-gh>=1.2
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - name: Install the project
+        run: uv sync --group=test
+      - uses: extractions/setup-just@v3
       - name: Run test suite
-        run: uv tool run tox -- --with-slow-integration
+        run: just test --without-slow-integration
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel: true
+          flag-name: python-${{ matrix.python-version }}
+
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close parallel build
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
+          carryforward: "python-3.12,python-3.13"
