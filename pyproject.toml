@@ -12,7 +12,6 @@ dependencies = [
     "loki-logger-handler>=1.1.1",
     "pandas>=2.2.3",
     "pillow>=11.1.0",
-    "pmdarima>=2.0.4",
     "prometheus-fastapi-instrumentator>=7.1.0",
     "requests>=2.32.3",
     "sktime>=0.36.0",
