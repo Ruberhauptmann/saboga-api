@@ -43,6 +43,7 @@ async def analyse_api_response(
         boardgame = Boardgame(bgg_id=data["bgg_id"])
 
     # Simple fields
+    boardgame.name = data["name"]
     boardgame.description = data["description"]
     boardgame.year_published = data["year_published"]
     boardgame.minplayers = data["minplayers"]

@@ -1284,6 +1284,20 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-settings"
+version = "2.9.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/67/1d/42628a2c33e93f8e9acbde0d5d735fa0850f3e6a2f8cb1eb6c40b9a732ac/pydantic_settings-2.9.1.tar.gz", hash = "sha256:c509bf79d27563add44e8446233359004ed85066cd096d8b510f715e6ef5d268", size = 163234 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/5f/d6d641b490fd3ec2c4c13b4244d68deea3a1b970a97be64f34fb5504ff72/pydantic_settings-2.9.1-py3-none-any.whl", hash = "sha256:59b4f431b1defb26fe620c71a7d3968a710d719f5f4cdbbdb7926edeb770f6ef", size = 44356 },
+]
+
+[[package]]
 name = "pygments"
 version = "2.19.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1591,6 +1605,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pillow" },
     { name = "prometheus-fastapi-instrumentator" },
+    { name = "pydantic-settings" },
     { name = "requests" },
     { name = "sktime" },
     { name = "statsforecast" },
@@ -1633,6 +1648,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pillow", specifier = ">=11.1.0" },
     { name = "prometheus-fastapi-instrumentator", specifier = ">=7.1.0" },
+    { name = "pydantic-settings", specifier = ">=2.9.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "sktime", specifier = ">=0.36.0" },
     { name = "statsforecast", specifier = ">=2.0.1" },
