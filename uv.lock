@@ -1595,7 +1595,7 @@ wheels = [
 
 [[package]]
 name = "sabogaapi"
-version = "0.0.39"
+version = "0.0.41"
 source = { editable = "." }
 dependencies = [
     { name = "aioresponses" },

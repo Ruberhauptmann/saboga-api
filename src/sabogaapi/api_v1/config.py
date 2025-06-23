@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    mongodb_uri: MongoDsn = "mongodb://localhost"
+    mongodb_uri: MongoDsn = MongoDsn("mongodb://localhost")
     img_dir: Path = Path("img")
     static_dir: Path = Path("static")
 
