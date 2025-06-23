@@ -38,7 +38,7 @@ jobs:
         run: uv sync --group=test
       - uses: extractions/setup-just@v3
       - name: Run test suite
-        run: just test --without-slow-integration
+        run: just test --with-slow-integration
       - name: Coveralls
         uses: coverallsapp/github-action@v2
         with:

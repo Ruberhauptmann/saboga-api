@@ -8,7 +8,7 @@ on:
       - 'main'
 
 concurrency:
-  group: unit-tests-${{ github.ref }}
+  group: lint-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
