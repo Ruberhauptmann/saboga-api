@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.41:
+
+0.0.41 — 2025-06-23
+-------------------
+
+Fixed
+^^^^^
+
+- Fixed bug in scraper where the wrong variable was read out from the config
+
 .. _changelog-0.0.40:
 
 0.0.40 — 2025-06-17

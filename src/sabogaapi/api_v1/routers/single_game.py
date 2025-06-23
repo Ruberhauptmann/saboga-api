@@ -20,7 +20,7 @@ async def read_game(
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
     mode: Literal["auto", "daily", "weekly", "yearly"] = "auto",
-) -> Boardgame:
+) -> BoardgameWithHistoricalData:
     """Returns a single board game from the database.
 
     \f
