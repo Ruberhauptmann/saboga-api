@@ -8,7 +8,9 @@ from sabogaapi.api_v1.models import RankHistory
 from sabogaapi.api_v1.schemas import Prediction
 
 
-async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Prediction]:
+async def forecast_game_ranking(
+    rank_history: List[RankHistory], period: str
+) -> List[Prediction]:
     df = pd.DataFrame([dict(entry) for entry in rank_history])
     df.drop(columns=["id", "revision_id"], inplace=True)
     df.dropna(inplace=True)
@@ -16,9 +18,21 @@ async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Predict
     df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).last()
     df.sort_index(inplace=True)
-    df.index = cast(pd.DatetimeIndex, df.index).to_period("D")
 
-    fh = np.arange(1, 31)
+    if period == "daily":
+        pd_period = "D"
+        fh = np.arange(1, 31)
+    elif period == "weekly":
+        pd_period = "W"
+        fh = np.arange(1, 20)
+    elif period == "yearly":
+        pd_period = "Y"
+        fh = np.arange(1, 5)
+    else:
+        pd_period = "D"
+        fh = np.arange(1, 31)
+
+    df.index = cast(pd.DatetimeIndex, df.index).to_period(pd_period)
 
     forecaster = StatsForecastAutoARIMA()
     forecaster.fit(df)

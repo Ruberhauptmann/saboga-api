@@ -41,6 +41,16 @@ async def read_game(
         start_date = end_date - datetime.timedelta(days=30)
     else:
         start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+
+    date_diff = (end_date - start_date).days
+    if mode == "auto":
+        if date_diff <= 30:
+            mode = "daily"
+        elif date_diff <= 180:
+            mode = "weekly"
+        else:
+            mode = "yearly"
+
     game = await Boardgame.get_boardgame_with_historical_data(
         bgg_id=bgg_id, start_date=start_date, end_date=end_date, mode=mode
     )
@@ -54,12 +64,33 @@ async def read_game(
 @router.get("/forecast", response_model=ForecastData)
 async def forecast(
     bgg_id: int,
+    start_date: datetime.date | None = None,
+    end_date: datetime.date | None = None,
+    mode: Literal["auto", "daily", "weekly", "yearly"] = "auto",
 ) -> ForecastData:
+    if end_date is None:
+        end_date = datetime.datetime.now()
+    else:
+        end_date = datetime.datetime.combine(end_date, datetime.datetime.max.time())
+    if start_date is None:
+        start_date = end_date - datetime.timedelta(days=30)
+    else:
+        start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+
+    date_diff = (end_date - start_date).days
+    if mode == "auto":
+        if date_diff <= 30:
+            mode = "daily"
+        elif date_diff <= 180:
+            mode = "weekly"
+        else:
+            mode = "yearly"
+
     bgg_rank_history = await RankHistory.find(Boardgame.bgg_id == bgg_id).to_list()
     if not bgg_rank_history:
         raise HTTPException(status_code=404, detail="Game not found")
 
-    prediction = await forecast_game_ranking(bgg_rank_history)
+    prediction = await forecast_game_ranking(bgg_rank_history, mode)
 
     return ForecastData(
         bgg_id=bgg_id,

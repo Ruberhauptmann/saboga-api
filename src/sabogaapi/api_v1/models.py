@@ -136,15 +136,6 @@ class Boardgame(Document):
         end_date: datetime.datetime,
         mode: str,
     ) -> dict | None:
-        date_diff = (end_date - start_date).days
-        if mode == "auto":
-            if date_diff <= 30:
-                mode = "daily"
-            elif date_diff <= 180:
-                mode = "weekly"
-            else:
-                mode = "yearly"
-
         pipeline = [
             {"$match": {"bgg_id": bgg_id}},
             {
