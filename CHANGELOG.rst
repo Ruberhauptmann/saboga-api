@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.42:
+
+0.0.42 — 2025-07-06
+-------------------
+
+Changed
+^^^^^^^
+
+- Scraper now uses the Boardgamegeek data dump to update the rank history
+
 .. _changelog-0.0.41:
 
 0.0.41 — 2025-06-23
