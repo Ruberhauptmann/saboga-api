@@ -1,157 +1,120 @@
+import os
 import time
 from datetime import datetime
-from xml.etree import ElementTree
+from zipfile import ZipFile
 
+import pandas as pd
 import requests
-from PIL import Image
-from pydantic import BaseModel
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from webdriver_manager.firefox import GeckoDriverManager
 
 from sabogaapi.api_v1.config import settings
 from sabogaapi.api_v1.database import init_db
-from sabogaapi.api_v1.models import (
-    Boardgame,
-    Category,
-    Designer,
-    Family,
-    Mechanic,
-    RankHistory,
-)
-from sabogaapi.api_v1.scraper._utilities import parse_boardgame_data, scrape_api
+from sabogaapi.api_v1.models import Boardgame, RankHistory
 from sabogaapi.logger import configure_logger
 
 logger = configure_logger()
 
 
-class BoardgameBGGIDs(BaseModel):
-    bgg_id: int
+def download_zip():
+    # Set up download directory
+    download_dir = os.path.abspath("download")
+    os.makedirs(download_dir, exist_ok=True)
 
+    # Firefox options
+    options = Options()
+    options.add_argument("--headless")  # Uncomment to run without browser window
 
-async def analyse_api_response(
-    item: ElementTree.Element,
-) -> tuple[None, None] | tuple[Boardgame, None] | tuple[Boardgame, RankHistory]:
-    data = parse_boardgame_data(item)
+    options.set_preference("browser.download.folderList", 2)  # Use custom download path
+    options.set_preference("browser.download.dir", download_dir)
+    options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
+    options.set_preference("browser.download.manager.showWhenStarting", False)
+    options.set_preference("pdfjs.disabled", True)
 
-    # Get boardgame from database or create a new one
-    boardgame = await Boardgame.find_one(Boardgame.bgg_id == data["bgg_id"])
-    if data["rank"] is None:
-        if boardgame is not None:
-            await boardgame.delete()
-            logger.info(f"Deleted boardgame {data['bgg_id']} due to missing rank.")
-        return None, None  # Don't process further
-
-    if boardgame is None:
-        boardgame = Boardgame(bgg_id=data["bgg_id"])
-
-    # Simple fields
-    boardgame.name = data["name"]
-    boardgame.description = data["description"]
-    boardgame.year_published = data["year_published"]
-    boardgame.minplayers = data["minplayers"]
-    boardgame.maxplayers = data["maxplayers"]
-    boardgame.playingtime = data["playingtime"]
-    boardgame.minplaytime = data["minplaytime"]
-    boardgame.maxplaytime = data["maxplaytime"]
-
-    # Process image
-    if data["image_url"]:
-        image_filename = f"{data['bgg_id']}.jpg"
-        image_file = settings.img_dir / image_filename
-        if not image_file.exists():
-            img_request = requests.get(data["image_url"])
-            if img_request.status_code == 200:
-                with open(image_file, "wb") as handler:
-                    handler.write(img_request.content)
-
-        thumbnail_filename = f"{image_file.stem}-thumbnail.jpg"
-        thumbnail_file = settings.img_dir / thumbnail_filename
-        if not thumbnail_file.exists():
-            im = Image.open(image_file).convert("RGB")
-            im.thumbnail((128, 128))
-            im.save(thumbnail_file)
-
-        boardgame.image_url = f"/img/{image_filename}"
-        boardgame.thumbnail_url = f"/img/{thumbnail_filename}"
-
-    # Process categories
-    category_names_ids = data["categories"]
-    if category_names_ids:
-        boardgame.categories = [
-            Category(name=name, bgg_id=bgg_id) for bgg_id, name in category_names_ids
-        ]
-
-    # Process families
-    family_names_ids = data["families"]
-    if family_names_ids:
-        boardgame.families = [
-            Family(name=name, bgg_id=bgg_id) for bgg_id, name in family_names_ids
-        ]
-
-    # Process mechanics
-    mechanic_names_ids = data["mechanics"]
-    if mechanic_names_ids:
-        boardgame.mechanics = [
-            Mechanic(name=name, bgg_id=bgg_id) for bgg_id, name in mechanic_names_ids
-        ]
-
-    # Process designers
-    designer_names_ids = data["designers"]
-    if designer_names_ids:
-        boardgame.designers = [
-            Designer(name=name, bgg_id=bgg_id) for bgg_id, name in designer_names_ids
-        ]
-
-    # Process rank history
-    last_rank_history = (
-        await RankHistory.find({"bgg_id": boardgame.bgg_id})
-        .sort(-RankHistory.date)
-        .limit(1)
-        .first_or_none()
-    )
-    if last_rank_history and (datetime.now() - last_rank_history.date).days < 1:
-        return boardgame, None
-
-    boardgame.bgg_rank = data["rank"]
-    boardgame.bgg_geek_rating = data["geek_rating"]
-    boardgame.bgg_average_rating = data["average_rating"]
-    rank_history = RankHistory(
-        bgg_id=boardgame.bgg_id,
-        bgg_rank=data["rank"],
-        bgg_geek_rating=data["geek_rating"],
-        bgg_average_rating=data["average_rating"],
-        date=datetime.today(),
+    # Start browser
+    driver = webdriver.Firefox(
+        service=Service(GeckoDriverManager().install()), options=options
     )
 
-    return boardgame, rank_history
+    driver.get("https://boardgamegeek.com/login")
+    time.sleep(2)
+
+    cookie_button = driver.find_element(By.CLASS_NAME, "fc-cta-consent")
+    cookie_button.click()
+
+    username = settings.bgg_username
+    password = settings.bgg_password
+
+    driver.find_element(By.ID, "inputUsername").send_keys(username)
+    driver.find_element(By.NAME, "password").send_keys(password)
+    driver.find_element(By.CSS_SELECTOR, "[type='submit']").click()
+
+    time.sleep(5)
+
+    driver.get("https://boardgamegeek.com/data_dumps/bg_ranks")
+    time.sleep(3)
+
+    link_element = driver.find_element(By.PARTIAL_LINK_TEXT, "Click to Download")
+    s3_url = link_element.get_attribute("href")
+    driver.quit()
+
+    response = requests.get(s3_url)
+    filename = os.path.join(download_dir, "boardgame_ranks.zip")
+    with open(filename, "wb") as f:
+        f.write(response.content)
+
+    with ZipFile(filename) as csv_zip:
+        with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
+            df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
+
+    return df
 
 
-async def ascrape_update(step: int) -> None:
+async def ascrape_update() -> None:
     await init_db()
-    run_index = 0
-    while True:
-        ids = (
-            await Boardgame.find_all()
-            .project(BoardgameBGGIDs)
-            .sort("-bgg_id")
-            .skip(run_index * step)
-            .limit(step)
-            .to_list()
-        )
-        ids_int = [x.bgg_id for x in ids]
 
-        if len(ids) == 0:
-            break
-        logger.info(f"Scraping {ids_int}.")
-        parsed_xml = scrape_api(ids_int)
-        if parsed_xml:
-            items = parsed_xml.findall("item")
-            rank_histories = []
-            for item in items:
-                boardgame, rank_history = await analyse_api_response(item)
-                if boardgame:
-                    await boardgame.save()
-                if rank_history:
-                    rank_histories.append(rank_history)
-            if rank_histories:
-                await RankHistory.insert_many(rank_histories)
-        run_index += 1
-        time.sleep(5)
+    date = datetime.today()
+
+    games_df = download_zip()
+
+    new_games = []
+    for game in games_df.itertuples():
+        game_db = await Boardgame.find_one(Boardgame.bgg_id == game.id)
+
+        if game_db:
+            game_db.name = game.name
+            game_db.bgg_rank = game.rank
+            game_db.bgg_geek_rating = game.bayesaverage
+            game_db.bgg_average_rating = game.average
+            game_db.year_published = game.yearpublished
+            await game_db.save()
+        else:
+            new_games.append(
+                Boardgame(
+                    bgg_id=game.id,
+                    name=game.name,
+                    bgg_rank=game.rank,
+                    bgg_geek_rating=game.bayesaverage,
+                    bgg_average_rating=game.average,
+                    year_published=game.yearpublished,
+                )
+            )
+    if new_games:
+        await Boardgame.insert_many(new_games)
+
+    new_rank_history = [
+        RankHistory(
+            date=date,
+            bgg_id=entry.id,
+            bgg_rank=entry.rank,
+            bgg_geek_rating=entry.bayesaverage,
+            bgg_average_rating=entry.average,
+        )
+        for entry in games_df.itertuples()
+    ]
+
+    if new_rank_history:
+        await RankHistory.insert_many(new_rank_history)

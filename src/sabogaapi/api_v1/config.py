@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     mongodb_uri: MongoDsn = MongoDsn("mongodb://localhost")
+    bgg_username: str = ""
+    bgg_password: str = ""
     img_dir: Path = Path("img")
     static_dir: Path = Path("static")
 
