@@ -3,13 +3,11 @@
 import datetime
 import math
 from typing import List
-from zipfile import ZipFile
 
-import pandas as pd
-from fastapi import APIRouter, Request, Response, UploadFile
+from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
 
-from sabogaapi.api_v1.models import Boardgame, RankHistory
+from sabogaapi.api_v1.models import Boardgame
 from sabogaapi.api_v1.schemas import BoardgameComparison
 from sabogaapi.logger import configure_logger
 
@@ -122,50 +120,3 @@ async def recommend_games() -> dict[str, str]:
 @router.get("/recommendations/{username}")
 async def recommend_games_for_user() -> dict[str, str]:
     return {"status": "not yet implemented"}
-
-
-@router.post("/uploadfile")
-async def create_upload_file(csv_zip_file: UploadFile) -> dict[str, str]:
-    filename = csv_zip_file.filename if csv_zip_file.filename is not None else ""
-    date = datetime.date.fromisoformat(filename.split("_")[-1].removesuffix(".zip"))
-    with ZipFile(csv_zip_file.file) as csv_zip:
-        with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
-            df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
-
-    new_ids = df["id"]
-    existing_ids = {
-        doc.bgg_id async for doc in Boardgame.find({"bgg_id": {"$in": new_ids}})
-    }
-    unique_ids = [id_ for id_ in new_ids if id_ not in existing_ids]
-    logger.info(f"Added: {unique_ids}")
-    new_games_df = df[df["id"].isin(unique_ids)]
-    new_games = [
-        Boardgame(
-            bgg_id=entry.id,
-            name=entry.name,
-            bgg_rank=entry.rank,
-            bgg_geek_rating=entry.bayesaverage,
-            bgg_average_rating=entry.average,
-            year_published=entry.yearpublished,
-        )
-        for entry in new_games_df.itertuples()
-    ]
-
-    if new_games:
-        await Boardgame.insert_many(new_games)
-
-    new_rank_history = [
-        RankHistory(
-            date=date,
-            bgg_id=entry.id,
-            bgg_rank=entry.rank,
-            bgg_geek_rating=entry.bayesaverage,
-            bgg_average_rating=entry.average,
-        )
-        for entry in new_games_df.itertuples()
-    ]
-
-    if new_rank_history:
-        await RankHistory.insert_many(new_rank_history)
-
-    return {"Inserted:": f"{unique_ids}"}

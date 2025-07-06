@@ -1,5 +1,10 @@
 # First, build the application in the `/app` directory.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        firefox-esr
+
 ADD . /app
 
 # Sync the project into a new environment, using the frozen lockfile
