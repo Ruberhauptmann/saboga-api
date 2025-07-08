@@ -5,8 +5,8 @@ from beanie import init_beanie
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
+from sabogaapi import create_app
 from sabogaapi.api_v1.models import Boardgame, RankHistory
-from sabogaapi.main import create_app
 
 
 async def init_db():

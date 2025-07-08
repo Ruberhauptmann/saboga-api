@@ -1,14 +1,21 @@
 import os
 from contextlib import AbstractAsyncContextManager
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Optional
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from sabogaapi.api_v1 import api_v1
 
 SECRET = os.getenv("FASTAPI-USERS-SECRET")
+
+
+class ErrorResponse(BaseModel):
+    detail: str
+    status_code: int
+    extra_info: Optional[dict] = None
 
 
 def create_app(
@@ -43,8 +50,8 @@ def create_app(
         root_path_in_servers=False,
     )
 
-    app.mount("/v1", api_v1)
-    app.mount("/latest", api_v1)
+    app.include_router(api_v1, prefix="/v1")
+    app.include_router(api_v1, prefix="/latest")
 
     app.add_middleware(
         CORSMiddleware,

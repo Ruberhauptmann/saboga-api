@@ -8,7 +8,7 @@ from sabogaapi.api_v1.models import Boardgame, RankHistory
 from .config import settings
 
 
-async def init_db() -> None:
+async def init_db() -> None:  # pragma: no cover
     client = AsyncIOMotorClient(  # type: ignore
         f"{settings.mongodb_uri}"
     )

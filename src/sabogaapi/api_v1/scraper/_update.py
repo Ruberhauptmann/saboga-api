@@ -20,7 +20,7 @@ from sabogaapi.logger import configure_logger
 logger = configure_logger()
 
 
-def download_zip():
+def download_zip():  # pragma: no cover
     logger.info("Starting ZIP download process")
 
     download_dir = os.path.abspath("download")
@@ -85,7 +85,7 @@ def download_zip():
     return df
 
 
-async def ascrape_update() -> None:
+async def ascrape_update() -> None:  # pragma: no cover
     logger.info("Starting scrape. Initializing DB connection.")
     await init_db()
 

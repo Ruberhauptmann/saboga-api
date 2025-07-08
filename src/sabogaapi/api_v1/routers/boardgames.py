@@ -131,26 +131,6 @@ async def read_games_with_volatility():
     return games
 
 
-@router.get("/by-category")
-async def read_all_games_by_category() -> dict[str, str]:
-    return {"status": "not yet implemented"}
-
-
-@router.get("/by-mechanic")
-async def read_all_games_by_mechanic() -> dict[str, str]:
-    return {"status": "not yet implemented"}
-
-
-@router.get("/by-family")
-async def read_all_games_by_family() -> dict[str, str]:
-    return {"status": "not yet implemented"}
-
-
-@router.get("/by-designer")
-async def read_all_games_by_designer() -> dict[str, str]:
-    return {"status": "not yet implemented"}
-
-
 @router.get("/clusters")
 async def game_clusters() -> dict[str, str]:
     return {"status": "not yet implemented"}
