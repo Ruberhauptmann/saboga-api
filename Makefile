@@ -28,7 +28,7 @@ dev: # Serve the site locally for testing.
 dev-prod: # Serve the site locally for testing.
 	cd api-testing && docker compose -f docker-compose.yml up -d --build
 
-.PHONY: dev-prod
+.PHONY: dev-prod-monitoring
 dev-prod-monitoring: # Serve the site locally for testing.
 	cd api-testing && docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --build
 

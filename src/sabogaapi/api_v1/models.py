@@ -6,6 +6,10 @@ from typing import Annotated, Any, List
 from beanie import Document, Indexed, TimeSeriesConfig
 from pydantic import BaseModel, Field
 
+from sabogaapi.logger import configure_logger
+
+logger = configure_logger()
+
 
 class RankHistory(Document):
     date: datetime.datetime = Field(default_factory=datetime.datetime.now)
@@ -70,7 +74,15 @@ class Boardgame(Document):
         page: int = 1,
         page_size: int = 50,
     ) -> List[dict[str, Any]]:
-        print(compare_to, flush=True)
+        logger.debug(
+            "Fetching top ranked boardgames",
+            extra={
+                "compare_to": compare_to.isoformat(),
+                "page": page,
+                "page_size": page_size,
+            },
+        )
+
         find_rank_comparison = [
             {"$sort": {"bgg_rank": 1}},
             {"$skip": (page - 1) * page_size},
@@ -125,7 +137,14 @@ class Boardgame(Document):
         rank_data = await Boardgame.aggregate(
             aggregation_pipeline=find_rank_comparison
         ).to_list()
-        print(rank_data, flush=True)
+        logger.info(
+            "Top ranked boardgames fetched",
+            extra={
+                "returned_count": len(rank_data),
+                "page": page,
+                "page_size": page_size,
+            },
+        )
 
         return rank_data
 
@@ -136,6 +155,15 @@ class Boardgame(Document):
         end_date: datetime.datetime,
         mode: str,
     ) -> dict | None:
+        logger.debug(
+            "Fetching boardgame with historical data",
+            extra={
+                "bgg_id": bgg_id,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "mode": mode,
+            },
+        )
         date_diff = (end_date - start_date).days
         if mode == "auto":
             if date_diff <= 30:
@@ -144,6 +172,9 @@ class Boardgame(Document):
                 mode = "weekly"
             else:
                 mode = "yearly"
+            logger.debug(
+                "Auto-detected mode", extra={"mode": mode, "date_diff_days": date_diff}
+            )
 
         pipeline = [
             {"$match": {"bgg_id": bgg_id}},
@@ -168,6 +199,7 @@ class Boardgame(Document):
         result = await Boardgame.aggregate(aggregation_pipeline=pipeline).to_list()
 
         if not result:
+            logger.warning("No boardgame found with bgg_id", extra={"bgg_id": bgg_id})
             return None
 
         boardgame_data = result[0]
@@ -198,6 +230,14 @@ class Boardgame(Document):
             }
             for entry in history
         ]
+        logger.info(
+            "Boardgame with historical data returned",
+            extra={
+                "bgg_id": bgg_id,
+                "history_points": len(boardgame_data["bgg_rank_history"]),
+                "mode": mode,
+            },
+        )
         return boardgame_data
 
     class Settings:

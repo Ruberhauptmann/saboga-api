@@ -2,6 +2,7 @@ import os
 from contextlib import AbstractAsyncContextManager
 from typing import Any, Callable, Mapping
 
+from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -52,5 +53,6 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(CorrelationIdMiddleware)
 
     return app
