@@ -11,7 +11,7 @@ from sabogaapi.main import create_app
 
 async def init_db():
     client = AsyncIOMotorClient(
-        "mongodb://api-user:password@127.0.0.1/boardgames?authSource=boardgames"
+        "mongodb://mongoadmin:password@127.0.0.1/boardgames?authSource=admin"
     )
     await init_beanie(
         document_models=[Boardgame, RankHistory],

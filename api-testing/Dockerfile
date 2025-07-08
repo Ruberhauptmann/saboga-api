@@ -1,4 +1,3 @@
-# First, build the application in the `/app` directory.
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
 RUN apt-get update && \
@@ -7,8 +6,9 @@ RUN apt-get update && \
 
 ADD . /app
 
-# Sync the project into a new environment, using the frozen lockfile
 WORKDIR /app
 RUN uv sync --frozen
 
-CMD ["uv", "run", "fastapi", "dev", "/app/src/sabogaapi/main.py", "--root-path", "/api", "--host", "0.0.0.0", "--proxy-headers", "--port", "8000"]
+RUN chmod +x /app/api-testing/entrypoint.sh
+
+CMD ["/app/api-testing/entrypoint.sh"]
