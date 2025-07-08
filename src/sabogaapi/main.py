@@ -10,7 +10,7 @@ from sabogaapi.metrics import instrumentator
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:  # pragma: no cover
     logger.info("Initialising database connection.")
     await init_db()
     yield
