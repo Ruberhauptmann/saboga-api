@@ -125,6 +125,12 @@ async def read_games_with_rank_changes(
     return games
 
 
+@router.get("/volatile")
+async def read_games_with_volatility():
+    games = await Boardgame.find().sort("bgg_rank_volatility").limit(50).to_list()
+    return games
+
+
 @router.get("/by-category")
 async def read_all_games_by_category() -> dict[str, str]:
     return {"status": "not yet implemented"}

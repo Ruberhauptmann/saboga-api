@@ -14,6 +14,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 from sabogaapi.api_v1.config import settings
 from sabogaapi.api_v1.database import init_db
 from sabogaapi.api_v1.models import Boardgame, RankHistory
+from sabogaapi.api_v1.statistics.volatility import calculate_volatility
 from sabogaapi.logger import configure_logger
 
 logger = configure_logger()
@@ -136,3 +137,17 @@ async def ascrape_update() -> None:
     if new_rank_history:
         await RankHistory.insert_many(new_rank_history)
         logger.info(f"Inserted {len(new_rank_history)} rank history entries.")
+
+    all_games = await Boardgame.find().to_list()
+
+    for game in all_games:
+        rank_history = await RankHistory.find(
+            RankHistory.bgg_id == game.bgg_id
+        ).to_list()
+        rank_volatility, geek_rating_volatility, average_rating_volatility = (
+            calculate_volatility(rank_history)
+        )
+        game.bgg_rank_volatility = rank_volatility
+        game.bgg_geek_rating_volatility = geek_rating_volatility
+        game.bgg_average_rating_volatility = average_rating_volatility
+        await game.save()
