@@ -16,6 +16,7 @@ from sabogaapi.api_v1.models import (
     Mechanic,
     RankHistory,
 )
+from sabogaapi.api_v1.statistics.volatility import calculate_volatility
 
 fake = Faker()
 
@@ -85,11 +86,18 @@ def generate_boardgame(bgg_id: int) -> tuple[Boardgame, list[RankHistory]]:
 
     title = clean_title(fake.sentence(nb_words=random.randint(2, 4)))
 
+    rank_volatility, geek_rating_volatility, average_rating_volatility = (
+        calculate_volatility(rank_history)
+    )
+
     boardgame = Boardgame(
         bgg_id=bgg_id,
         bgg_rank=latest["bgg_rank"],
         bgg_geek_rating=latest["bgg_geek_rating"],
         bgg_average_rating=latest["bgg_average_rating"],
+        bgg_rank_volatility=rank_volatility,
+        bgg_geek_rating_volatility=geek_rating_volatility,
+        bgg_average_rating_volatility=average_rating_volatility,
         name=title,
         description=fake.paragraph(nb_sentences=10),
         image_url=fake.image_url(),

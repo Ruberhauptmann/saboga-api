@@ -13,7 +13,9 @@ BOARDGAMES_WITHOUT_RANK = Gauge(
 )
 
 
-def count_games_without_rank() -> Callable[[Info], Coroutine[Any, Any, None]]:
+def count_games_without_rank() -> (
+    Callable[[Info], Coroutine[Any, Any, None]]
+):  # pragma: no cover
     """
     Function returning an instrumentation function that updates the Prometheus metric.
     """

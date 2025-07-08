@@ -54,6 +54,9 @@ class Boardgame(Document):
     name: str = ""
     bgg_geek_rating: float | None = None
     bgg_average_rating: float | None = None
+    bgg_rank_volatility: float | None = None
+    bgg_geek_rating_volatility: float | None = None
+    bgg_average_rating_volatility: float | None = None
     description: str | None = None
     image_url: str | None = None
     thumbnail_url: str | None = None
