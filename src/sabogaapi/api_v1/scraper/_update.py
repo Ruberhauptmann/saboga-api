@@ -20,7 +20,8 @@ logger = configure_logger()
 
 
 def download_zip():
-    # Set up download directory
+    logger.info("Starting ZIP download process")
+
     download_dir = os.path.abspath("download")
     os.makedirs(download_dir, exist_ok=True)
 
@@ -34,33 +35,42 @@ def download_zip():
     options.set_preference("browser.download.manager.showWhenStarting", False)
     options.set_preference("pdfjs.disabled", True)
 
+    logger.info("Launching headless Firefox browser")
     # Start browser
     driver = webdriver.Firefox(
         service=Service(GeckoDriverManager().install()), options=options
     )
+    try:
+        logger.info("Navigating to BGG login page")
+        driver.get("https://boardgamegeek.com/login")
+        time.sleep(2)
 
-    driver.get("https://boardgamegeek.com/login")
-    time.sleep(2)
+        cookie_button = driver.find_element(By.CLASS_NAME, "fc-cta-consent")
+        cookie_button.click()
+        logger.debug("Cookie consent clicked.")
 
-    cookie_button = driver.find_element(By.CLASS_NAME, "fc-cta-consent")
-    cookie_button.click()
+        username = settings.bgg_username
+        password = settings.bgg_password
 
-    username = settings.bgg_username
-    password = settings.bgg_password
+        driver.find_element(By.ID, "inputUsername").send_keys(username)
+        driver.find_element(By.NAME, "password").send_keys(password)
+        driver.find_element(By.CSS_SELECTOR, "[type='submit']").click()
 
-    driver.find_element(By.ID, "inputUsername").send_keys(username)
-    driver.find_element(By.NAME, "password").send_keys(password)
-    driver.find_element(By.CSS_SELECTOR, "[type='submit']").click()
+        logger.info("Login submitted. Waiting for redirect")
+        time.sleep(5)
 
-    time.sleep(5)
+        driver.get("https://boardgamegeek.com/data_dumps/bg_ranks")
+        time.sleep(3)
 
-    driver.get("https://boardgamegeek.com/data_dumps/bg_ranks")
-    time.sleep(3)
+        logger.info("Fetching S3 URL for ZIP download")
+        link_element = driver.find_element(By.PARTIAL_LINK_TEXT, "Click to Download")
+        s3_url = link_element.get_attribute("href")
+        logger.debug(f"S3 URL: {s3_url}")
+    finally:
+        driver.quit()
+        logger.debug("Browser closed.")
 
-    link_element = driver.find_element(By.PARTIAL_LINK_TEXT, "Click to Download")
-    s3_url = link_element.get_attribute("href")
-    driver.quit()
-
+    logger.info("Downloading ZIP file")
     response = requests.get(s3_url)
     filename = os.path.join(download_dir, "boardgame_ranks.zip")
     with open(filename, "wb") as f:
@@ -69,17 +79,21 @@ def download_zip():
     with ZipFile(filename) as csv_zip:
         with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
             df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
+            logger.info(f"Parsed {len(df)} ranked boardgames from CSV.")
 
     return df
 
 
 async def ascrape_update() -> None:
+    logger.info("Starting scrape. Initializing DB connection.")
     await init_db()
 
     date = datetime.today()
 
     games_df = download_zip()
+    updated_games = 0
 
+    logger.info("Processing boardgames from CSV.")
     new_games = []
     for game in games_df.itertuples():
         game_db = await Boardgame.find_one(Boardgame.bgg_id == game.id)
@@ -91,6 +105,7 @@ async def ascrape_update() -> None:
             game_db.bgg_average_rating = game.average
             game_db.year_published = game.yearpublished
             await game_db.save()
+            updated_games += 1
         else:
             new_games.append(
                 Boardgame(
@@ -104,6 +119,8 @@ async def ascrape_update() -> None:
             )
     if new_games:
         await Boardgame.insert_many(new_games)
+        logger.info(f"Inserted {len(new_games)} new boardgames.")
+    logger.info(f"Updated {updated_games} existing boardgames.")
 
     new_rank_history = [
         RankHistory(
@@ -118,3 +135,4 @@ async def ascrape_update() -> None:
 
     if new_rank_history:
         await RankHistory.insert_many(new_rank_history)
+        logger.info(f"Inserted {len(new_rank_history)} rank history entries.")

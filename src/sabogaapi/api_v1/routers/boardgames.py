@@ -2,6 +2,7 @@
 
 import datetime
 import math
+import time
 from typing import List
 
 from fastapi import APIRouter, Request, Response
@@ -51,13 +52,37 @@ async def read_games_with_rank_changes(
     List[BoardgamePublic]: List of boardgames from the database.
 
     """
+    start_time = time.time()
+    logger.info(
+        "Request received",
+        extra={
+            "params": {
+                "page": page,
+                "per_page": per_page,
+                "compare_to": str(compare_to),
+            },
+        },
+    )
+
     if page < 1:
+        logger.warning(
+            "Invalid page number",
+            extra={
+                "page": page,
+            },
+        )
         raise HTTPException(
             status_code=422, detail="Page number must be greater than 1"
         )
 
     if compare_to is None:
         compare_to = datetime.datetime.now() - datetime.timedelta(weeks=1)
+        logger.debug(
+            "Using default comparison date (1 week ago)",
+            extra={
+                "compare_to": compare_to.isoformat(),
+            },
+        )
     else:
         compare_to = datetime.datetime.combine(compare_to, datetime.datetime.min.time())
 
@@ -82,6 +107,19 @@ async def read_games_with_rank_changes(
     response.headers["link"] += (
         f'<{request.url_for("read_all_games").include_query_params(page=last_page, per_page=per_page)}>; rel="last",'
         f'<{request.url_for("read_all_games").include_query_params(page=1, per_page=per_page)}>; rel="first"'
+    )
+
+    duration = round((time.time() - start_time) * 1000, 2)
+
+    logger.info(
+        "Returning boardgames",
+        extra={
+            "returned": len(games),
+            "total": total_count,
+            "page": page,
+            "per_page": per_page,
+            "duration_ms": duration,
+        },
     )
 
     return games

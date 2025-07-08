@@ -6,9 +6,20 @@ from sktime.forecasting.statsforecast import StatsForecastAutoARIMA
 
 from sabogaapi.api_v1.models import RankHistory
 from sabogaapi.api_v1.schemas import Prediction
+from sabogaapi.logger import configure_logger
+
+logger = configure_logger()
 
 
 async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Prediction]:
+    logger.info("Starting game ranking forecast.")
+
+    if not rank_history:
+        logger.warning("No rank history data provided.")
+        return []
+
+    logger.debug(f"Received {len(rank_history)} rank history records.")
+
     df = pd.DataFrame([dict(entry) for entry in rank_history])
     df.drop(columns=["id", "revision_id"], inplace=True)
     df.dropna(inplace=True)
@@ -21,7 +32,10 @@ async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Predict
     fh = np.arange(1, 31)
 
     forecaster = StatsForecastAutoARIMA()
+    logger.info("Fitting StatsForecastAutoARIMA model.")
     forecaster.fit(df)
+
+    logger.info("Generating point forecasts.")
     y_pred = forecaster.predict(fh=fh)
     interval = 0.95
     conf_int = forecaster.predict_interval(fh=fh, coverage=interval)
@@ -58,4 +72,5 @@ async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Predict
         )
     ]
 
+    logger.info(f"Generated {len(predictions)} forecast predictions.")
     return predictions
