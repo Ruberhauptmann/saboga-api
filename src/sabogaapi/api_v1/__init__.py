@@ -1,7 +1,6 @@
 """Version 1 of the saboga API."""
 
 from fastapi import APIRouter
-from starlette.staticfiles import StaticFiles
 
 from sabogaapi.api_v1.routers import (
     boardgames,
@@ -12,8 +11,6 @@ from sabogaapi.api_v1.routers import (
     search,
     single_game,
 )
-
-from .config import settings
 
 description = """
 This is a little project utilising data from Boardgamegeek to show historical rating and rank data of the ranked games.
@@ -34,5 +31,3 @@ api_v1.include_router(families.router)
 api_v1.include_router(mechanics.router)
 
 api_v1.include_router(search.router)
-api_v1.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
-api_v1.mount("/img", StaticFiles(directory=settings.img_dir), name="img")

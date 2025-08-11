@@ -6,8 +6,10 @@ from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from starlette.staticfiles import StaticFiles
 
 from sabogaapi.api_v1 import api_v1
+from sabogaapi.api_v1.config import settings
 
 SECRET = os.getenv("FASTAPI-USERS-SECRET")
 
@@ -51,6 +53,9 @@ def create_app(
     )
 
     app.include_router(api_v1, prefix="/v1")
+    app.mount("/v1/static", StaticFiles(directory=settings.static_dir), name="static")
+    app.mount("/v1/img", StaticFiles(directory=settings.img_dir), name="img")
+
     app.include_router(api_v1, prefix="/latest")
 
     app.add_middleware(
