@@ -6,6 +6,7 @@ import re
 from beanie import init_beanie
 from faker import Faker
 from motor.motor_asyncio import AsyncIOMotorClient
+from PIL import Image, ImageDraw, ImageFont
 
 from sabogaapi.api_v1.config import settings
 from sabogaapi.api_v1.models import (
@@ -75,6 +76,29 @@ def generate_rank_history(
     return history, latest_data
 
 
+def generate_image_with_text(filepath: str, text: str, size: tuple[int, int]):
+    # Random background color
+    bg_color = tuple(random.randint(100, 255) for _ in range(3))
+    # Create image
+    img = Image.new("RGB", size, bg_color)
+    draw = ImageDraw.Draw(img)
+
+    # Try to load a default font
+    try:
+        font = ImageFont.truetype("arial.ttf", size=int(min(size) / 4))
+    except IOError:
+        font = ImageFont.load_default()
+
+    # Center the text
+    text_bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = text_bbox[2] - text_bbox[0]
+    text_height = text_bbox[3] - text_bbox[1]
+    position = ((size[0] - text_width) / 2, (size[1] - text_height) / 2)
+
+    draw.text(position, text, fill="black", font=font)
+    img.save(filepath)
+
+
 def generate_boardgame(bgg_id: int) -> tuple[Boardgame, list[RankHistory]]:
     rank_history, latest = generate_rank_history(bgg_id, HISTORY_DAYS)
 
@@ -90,6 +114,19 @@ def generate_boardgame(bgg_id: int) -> tuple[Boardgame, list[RankHistory]]:
         calculate_volatility(rank_history)
     )
 
+    if random.choice([True, False]):
+        main_size = (500, 500)
+        thumb_size = (100, 100)
+    else:
+        main_size = (600, 400)
+        thumb_size = (120, 80)
+
+    main_image_path = f"{bgg_id}.png"
+    thumb_image_path = f"{bgg_id}-thumbnail.png"
+
+    generate_image_with_text(f"img/{main_image_path}", str(bgg_id), main_size)
+    generate_image_with_text(f"img/{thumb_image_path}", str(bgg_id), thumb_size)
+
     boardgame = Boardgame(
         bgg_id=bgg_id,
         bgg_rank=latest["bgg_rank"],
@@ -100,8 +137,8 @@ def generate_boardgame(bgg_id: int) -> tuple[Boardgame, list[RankHistory]]:
         bgg_average_rating_volatility=average_rating_volatility,
         name=title,
         description=fake.paragraph(nb_sentences=10),
-        image_url=fake.image_url(),
-        thumbnail_url=fake.image_url(),
+        image_url=f"/img/{main_image_path}",
+        thumbnail_url=f"/img/{thumb_image_path}",
         year_published=random.randint(1990, 2025),
         minplayers=minplayers,
         maxplayers=maxplayers,

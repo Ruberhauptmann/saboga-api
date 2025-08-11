@@ -40,9 +40,7 @@ services:
       - "traefik.docker.network=saboga-reverse-proxy"
       - "traefik.http.routers.saboga-api.middlewares=strip-api-prefix"
       - "traefik.http.middlewares.strip-api-prefix.stripPrefix.prefixes=/api"
-    volumes:
-      - ./static:/app/static
-      - ./img:/app/img
+      - "traefik.http.services.saboga-api.loadbalancer.server.port=8000"
     expose:
       - "8000"
     env_file:
@@ -79,6 +77,7 @@ networks:
   saboga-api:
     driver: bridge
     internal: true
+    name: saboga-api
   saboga-reverse-proxy:
     driver: bridge
     name: saboga-reverse-proxy

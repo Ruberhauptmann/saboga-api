@@ -4,7 +4,12 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         firefox-esr
 
-ADD . /app
+ADD src /app/src
+ADD api-testing /app/api-testing
+ADD pyproject.toml /app/
+ADD uv.lock /app/
+ADD README.md /app/
+ADD .venv /app/.venv
 
 WORKDIR /app
 RUN uv sync --frozen
