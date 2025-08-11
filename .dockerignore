@@ -1,12 +1,10 @@
-.venv
-.tox
 .git
 .changelog.d
+.github
+
 .ruff_cache
 tests
 .mypy_cache
-.github
-.run
-.idea
+
 api-testing/img
 api-testing/dump

@@ -79,6 +79,7 @@ networks:
   saboga-api:
     driver: bridge
     internal: true
+    name: saboga-api
   saboga-reverse-proxy:
     driver: bridge
     name: saboga-reverse-proxy
