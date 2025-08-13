@@ -210,11 +210,11 @@ class Boardgame(Document):
         # Apply mode filtering to bgg_rank_history
         history = boardgame_data["bgg_rank_history"]
         if mode == "weekly":
-            history = history[::7]  # Every 7th entry
+            history = history[::-7]
         elif mode == "yearly":
             seen_years = set()
             yearly_history = []
-            for entry in history:
+            for entry in reversed(history):
                 year = entry["date"].year
                 if year not in seen_years:
                     yearly_history.append(entry)

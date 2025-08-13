@@ -8,9 +8,9 @@ from typing import List
 from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
 
-from sabogaapi.api_v1.models import Boardgame
-from sabogaapi.api_v1.schemas import BoardgameComparison
 from sabogaapi.logger import configure_logger
+from sabogaapi.models import Boardgame
+from sabogaapi.schemas import BoardgameComparison
 
 logger = configure_logger()
 

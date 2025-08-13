@@ -2,8 +2,8 @@ from typing import List
 
 import pandas as pd
 
-from sabogaapi.api_v1.models import RankHistory
 from sabogaapi.logger import configure_logger
+from sabogaapi.models import RankHistory
 
 logger = configure_logger()
 

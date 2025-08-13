@@ -3,9 +3,9 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 
-from sabogaapi.api_v1.models import Boardgame, RankHistory
-from sabogaapi.api_v1.schemas import BoardgameWithHistoricalData, ForecastData
-from sabogaapi.api_v1.statistics.predict import forecast_game_ranking
+from sabogaapi.models import Boardgame, RankHistory
+from sabogaapi.schemas import BoardgameWithHistoricalData, ForecastData
+from sabogaapi.statistics.predict import forecast_game_ranking
 
 router = APIRouter(
     prefix="/boardgames/{bgg_id}",
@@ -54,8 +54,21 @@ async def read_game(
 @router.get("/forecast", response_model=ForecastData)
 async def forecast(
     bgg_id: int,
+    start_date: datetime.datetime | None = None,
+    end_date: datetime.datetime | None = None,
 ) -> ForecastData:
-    bgg_rank_history = await RankHistory.find(Boardgame.bgg_id == bgg_id).to_list()
+    if end_date is None:
+        end_date = datetime.datetime.now()
+    else:
+        end_date = datetime.datetime.combine(end_date, datetime.datetime.max.time())
+    if start_date is None:
+        start_date = end_date - datetime.timedelta(days=30)
+    else:
+        start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
+
+    bgg_rank_history = await RankHistory.find(
+        RankHistory.bgg_id == bgg_id, RankHistory.date < end_date
+    ).to_list()
     if not bgg_rank_history:
         raise HTTPException(status_code=404, detail="Game not found")
 

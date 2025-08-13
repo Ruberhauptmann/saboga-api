@@ -8,8 +8,8 @@ from faker import Faker
 from motor.motor_asyncio import AsyncIOMotorClient
 from PIL import Image, ImageDraw, ImageFont
 
-from sabogaapi.api_v1.config import settings
-from sabogaapi.api_v1.models import (
+from sabogaapi.config import settings
+from sabogaapi.models import (
     Boardgame,
     Category,
     Designer,
@@ -17,7 +17,7 @@ from sabogaapi.api_v1.models import (
     Mechanic,
     RankHistory,
 )
-from sabogaapi.api_v1.statistics.volatility import calculate_volatility
+from sabogaapi.statistics.volatility import calculate_volatility
 
 fake = Faker()
 
@@ -58,7 +58,7 @@ def generate_rank_history(
 
         history.append(
             RankHistory(
-                date=today - datetime.timedelta(days=(days - i)),
+                date=today - datetime.timedelta(days=(days - i - 1)),
                 bgg_id=bgg_id,
                 bgg_rank=int(rank),
                 bgg_geek_rating=geek_rating,

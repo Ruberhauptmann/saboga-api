@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from sabogaapi.api_v1.models import Boardgame
+from sabogaapi.models import Boardgame
 
 router = APIRouter(
     prefix="/search",
