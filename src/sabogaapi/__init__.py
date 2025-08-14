@@ -52,7 +52,7 @@ def create_app(
             "url": "https://github.com/Ruberhauptmann/saboga-api/blob/main/LICENSE.md",
         },
         lifespan=lifespan,
-        root_path_in_servers=False,
+        # root_path_in_servers=False,
         description=description,
     )
 

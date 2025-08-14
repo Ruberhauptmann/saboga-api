@@ -3,6 +3,7 @@
 from fastapi import APIRouter
 
 from sabogaapi.logger import configure_logger
+from sabogaapi.models import Boardgame, Designer
 
 logger = configure_logger()
 
@@ -14,5 +15,11 @@ router = APIRouter(
 
 
 @router.get("")
-async def read_all_designers() -> dict[str, str]:
+async def read_all_designers() -> list[Designer]:
+    designer_list = await Boardgame.get_designers()
+    return designer_list
+
+
+@router.get("/clusters")
+async def read_designer_clusters() -> dict[str, str]:
     return {"status": "not yet implemented"}

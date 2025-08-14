@@ -67,9 +67,14 @@ class Boardgame(Document):
     minplaytime: int | None = None
     maxplaytime: int | None = None
     categories: List[Category] = []
-    families: List["Family"] = []
+    families: List[Family] = []
     mechanics: List[Mechanic] = []
     designers: List[Designer] = []
+
+    @staticmethod
+    async def get_designers() -> list[Designer]:
+        boardgame_list = await Boardgame.find().to_list()
+        return boardgame_list
 
     @staticmethod
     async def get_top_ranked_boardgames(

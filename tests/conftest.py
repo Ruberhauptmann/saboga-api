@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from sabogaapi import create_app
-from sabogaapi.api_v1.models import Boardgame, RankHistory
+from sabogaapi.models import Boardgame, RankHistory
 
 
 async def init_db():
