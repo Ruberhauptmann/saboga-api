@@ -72,7 +72,7 @@ class Boardgame(Document):
     designers: List[Designer] = []
 
     @staticmethod
-    async def get_designers() -> list[Designer]:
+    async def get_designers() -> list["Boardgame"]:
         boardgame_list = await Boardgame.find().to_list()
         return boardgame_list
 
