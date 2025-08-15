@@ -1,14 +1,19 @@
+import asyncio
+import datetime
 import time
 from contextlib import asynccontextmanager
 
 import docker
 import pytest
 from beanie import init_beanie
+from faker import Faker
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from sabogaapi import create_app
 from sabogaapi.models import Boardgame, RankHistory
+
+fake = Faker()
 
 
 async def init_db():
@@ -63,6 +68,36 @@ def mongodb_host(mongodb_container):
             return addr
         except KeyError:
             time.sleep(0.5)
+
+
+@pytest.fixture
+def small_dataset(mongodb_host):
+    """Load a minimal deterministic dataset for quick tests"""
+    uri = "mongodb://mongoadmin:password@127.0.0.1:27017/boardgames?authSource=admin"
+
+    def _insert():
+        async def _inner():
+            client = AsyncIOMotorClient(uri)
+            await init_beanie(
+                database=client.get_database(), document_models=[Boardgame, RankHistory]
+            )
+
+            await Boardgame.delete_all()
+            await RankHistory.delete_all()
+
+            bg = Boardgame(name="Catan", bgg_id=1, bgg_rank=42)
+            await bg.insert()
+            rh = RankHistory(
+                bgg_id=bg.bgg_id,
+                bgg_rank=42,
+                date=datetime.datetime.fromisoformat("2025-08-15"),
+            )
+            await rh.insert()
+            return bg, rh
+
+        return asyncio.run(_inner())
+
+    return _insert
 
 
 @pytest.fixture()
