@@ -38,7 +38,7 @@ def docker_client():
     return docker.from_env()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mongodb_container(docker_client):
     container = docker_client.containers.run(
         "docker.io/mongo:8.0-noble",
@@ -56,7 +56,7 @@ def mongodb_container(docker_client):
     container.remove(force=True)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mongodb_host(mongodb_container):
     while True:
         mongodb_container.reload()
@@ -70,7 +70,7 @@ def mongodb_host(mongodb_container):
             time.sleep(0.5)
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def small_dataset(mongodb_host):
     """Load a minimal deterministic dataset for quick tests"""
     uri = "mongodb://mongoadmin:password@127.0.0.1:27017/boardgames?authSource=admin"
@@ -100,7 +100,7 @@ def small_dataset(mongodb_host):
     return _insert
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def app(mongodb_host):
     app = create_app(lifespan=lifespan)
     yield app
