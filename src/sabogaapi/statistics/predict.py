@@ -4,9 +4,8 @@ import numpy as np
 import pandas as pd
 from sktime.forecasting.statsforecast import StatsForecastAutoARIMA
 
-from sabogaapi.api_v1.models import RankHistory
-from sabogaapi.api_v1.schemas import Prediction
 from sabogaapi.logger import configure_logger
+from sabogaapi.schemas import Prediction, RankHistory
 
 logger = configure_logger()
 
@@ -28,6 +27,8 @@ async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Predict
     df = df.groupby(df.index).last()
     df.sort_index(inplace=True)
     df.index = cast(pd.DatetimeIndex, df.index).to_period("D")
+
+    print(df, flush=True)
 
     fh = np.arange(1, 31)
 

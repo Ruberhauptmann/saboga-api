@@ -8,8 +8,8 @@ from faker import Faker
 from motor.motor_asyncio import AsyncIOMotorClient
 from PIL import Image, ImageDraw, ImageFont
 
-from sabogaapi.api_v1.config import settings
-from sabogaapi.api_v1.models import (
+from sabogaapi.config import settings
+from sabogaapi.models import (
     Boardgame,
     Category,
     Designer,
@@ -17,7 +17,7 @@ from sabogaapi.api_v1.models import (
     Mechanic,
     RankHistory,
 )
-from sabogaapi.api_v1.statistics.volatility import calculate_volatility
+from sabogaapi.statistics.volatility import calculate_volatility
 
 fake = Faker()
 
@@ -27,7 +27,6 @@ HISTORY_DAYS = 30
 CATEGORIES = [Category(name=fake.word(), bgg_id=i) for i in range(1, 10)]
 MECHANICS = [Mechanic(name=fake.word(), bgg_id=i) for i in range(1, 10)]
 FAMILIES = [Family(name=fake.word(), bgg_id=i) for i in range(1, 10)]
-DESIGNERS = [Designer(name=fake.name(), bgg_id=i) for i in range(1, 10)]
 
 
 def clean_title(text: str) -> str:
@@ -58,7 +57,7 @@ def generate_rank_history(
 
         history.append(
             RankHistory(
-                date=today - datetime.timedelta(days=(days - i)),
+                date=today - datetime.timedelta(days=(days - i - 1)),
                 bgg_id=bgg_id,
                 bgg_rank=int(rank),
                 bgg_geek_rating=geek_rating,
@@ -99,7 +98,9 @@ def generate_image_with_text(filepath: str, text: str, size: tuple[int, int]):
     img.save(filepath)
 
 
-def generate_boardgame(bgg_id: int) -> tuple[Boardgame, list[RankHistory]]:
+def generate_boardgame(
+    bgg_id: int, designers: list[Designer]
+) -> tuple[Boardgame, list[RankHistory]]:
     rank_history, latest = generate_rank_history(bgg_id, HISTORY_DAYS)
 
     minplayers = random.randint(1, 4)
@@ -148,7 +149,7 @@ def generate_boardgame(bgg_id: int) -> tuple[Boardgame, list[RankHistory]]:
         categories=random.sample(CATEGORIES, k=random.randint(1, 3)),
         mechanics=random.sample(MECHANICS, k=random.randint(1, 2)),
         families=random.sample(FAMILIES, k=random.randint(0, 2)),
-        designers=random.sample(DESIGNERS, k=random.randint(1, 2)),
+        designers=random.sample(designers, k=2),  # type: ignore
     )
 
     return boardgame, rank_history
@@ -157,17 +158,23 @@ def generate_boardgame(bgg_id: int) -> tuple[Boardgame, list[RankHistory]]:
 async def generate_data():
     client = AsyncIOMotorClient(f"{settings.mongodb_uri}")
     await init_beanie(
-        database=client.get_database(), document_models=[Boardgame, RankHistory]
+        database=client.get_database(),
+        document_models=[Boardgame, RankHistory, Designer],
     )
 
     await Boardgame.delete_all()
     await RankHistory.delete_all()
+    await Designer.delete_all()
+
+    designers = [Designer(name=fake.name(), bgg_id=i) for i in range(1, 10)]
+    await Designer.insert_many(designers)
+    designers = await Designer.find_all(fetch_links=True).to_list()
 
     games = []
     history_entries = []
 
     for i in range(NUM_GAMES):
-        game, history = generate_boardgame(1000 + i)
+        game, history = generate_boardgame(1000 + i, designers)
         games.append(game)
         history_entries.extend(history)
 

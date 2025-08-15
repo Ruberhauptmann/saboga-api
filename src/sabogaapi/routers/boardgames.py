@@ -8,9 +8,9 @@ from typing import List
 from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
 
-from sabogaapi.api_v1.models import Boardgame
-from sabogaapi.api_v1.schemas import BoardgameComparison
 from sabogaapi.logger import configure_logger
+from sabogaapi.schemas import BoardgameInList
+from sabogaapi.services import BoardgameService
 
 logger = configure_logger()
 
@@ -26,14 +26,14 @@ async def read_all_games():
     return {"status": "not yet implemented"}
 
 
-@router.get("/rank-history", response_model=List[BoardgameComparison])
+@router.get("/rank-history", response_model=List[BoardgameInList])
 async def read_games_with_rank_changes(
     response: Response,
     request: Request,
     compare_to: datetime.date | None = None,
     page: int = 1,
     per_page: int = 50,
-) -> List[BoardgameComparison]:
+) -> List[BoardgameInList]:
     """Returns a list of boardgames from the database, sorted by rank.
 
     \f
@@ -49,7 +49,7 @@ async def read_games_with_rank_changes(
 
     Returns
     -------
-    List[BoardgamePublic]: List of boardgames from the database.
+    List[BoardgameComparison]: List of boardgames from the database.
 
     """
     start_time = time.time()
@@ -88,12 +88,11 @@ async def read_games_with_rank_changes(
 
     compare_to = compare_to.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    top_ranked_data = await Boardgame.get_top_ranked_boardgames(
+    top_ranked_data = await BoardgameService.get_top_ranked_boardgames(
         compare_to=compare_to, page=page, page_size=per_page
     )
-    games = [BoardgameComparison(**game) for game in top_ranked_data]
 
-    total_count = await Boardgame.find_all().count()
+    total_count = await BoardgameService.get_total_count()
     last_page = math.ceil(total_count / per_page)
     response.headers["link"] = ""
     if page > 1:
@@ -114,21 +113,19 @@ async def read_games_with_rank_changes(
     logger.info(
         "Returning boardgames",
         extra={
-            "returned": len(games),
+            "returned": len(top_ranked_data),
             "total": total_count,
             "page": page,
             "per_page": per_page,
             "duration_ms": duration,
         },
     )
-
-    return games
+    return top_ranked_data
 
 
 @router.get("/volatile")
 async def read_games_with_volatility():
-    games = await Boardgame.find().sort("bgg_rank_volatility").limit(50).to_list()
-    return games
+    return {"status": "not yet implemented"}
 
 
 @router.get("/clusters")

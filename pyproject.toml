@@ -47,6 +47,8 @@ test = [
     "pytest-mock>=3.14.0",
     "pytest-codspeed>=3.2.0",
     "pytest-mongodb>=2.4.0",
+    "docker>=7.1.0",
+    "pytest-asyncio>=1.1.0",
 ]
 lint = [
     "ruff>=0.8.2",

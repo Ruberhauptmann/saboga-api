@@ -4,7 +4,7 @@ from prometheus_client import Gauge
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_fastapi_instrumentator.metrics import Info
 
-from sabogaapi.api_v1.models import Boardgame
+from sabogaapi.models import Boardgame
 
 # Define Prometheus Gauge
 BOARDGAMES_WITHOUT_RANK = Gauge(

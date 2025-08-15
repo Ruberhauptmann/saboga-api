@@ -23,7 +23,7 @@ class Family(BaseModel):
     bgg_id: int
 
 
-class Person(BaseModel):
+class Designer(BaseModel):
     name: str
     bgg_id: int
 
@@ -45,22 +45,22 @@ class BaseBoardgame(BaseModel):
     playingtime: int | None = None
     minplaytime: int | None = None
     maxplaytime: int | None = None
-    categories: List[Category] = []
-    families: List[Family] = []
-    designers: List[Person] = []
-    mechanics: List[Mechanic] = []
     bgg_rank: int
     bgg_geek_rating: float | None = None
     bgg_average_rating: float | None = None
 
 
-class BoardgameComparison(BaseBoardgame):
+class BoardgameInList(BaseBoardgame):
     bgg_rank_change: int | None = None
     bgg_geek_rating_change: float | None = None
     bgg_average_rating_change: float | None = None
 
 
-class BoardgameWithHistoricalData(BaseBoardgame):
+class BoardgameSingle(BaseBoardgame):
+    categories: List[Category] = []
+    families: List[Family] = []
+    designers: List[Designer] = []
+    mechanics: List[Mechanic] = []
     bgg_rank_history: List[RankHistory] = []
 
 
@@ -77,3 +77,8 @@ class Prediction(BaseModel):
 class ForecastData(BaseModel):
     bgg_id: int
     prediction: List[Prediction]
+
+
+class SearchResult(BaseModel):
+    bgg_id: int
+    name: str

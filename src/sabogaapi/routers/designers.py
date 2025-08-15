@@ -1,0 +1,29 @@
+"""Routes for viewing the designers data."""
+
+from typing import Any
+
+from fastapi import APIRouter
+
+from sabogaapi.logger import configure_logger
+from sabogaapi.schemas import Designer
+from sabogaapi.services import DesignerService
+
+logger = configure_logger()
+
+router = APIRouter(
+    prefix="/designers",
+    tags=["Designers"],
+    responses={404: {"description": "Not found"}},
+)
+
+
+@router.get("")
+async def read_all_designers() -> list[Designer]:
+    designer_list = await DesignerService.read_all_designers()
+    return designer_list
+
+
+@router.get("/clusters")
+async def read_designer_clusters() -> dict[str, list[dict[str, Any]]]:
+    designer_cluster = await DesignerService.get_designer_network()
+    return designer_cluster

@@ -1,82 +1,19 @@
-"""Beanie database models."""
-
 import datetime
-from typing import Annotated, Any, List
-
-from beanie import Document, Indexed, TimeSeriesConfig
-from pydantic import BaseModel, Field
 
 from sabogaapi.logger import configure_logger
+from sabogaapi.models import Boardgame, Designer, RankHistory
+from sabogaapi.schemas import BoardgameInList, BoardgameSingle, SearchResult
 
 logger = configure_logger()
 
 
-class RankHistory(Document):
-    date: datetime.datetime = Field(default_factory=datetime.datetime.now)
-    bgg_id: int
-    bgg_rank: int | None = None
-    bgg_geek_rating: float | None = None
-    bgg_average_rating: float | None = None
-
-    class Settings:
-        timeseries = TimeSeriesConfig(
-            time_field="date",
-            meta_field="bgg_id",
-            bucket_rounding_second=86400,
-            bucket_max_span_seconds=86400,
-        )
-        name = "rank_history"
-
-
-class Category(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Family(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Mechanic(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Designer(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Boardgame(Document):
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    bgg_rank: Annotated[int, Indexed()]
-    name: str = ""
-    bgg_geek_rating: float | None = None
-    bgg_average_rating: float | None = None
-    bgg_rank_volatility: float | None = None
-    bgg_geek_rating_volatility: float | None = None
-    bgg_average_rating_volatility: float | None = None
-    description: str | None = None
-    image_url: str | None = None
-    thumbnail_url: str | None = None
-    year_published: int | None = None
-    minplayers: int | None = None
-    maxplayers: int | None = None
-    playingtime: int | None = None
-    minplaytime: int | None = None
-    maxplaytime: int | None = None
-    categories: List[Category] = []
-    families: List["Family"] = []
-    mechanics: List[Mechanic] = []
-    designers: List[Designer] = []
-
+class BoardgameService:
     @staticmethod
     async def get_top_ranked_boardgames(
         compare_to: datetime.datetime,
         page: int = 1,
         page_size: int = 50,
-    ) -> List[dict[str, Any]]:
+    ) -> list[BoardgameInList]:
         logger.debug(
             "Fetching top ranked boardgames",
             extra={
@@ -148,8 +85,7 @@ class Boardgame(Document):
                 "page_size": page_size,
             },
         )
-
-        return rank_data
+        return [BoardgameInList(**result) for result in rank_data]
 
     @staticmethod
     async def get_boardgame_with_historical_data(
@@ -157,7 +93,7 @@ class Boardgame(Document):
         start_date: datetime.datetime,
         end_date: datetime.datetime,
         mode: str,
-    ) -> dict | None:
+    ) -> BoardgameSingle | None:
         logger.debug(
             "Fetching boardgame with historical data",
             extra={
@@ -197,6 +133,14 @@ class Boardgame(Document):
                     "as": "bgg_rank_history",
                 }
             },
+            {
+                "$lookup": {
+                    "from": f"{Designer.Settings.name}",
+                    "localField": "designers.$id",
+                    "foreignField": "_id",
+                    "as": "designers",
+                }
+            },
         ]
 
         result = await Boardgame.aggregate(aggregation_pipeline=pipeline).to_list()
@@ -210,11 +154,11 @@ class Boardgame(Document):
         # Apply mode filtering to bgg_rank_history
         history = boardgame_data["bgg_rank_history"]
         if mode == "weekly":
-            history = history[::7]  # Every 7th entry
+            history = history[::-7]
         elif mode == "yearly":
             seen_years = set()
             yearly_history = []
-            for entry in history:
+            for entry in reversed(history):
                 year = entry["date"].year
                 if year not in seen_years:
                     yearly_history.append(entry)
@@ -241,7 +185,17 @@ class Boardgame(Document):
                 "mode": mode,
             },
         )
-        return boardgame_data
+        return BoardgameSingle(**boardgame_data)
 
-    class Settings:
-        name = "boardgames"
+    @staticmethod
+    async def get_total_count() -> int:
+        return await Boardgame.find_all().count()
+
+    @staticmethod
+    async def search(query: str, limit: int = 10) -> list[SearchResult]:
+        results = (
+            await Boardgame.find({"name": {"$regex": query, "$options": "i"}})
+            .limit(limit)
+            .to_list()
+        )
+        return [SearchResult(**result.model_dump()) for result in results]

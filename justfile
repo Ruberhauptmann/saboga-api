@@ -7,9 +7,7 @@ help:
 qa *args: lint type (test args)
 
 test *args:
-    docker run --rm --env-file api-testing/.env --name pytest-mongodb -d -p 27017:27017 mongo:8.0-noble
     uv run pytest tests/ --import-mode importlib --cov src --cov-report xml --junitxml=report.xml "$@"
-    docker stop pytest-mongodb
     uv run coverage report -m
 
 

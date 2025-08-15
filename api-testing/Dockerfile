@@ -4,15 +4,16 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         firefox-esr
 
-ADD src /app/src
-ADD api-testing /app/api-testing
-ADD pyproject.toml /app/
-ADD uv.lock /app/
-ADD README.md /app/
-ADD .venv /app/.venv
-
 WORKDIR /app
-RUN uv sync --frozen
+
+# Copy dependency files first
+ADD pyproject.toml uv.lock README.md ./
+# Create venv and install deps (cached unless lockfile changes)
+RUN uv sync --frozen --no-install-project
+
+# Now copy in source (doesn't break dependency cache)
+ADD src ./src
+ADD api-testing ./api-testing
 
 RUN chmod +x /app/api-testing/entrypoint.sh
 
