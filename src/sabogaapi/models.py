@@ -41,7 +41,7 @@ class Mechanic(BaseModel):
 
 class Designer(Document):
     name: str
-    bgg_id: int
+    bgg_id: Annotated[int, Indexed(unique=True)]
 
     class Settings:
         name = "designers"

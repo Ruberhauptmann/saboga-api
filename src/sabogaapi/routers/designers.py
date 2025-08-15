@@ -1,5 +1,7 @@
 """Routes for viewing the designers data."""
 
+from typing import Any
+
 from fastapi import APIRouter
 
 from sabogaapi.logger import configure_logger
@@ -22,5 +24,6 @@ async def read_all_designers() -> list[Designer]:
 
 
 @router.get("/clusters")
-async def read_designer_clusters() -> dict[str, str]:
-    return {"status": "not yet implemented"}
+async def read_designer_clusters() -> dict[str, list[dict[str, Any]]]:
+    designer_cluster = await DesignerService.get_designer_network()
+    return designer_cluster
