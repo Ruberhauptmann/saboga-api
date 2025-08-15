@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.models import RankHistory
+from sabogaapi.schemas import RankHistory
 
 logger = configure_logger()
 

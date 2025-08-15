@@ -5,8 +5,7 @@ import pandas as pd
 from sktime.forecasting.statsforecast import StatsForecastAutoARIMA
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.models import RankHistory
-from sabogaapi.schemas import Prediction
+from sabogaapi.schemas import Prediction, RankHistory
 
 logger = configure_logger()
 

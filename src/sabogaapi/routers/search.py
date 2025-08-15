@@ -1,9 +1,9 @@
 from typing import List
 
 from fastapi import APIRouter
-from pydantic import BaseModel
 
-from sabogaapi.models import Boardgame
+from sabogaapi.schemas import SearchResult
+from sabogaapi.services import BoardgameService
 
 router = APIRouter(
     prefix="/search",
@@ -12,18 +12,7 @@ router = APIRouter(
 )
 
 
-class SearchResult(BaseModel):
-    bgg_id: int
-    name: str
-
-
 @router.get("", response_model=List[SearchResult])
-async def search(query: str, limit: int = 10) -> List[SearchResult]:
-    results = (
-        await Boardgame.find({"name": {"$regex": query, "$options": "i"}})
-        .project(SearchResult)
-        .limit(limit)
-        .to_list()
-    )
-
+async def search(query: str, limit: int = 10) -> list[SearchResult]:
+    results = await BoardgameService.search(query=query, limit=limit)
     return results

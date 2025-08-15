@@ -3,7 +3,8 @@
 from fastapi import APIRouter
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.models import Boardgame
+from sabogaapi.schemas import Designer
+from sabogaapi.services import DesignerService
 
 logger = configure_logger()
 
@@ -15,8 +16,8 @@ router = APIRouter(
 
 
 @router.get("")
-async def read_all_designers() -> list[Boardgame]:
-    designer_list = await Boardgame.get_designers()
+async def read_all_designers() -> list[Designer]:
+    designer_list = await DesignerService.read_all_designers()
     return designer_list
 
 
