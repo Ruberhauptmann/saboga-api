@@ -1,3 +1,5 @@
+"""Service layer for rank history."""
+
 import datetime
 
 from sabogaapi import models, schemas
@@ -7,6 +9,8 @@ logger = configure_logger()
 
 
 class RankHistoryService:
+    """Service layer for rank history."""
+
     @staticmethod
     async def get_rank_history_before_date(
         bgg_id: int, end_date: datetime.date

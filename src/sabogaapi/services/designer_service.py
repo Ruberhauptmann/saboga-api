@@ -1,3 +1,5 @@
+"""Service layer for designer."""
+
 from collections import defaultdict
 from itertools import combinations
 from typing import Any
@@ -10,13 +12,27 @@ logger = configure_logger()
 
 
 class DesignerService:
+    """Service layer for designer."""
+
     @staticmethod
     async def read_all_designers() -> list[schemas.Designer]:
+        """Read all designers.
+
+        Returns:
+            list[schemas.Designer]: List of designers.
+
+        """
         designer_list = await models.Designer.find().to_list()
         return [schemas.Designer(**designer.model_dump()) for designer in designer_list]
 
     @staticmethod
     async def get_designer_network() -> dict[str, list[dict[str, Any]]]:
+        """Construct a graph from designer data.
+
+        Returns:
+            dict[str, list[dict[str, Any]]]: Dictionary with nodes and connections.
+
+        """
         boardgames_cursor = Boardgame.find({}, fetch_links=True)
 
         edges_dict = defaultdict(list)

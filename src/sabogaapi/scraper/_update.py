@@ -1,6 +1,5 @@
-import os
+import datetime
 import time
-from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -69,23 +68,25 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
         logger.info("Fetching S3 URL for ZIP download")
         link_element = driver.find_element(By.PARTIAL_LINK_TEXT, "Click to Download")
         s3_url = link_element.get_attribute("href")
-        logger.debug(f"S3 URL: {s3_url}")
+        logger.debug("S3 URL: %s", s3_url)
     finally:
         driver.quit()
         logger.debug("Browser closed.")
 
     logger.info("Downloading ZIP file")
-    response = requests.get(str(s3_url))
-    filename = os.path.join(download_dir, "boardgame_ranks.zip")
-    with open(filename, "wb") as f:
+    response = requests.get(str(s3_url), timeout=30)
+    filename = Path(download_dir) / "boardgame_ranks.zip"
+    with filename.open("wb") as f:
         f.write(response.content)
 
-    with ZipFile(filename) as csv_zip:
-        with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
-            df = pd.read_csv(rank_csv_file)
+    with (
+        ZipFile(filename) as csv_zip,
+        csv_zip.open("boardgames_ranks.csv") as rank_csv_file,
+    ):
+        df = pd.read_csv(rank_csv_file)
 
     df = df[df["rank"] != 0]
-    logger.info(f"Parsed {len(df)} ranked boardgames from CSV.")
+    logger.info("Parsed %s ranked boardgames from CSV.", len(df))
 
     return df
 
@@ -94,7 +95,7 @@ async def ascrape_update() -> None:  # pragma: no cover
     logger.info("Starting scrape. Initializing DB connection.")
     await init_db()
 
-    date = datetime.today()
+    date = datetime.datetime.now(tz=datetime.UTC)
 
     games_df = download_zip()
     updated_games = 0
@@ -125,8 +126,8 @@ async def ascrape_update() -> None:  # pragma: no cover
             )
     if new_games:
         await models.Boardgame.insert_many(new_games)
-        logger.info(f"Inserted {len(new_games)} new boardgames.")
-    logger.info(f"Updated {updated_games} existing boardgames.")
+        logger.info("Inserted %s new boardgames.", len(new_games))
+    logger.info("Updated %s existing boardgames.", updated_games)
 
     new_rank_history = [
         models.RankHistory(
@@ -141,7 +142,7 @@ async def ascrape_update() -> None:  # pragma: no cover
 
     if new_rank_history:
         await models.RankHistory.insert_many(new_rank_history)
-        logger.info(f"Inserted {len(new_rank_history)} rank history entries.")
+        logger.info("Inserted %s rank history entries.", len(new_rank_history))
 
     all_games = await models.Boardgame.find().to_list()
 

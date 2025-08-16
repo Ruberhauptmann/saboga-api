@@ -17,7 +17,7 @@ BOARDGAMES_WITHOUT_RANK = Gauge(
 def count_games_without_rank() -> Callable[
     [Info], Coroutine[Any, Any, None]
 ]:  # pragma: no cover
-    """Function returning an instrumentation function that updates the Prometheus metric."""
+    """Function returning an function that updates the Prometheus metric."""
 
     async def instrumentation(_: Info) -> None:
         pipeline = [

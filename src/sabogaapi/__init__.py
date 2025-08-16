@@ -1,7 +1,7 @@
 import os
 from collections.abc import Callable, Mapping
 from contextlib import AbstractAsyncContextManager
-from typing import Any, Optional
+from typing import Any
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
@@ -35,10 +35,15 @@ def create_app(
     | None,
 ) -> FastAPI:
     description = """
-    This is a little project utilising data from Boardgamegeek to show historical rating and rank data of the ranked games.
+    This is a little project utilising data from Boardgamegeek to show historical rating
+    and rank data of the ranked games.
 
     <a href="https://boardgamegeek.com" target="_blank">
-        <img alt="Powered by Boardgamegeek" src="/api/v1/static/powered_by_bgg.webp" width="200">
+        <img
+            alt="Powered by Boardgamegeek"
+            src="/api/v1/static/powered_by_bgg.webp"
+            width="200"
+        >
     </a>
     """
     app = FastAPI(
@@ -53,7 +58,6 @@ def create_app(
             "url": "https://github.com/Ruberhauptmann/saboga-api/blob/main/LICENSE.md",
         },
         lifespan=lifespan,
-        # root_path_in_servers=False,
         description=description,
     )
 

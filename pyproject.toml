@@ -69,4 +69,6 @@ ignore = [
     "S101", # check for assert
     "COM812", # trailing comma
     "PD901", # check for generic name df for DataFrames
+    "D",
+    "RUF012" # Mutable class vars
 ]

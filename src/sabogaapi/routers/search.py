@@ -10,7 +10,6 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[SearchResult])
+@router.get("")
 async def search(query: str, limit: int = 10) -> list[SearchResult]:
-    results = await BoardgameService.search(query=query, limit=limit)
-    return results
+    return await BoardgameService.search(query=query, limit=limit)

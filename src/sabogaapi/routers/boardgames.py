@@ -8,7 +8,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import BoardgameInList
+from sabogaapi.schemas import BoardgameInList, BoardgameSingle
 from sabogaapi.services import BoardgameService
 
 logger = configure_logger()
@@ -21,11 +21,18 @@ router = APIRouter(
 
 
 @router.get("")
-async def read_all_games():
+async def read_all_games() -> dict[str, str]:
     return {"status": "not yet implemented"}
 
 
-@router.get("/rank-history", response_model=list[BoardgameInList])
+def make_link(request: Request, page: int, per_page: int, rel: str) -> str:
+    url = request.url_for("read_all_games").include_query_params(
+        page=page, per_page=per_page
+    )
+    return f'<{url}>; rel="{rel}"'
+
+
+@router.get("/rank-history")
 async def read_games_with_rank_changes(
     response: Response,
     request: Request,
@@ -33,17 +40,19 @@ async def read_games_with_rank_changes(
     page: int = 1,
     per_page: int = 50,
 ) -> list[BoardgameInList]:
-    """Returns a list of boardgames from the database, sorted by rank.
+    """Return a list of boardgames from the database, sorted by rank.
 
     \f
 
     Parameters
     ----------
-    response (Response): FastAPI response object, to inject the link header in the reponse.
-    request (Request): FastAPI request object, to parse the url for linking to the boardgame overview
-        in the link header.
+    response (Response): FastAPI response object, to inject the link header in the
+        reponse.
+    request (Request): FastAPI request object, to parse the url for linking to the
+        boardgame overview in the link header.
     date (str): Date in YEAR/WEEK format, search for historical data on this date.
-    compare_to (str): Date in YEAR/WEEK format, to compare boardgame ranking data against.
+    compare_to (str): Date in YEAR/WEEK format, to compare boardgame
+        ranking data against.
     page (int, optional): Number of page for pagination.
     per_page (int, optional): Number of records per page for pagination.
 
@@ -77,7 +86,9 @@ async def read_games_with_rank_changes(
         )
 
     if compare_to is None:
-        compare_to = datetime.datetime.now() - datetime.timedelta(weeks=1)
+        compare_to = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+            weeks=1
+        )
         logger.debug(
             "Using default comparison date (1 week ago)",
             extra={
@@ -97,19 +108,19 @@ async def read_games_with_rank_changes(
 
     total_count = await BoardgameService.get_total_count()
     last_page = math.ceil(total_count / per_page)
-    response.headers["link"] = ""
+
+    links = []
     if page > 1:
-        response.headers["link"] += (
-            f'<{request.url_for("read_all_games").include_query_params(page=page - 1, per_page=per_page)}>; rel="prev",'
-        )
+        links.append(make_link(request, page - 1, per_page, "prev"))
     if page < last_page:
-        response.headers["link"] += (
-            f'<{request.url_for("read_all_games").include_query_params(page=page + 1, per_page=per_page)}>; rel="next",'
-        )
-    response.headers["link"] += (
-        f'<{request.url_for("read_all_games").include_query_params(page=last_page, per_page=per_page)}>; rel="last",'
-        f'<{request.url_for("read_all_games").include_query_params(page=1, per_page=per_page)}>; rel="first"'
+        links.append(make_link(request, page + 1, per_page, "next"))
+    links.extend(
+        [
+            make_link(request, last_page, per_page, "last"),
+            make_link(request, 1, per_page, "first"),
+        ]
     )
+    response.headers["link"] = ", ".join(links)
 
     duration = round((time.time() - start_time) * 1000, 2)
 
@@ -127,17 +138,15 @@ async def read_games_with_rank_changes(
 
 
 @router.get("/volatile")
-async def read_games_with_volatility():
+async def read_games_with_volatility() -> dict[str, str]:
     return {"status": "not yet implemented"}
 
 
 @router.get("/trending")
-async def read_trending_games():
-    games = await BoardgameService.get_trending_games()
-    return games
+async def read_trending_games() -> list[BoardgameSingle]:
+    return await BoardgameService.get_trending_games()
 
 
 @router.get("/declining")
-async def read_declining_games():
-    games = await BoardgameService.get_declining_games()
-    return games
+async def read_declining_games() -> list[BoardgameSingle]:
+    return await BoardgameService.get_declining_games()
