@@ -29,13 +29,9 @@ class DesignerService:
                 edges_dict[(a, b)].append(bgg_id)
             designer_ids_set.update(designers)
 
-        print(designer_ids_set, flush=True)
-
         designers_list = await Designer.find(
             {"bgg_id": {"$in": list(designer_ids_set)}},
         ).to_list()
-
-        print(designers_list, flush=True)
 
         designer_lookup = {
             d.bgg_id: {"bgg_id": d.bgg_id, "name": d.name} for d in designers_list

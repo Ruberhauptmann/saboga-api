@@ -33,7 +33,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
     options.add_argument("--headless")  # Uncomment to run without browser window
 
     options.set_preference("browser.download.folderList", 2)  # Use custom download path
-    options.set_preference("browser.download.dir", download_dir)
+    options.set_preference("browser.download.dir", f"{download_dir}")
     options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
     options.set_preference("browser.download.manager.showWhenStarting", value=False)
     options.set_preference("pdfjs.disabled", value=True)
@@ -75,15 +75,17 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
         logger.debug("Browser closed.")
 
     logger.info("Downloading ZIP file")
-    response = requests.get(s3_url)
+    response = requests.get(str(s3_url))
     filename = os.path.join(download_dir, "boardgame_ranks.zip")
     with open(filename, "wb") as f:
         f.write(response.content)
 
     with ZipFile(filename) as csv_zip:
         with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
-            df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
-            logger.info(f"Parsed {len(df)} ranked boardgames from CSV.")
+            df = pd.read_csv(rank_csv_file)
+
+    df = df[df["rank"] != 0]
+    logger.info(f"Parsed {len(df)} ranked boardgames from CSV.")
 
     return df
 

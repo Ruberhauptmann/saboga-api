@@ -21,7 +21,7 @@ async def read_game(
     end_date: datetime.date | None = None,
     mode: Literal["auto", "daily", "weekly", "yearly"] = "auto",
 ) -> BoardgameSingle:
-    """Returns a single board game from the database.
+    """Return a single board game from the database.
 
     \f
 

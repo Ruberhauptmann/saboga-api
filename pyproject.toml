@@ -67,5 +67,6 @@ ignore = [
     "D213", # summary on first line
     "PLR2004", # check for magic values
     "S101", # check for assert
-    "COM812" # trainling comma
+    "COM812", # trailing comma
+    "PD901", # check for generic name df for DataFrames
 ]

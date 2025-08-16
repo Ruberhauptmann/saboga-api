@@ -1,3 +1,5 @@
+"""Calculate volatility."""
+
 import pandas as pd
 
 from sabogaapi.logger import configure_logger
@@ -6,14 +8,23 @@ from sabogaapi.schemas import RankHistory
 logger = configure_logger()
 
 
-def calculate_volatility(rank_history: list[RankHistory]):
+def calculate_volatility(rank_history: list[RankHistory]) -> tuple[float, float, float]:
+    """Calculate volatility.
+
+    Args:
+        rank_history (list[RankHistory]): List of data entries.
+
+    Returns:
+        tuple[float, float, float]: Volatility for rank, geek_rating and average_rating.
+
+    """
     logger.info("Starting volatility calculation.")
 
     if not rank_history:
         logger.warning("No rank history data provided.")
         return []
 
-    logger.debug(f"Received {len(rank_history)} rank history records.")
+    logger.debug("Received %s rank history records.", len(rank_history))
 
     df = pd.DataFrame([dict(entry) for entry in rank_history]).dropna()
 

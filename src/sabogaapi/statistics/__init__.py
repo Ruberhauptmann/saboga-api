@@ -1,3 +1,5 @@
+"""Statistic functions."""
+
 from .predict import forecast_game_ranking
 from .volatility import calculate_volatility
 
