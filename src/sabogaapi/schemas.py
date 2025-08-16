@@ -81,3 +81,23 @@ class ForecastData(BaseModel):
 class SearchResult(BaseModel):
     bgg_id: int
     name: str
+
+
+class DesignerNode(BaseModel):
+    id: str
+    label: str
+    x: float
+    y: float
+    size: float
+
+
+class DesignerEdge(BaseModel):
+    id: str
+    source: str
+    target: str
+    size: float
+
+
+class DesignerNetwork(BaseModel):
+    nodes: list[DesignerNode]
+    edges: list[DesignerEdge]
