@@ -1,4 +1,28 @@
 
+.. _changelog-0.0.43:
+
+0.0.43 — 2025-08-16
+-------------------
+
+Added
+^^^^^
+
+- Calculate volatility across rank history (std / mean)
+
+- Endpoint for network analysis of boardgame designers
+
+- Endpoint for trending games
+
+Changed
+^^^^^^^
+
+- More extensive logging
+
+Fixed
+^^^^^
+
+- Show the date entries in the yearly and weekly filter starting from the newest date
+
 .. _changelog-0.0.42:
 
 0.0.42 — 2025-07-06
