@@ -11,7 +11,6 @@ ADD src /app/src
 ADD pyproject.toml /app/
 ADD uv.lock /app/
 ADD README.md /app/
-ADD .venv /app/.venv
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
