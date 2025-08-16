@@ -19,11 +19,9 @@ router = APIRouter(
 
 @router.get("")
 async def read_all_designers() -> list[Designer]:
-    designer_list = await DesignerService.read_all_designers()
-    return designer_list
+    return await DesignerService.read_all_designers()
 
 
 @router.get("/clusters")
 async def read_designer_clusters() -> dict[str, list[dict[str, Any]]]:
-    designer_cluster = await DesignerService.get_designer_network()
-    return designer_cluster
+    return await DesignerService.get_designer_network()

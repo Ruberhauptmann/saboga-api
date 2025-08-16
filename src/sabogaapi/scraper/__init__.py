@@ -1,3 +1,5 @@
+"""Scraper."""
+
 import argparse
 import asyncio
 
@@ -9,6 +11,7 @@ logger = configure_logger()
 
 
 def scrape() -> None:  # pragma: no cover
+    """Scrape CLI."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, required=True)
     args = parser.parse_args()
@@ -17,4 +20,4 @@ def scrape() -> None:  # pragma: no cover
         case "update":
             asyncio.run(ascrape_update())
         case _:
-            logger.error(f"Scraper {args.mode} not implemented.")
+            logger.error("Scraper %s not implemented.", args.mode)

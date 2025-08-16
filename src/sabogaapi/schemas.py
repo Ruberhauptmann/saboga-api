@@ -1,7 +1,6 @@
 """Schemas for saboga API."""
 
 import datetime
-from typing import List
 
 from pydantic import BaseModel
 
@@ -57,11 +56,11 @@ class BoardgameInList(BaseBoardgame):
 
 
 class BoardgameSingle(BaseBoardgame):
-    categories: List[Category] = []
-    families: List[Family] = []
-    designers: List[Designer] = []
-    mechanics: List[Mechanic] = []
-    bgg_rank_history: List[RankHistory] = []
+    categories: list[Category] = []
+    families: list[Family] = []
+    designers: list[Designer] = []
+    mechanics: list[Mechanic] = []
+    bgg_rank_history: list[RankHistory] = []
 
 
 class Prediction(BaseModel):
@@ -76,7 +75,7 @@ class Prediction(BaseModel):
 
 class ForecastData(BaseModel):
     bgg_id: int
-    prediction: List[Prediction]
+    prediction: list[Prediction]
 
 
 class SearchResult(BaseModel):

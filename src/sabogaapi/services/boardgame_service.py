@@ -1,8 +1,7 @@
 import datetime
 
+from sabogaapi import models, schemas
 from sabogaapi.logger import configure_logger
-from sabogaapi.models import Boardgame, Designer, RankHistory
-from sabogaapi.schemas import BoardgameInList, BoardgameSingle, SearchResult
 
 logger = configure_logger()
 
@@ -13,7 +12,7 @@ class BoardgameService:
         compare_to: datetime.datetime,
         page: int = 1,
         page_size: int = 50,
-    ) -> list[BoardgameInList]:
+    ) -> list[schemas.BoardgameInList]:
         logger.debug(
             "Fetching top ranked boardgames",
             extra={
@@ -29,7 +28,7 @@ class BoardgameService:
             {"$limit": page_size},
             {
                 "$lookup": {
-                    "from": f"{RankHistory.Settings.name}",
+                    "from": f"{models.RankHistory.Settings.name}",
                     "let": {"bgg_id": "$bgg_id"},
                     "pipeline": [
                         {
@@ -37,45 +36,47 @@ class BoardgameService:
                                 "$expr": {
                                     "$and": [
                                         {"$eq": ["$bgg_id", "$$bgg_id"]},
-                                    ]
-                                }
-                            }
+                                    ],
+                                },
+                            },
                         },
                         {"$sort": {"date": -1}},
                         {
                             "$match": {
-                                "date": {"$lt": compare_to + datetime.timedelta(days=1)}
-                            }
+                                "date": {
+                                    "$lt": compare_to + datetime.timedelta(days=1)
+                                },
+                            },
                         },
                         {"$limit": 1},
                     ],
                     "as": "rank_history",
-                }
+                },
             },
             {"$unwind": {"path": "$rank_history", "preserveNullAndEmptyArrays": True}},
             {
                 "$set": {
                     "bgg_rank_change": {
-                        "$subtract": ["$rank_history.bgg_rank", "$bgg_rank"]
+                        "$subtract": ["$rank_history.bgg_rank", "$bgg_rank"],
                     },
                     "bgg_average_rating_change": {
                         "$subtract": [
                             "$bgg_average_rating",
                             "$rank_history.bgg_average_rating",
-                        ]
+                        ],
                     },
                     "bgg_geek_rating_change": {
                         "$subtract": [
                             "$bgg_geek_rating",
                             "$rank_history.bgg_geek_rating",
-                        ]
+                        ],
                     },
-                }
+                },
             },
         ]
 
-        rank_data = await Boardgame.aggregate(
-            aggregation_pipeline=find_rank_comparison
+        rank_data = await models.Boardgame.aggregate(
+            aggregation_pipeline=find_rank_comparison,
         ).to_list()
         logger.info(
             "Top ranked boardgames fetched",
@@ -85,7 +86,7 @@ class BoardgameService:
                 "page_size": page_size,
             },
         )
-        return [BoardgameInList(**result) for result in rank_data]
+        return [schemas.BoardgameInList(**result) for result in rank_data]
 
     @staticmethod
     async def get_boardgame_with_historical_data(
@@ -93,7 +94,19 @@ class BoardgameService:
         start_date: datetime.datetime,
         end_date: datetime.datetime,
         mode: str,
-    ) -> BoardgameSingle | None:
+    ) -> schemas.BoardgameSingle | None:
+        """Get a boardgame with historical data.
+
+        Args:
+            bgg_id (int): ID.
+            start_date (datetime.datetime): Start date for historical data.
+            end_date (datetime.datetime): End date for historical data.
+            mode (str): Mode for historical data.
+
+        Returns:
+            schemas.BoardgameSingle | None: Boardgame or none if there is no result.
+
+        """
         logger.debug(
             "Fetching boardgame with historical data",
             extra={
@@ -112,38 +125,41 @@ class BoardgameService:
             else:
                 mode = "yearly"
             logger.debug(
-                "Auto-detected mode", extra={"mode": mode, "date_diff_days": date_diff}
+                "Auto-detected mode",
+                extra={"mode": mode, "date_diff_days": date_diff},
             )
 
         pipeline = [
             {"$match": {"bgg_id": bgg_id}},
             {
                 "$lookup": {
-                    "from": f"{RankHistory.Settings.name}",
+                    "from": f"{models.RankHistory.Settings.name}",
                     "let": {"bgg_id": "$bgg_id"},
                     "pipeline": [
                         {
                             "$match": {
                                 "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
                                 "date": {"$lte": end_date, "$gte": start_date},
-                            }
+                            },
                         },
                         {"$sort": {"date": 1}},
                     ],
                     "as": "bgg_rank_history",
-                }
+                },
             },
             {
                 "$lookup": {
-                    "from": f"{Designer.Settings.name}",
+                    "from": f"{models.Designer.Settings.name}",
                     "localField": "designers.$id",
                     "foreignField": "_id",
                     "as": "designers",
-                }
+                },
             },
         ]
 
-        result = await Boardgame.aggregate(aggregation_pipeline=pipeline).to_list()
+        result = await models.Boardgame.aggregate(
+            aggregation_pipeline=pipeline
+        ).to_list()
 
         if not result:
             logger.warning("No boardgame found with bgg_id", extra={"bgg_id": bgg_id})
@@ -168,7 +184,10 @@ class BoardgameService:
         boardgame_data["bgg_rank_history"] = [
             {
                 "date": entry["date"].replace(
-                    hour=0, minute=0, second=0, microsecond=0
+                    hour=0,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
                 ),
                 "bgg_id": entry["bgg_id"],
                 "bgg_rank": entry["bgg_rank"],
@@ -185,17 +204,65 @@ class BoardgameService:
                 "mode": mode,
             },
         )
-        return BoardgameSingle(**boardgame_data)
+        return schemas.BoardgameSingle(**boardgame_data)
 
     @staticmethod
     async def get_total_count() -> int:
-        return await Boardgame.find_all().count()
+        """Get number of boardgames.
+
+        Returns:
+            int: Number of boardgames.
+
+        """
+        return await models.Boardgame.find_all().count()
 
     @staticmethod
-    async def search(query: str, limit: int = 10) -> list[SearchResult]:
+    async def search(query: str, limit: int = 10) -> list[schemas.SearchResult]:
+        """Search.
+
+        Args:
+            query (str): Search query.
+            limit (int, optional): Limit for results. Defaults to 10.
+
+        Returns:
+            list[schemas.SearchResult]: List of search results.
+
+        """
         results = (
-            await Boardgame.find({"name": {"$regex": query, "$options": "i"}})
+            await models.Boardgame.find({"name": {"$regex": query, "$options": "i"}})
             .limit(limit)
             .to_list()
         )
-        return [SearchResult(**result.model_dump()) for result in results]
+        return [schemas.SearchResult(**result.model_dump()) for result in results]
+
+    @staticmethod
+    async def get_trending_games(limit: int = 10) -> list[schemas.BoardgameSingle]:
+        """Get trending games.
+
+        Args:
+            limit (int, optional): Limit for number of games. Defaults to 10.
+
+        Returns:
+            list[schemas.BoardgameSingle]: List of boardgames.
+
+        """
+        results = (
+            await models.Boardgame.find().sort("+bgg_rank_trend").limit(limit).to_list()
+        )
+        return [schemas.BoardgameSingle(**result.model_dump()) for result in results]
+
+    @staticmethod
+    async def get_declining_games(limit: int = 10) -> list[schemas.BoardgameSingle]:
+        """Get declining games.
+
+        Args:
+            limit (int, optional): Limit for number of games. Defaults to 10.
+
+        Returns:
+            list[schemas.BoardgameSingle]: List of boardgames.
+
+        """
+        results = (
+            await models.Boardgame.find().sort("-bgg_rank_trend").limit(limit).to_list()
+        )
+        return [schemas.BoardgameSingle(**result.model_dump()) for result in results]

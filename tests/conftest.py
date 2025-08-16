@@ -1,27 +1,29 @@
 import asyncio
 import datetime
 import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 
 import docker
 import pytest
 from beanie import init_beanie
+from docker.models.containers import Container
 from faker import Faker
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
 from sabogaapi import create_app
-from sabogaapi.models import Boardgame, RankHistory
+from sabogaapi.models import Boardgame, Designer, RankHistory
 
 fake = Faker()
 
 
 async def init_db():
     client = AsyncIOMotorClient(
-        "mongodb://mongoadmin:password@127.0.0.1/boardgames?authSource=admin"
+        "mongodb://mongoadmin:password@127.0.0.1/boardgames?authSource=admin",
     )
     await init_beanie(
-        document_models=[Boardgame, RankHistory],
+        document_models=[Boardgame, RankHistory, Designer],
         database=client.get_database(),
     )
 
@@ -33,13 +35,13 @@ async def lifespan(app: FastAPI):
 
 
 @pytest.fixture(scope="session")
-def docker_client():
+def docker_client() -> docker.DockerClient:
     """Return a Docker client"""
     return docker.from_env()
 
 
 @pytest.fixture(scope="session")
-def mongodb_container(docker_client):
+def mongodb_container(docker_client: docker.DockerClient):
     container = docker_client.containers.run(
         "docker.io/mongo:8.0-noble",
         detach=True,
@@ -57,21 +59,20 @@ def mongodb_container(docker_client):
 
 
 @pytest.fixture(scope="session")
-def mongodb_host(mongodb_container):
+def mongodb_host(mongodb_container: Container) -> str:
     while True:
         mongodb_container.reload()
         try:
             networks = list(
-                mongodb_container.attrs["NetworkSettings"]["Networks"].values()
+                mongodb_container.attrs["NetworkSettings"]["Networks"].values(),
             )
-            addr = networks[0]["IPAddress"]
-            return addr
+            return networks[0]["IPAddress"]
         except KeyError:
             time.sleep(0.5)
 
 
 @pytest.fixture(scope="function")
-def small_dataset(mongodb_host):
+def small_dataset(mongodb_host: str) -> Callable[[], tuple[Boardgame, RankHistory]]:
     """Load a minimal deterministic dataset for quick tests"""
     uri = "mongodb://mongoadmin:password@127.0.0.1:27017/boardgames?authSource=admin"
 
@@ -79,7 +80,8 @@ def small_dataset(mongodb_host):
         async def _inner():
             client = AsyncIOMotorClient(uri)
             await init_beanie(
-                database=client.get_database(), document_models=[Boardgame, RankHistory]
+                database=client.get_database(),
+                document_models=[Boardgame, RankHistory],
             )
 
             await Boardgame.delete_all()
@@ -101,6 +103,6 @@ def small_dataset(mongodb_host):
 
 
 @pytest.fixture(scope="session")
-def app(mongodb_host):
+def app(mongodb_host: str) -> FastAPI:
     app = create_app(lifespan=lifespan)
-    yield app
+    return app

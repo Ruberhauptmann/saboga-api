@@ -1,6 +1,6 @@
-import os
+import datetime
 import time
-from datetime import datetime
+from pathlib import Path
 from zipfile import ZipFile
 
 import pandas as pd
@@ -15,31 +15,33 @@ from sabogaapi import models, schemas
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.logger import configure_logger
+from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
 logger = configure_logger()
 
 
-def download_zip():  # pragma: no cover
+def download_zip() -> pd.DataFrame:  # pragma: no cover
     logger.info("Starting ZIP download process")
 
-    download_dir = os.path.abspath("download")
-    os.makedirs(download_dir, exist_ok=True)
+    download_dir = Path("download").resolve()
+    download_dir.mkdir(parents=True, exist_ok=True)
 
     # Firefox options
     options = Options()
     options.add_argument("--headless")  # Uncomment to run without browser window
 
     options.set_preference("browser.download.folderList", 2)  # Use custom download path
-    options.set_preference("browser.download.dir", download_dir)
+    options.set_preference("browser.download.dir", f"{download_dir}")
     options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
-    options.set_preference("browser.download.manager.showWhenStarting", False)
-    options.set_preference("pdfjs.disabled", True)
+    options.set_preference("browser.download.manager.showWhenStarting", value=False)
+    options.set_preference("pdfjs.disabled", value=True)
 
     logger.info("Launching headless Firefox browser")
     # Start browser
     driver = webdriver.Firefox(
-        service=Service(GeckoDriverManager().install()), options=options
+        service=Service(GeckoDriverManager().install()),
+        options=options,
     )
     try:
         logger.info("Navigating to BGG login page")
@@ -66,21 +68,25 @@ def download_zip():  # pragma: no cover
         logger.info("Fetching S3 URL for ZIP download")
         link_element = driver.find_element(By.PARTIAL_LINK_TEXT, "Click to Download")
         s3_url = link_element.get_attribute("href")
-        logger.debug(f"S3 URL: {s3_url}")
+        logger.debug("S3 URL: %s", s3_url)
     finally:
         driver.quit()
         logger.debug("Browser closed.")
 
     logger.info("Downloading ZIP file")
-    response = requests.get(s3_url)
-    filename = os.path.join(download_dir, "boardgame_ranks.zip")
-    with open(filename, "wb") as f:
+    response = requests.get(str(s3_url), timeout=30)
+    filename = Path(download_dir) / "boardgame_ranks.zip"
+    with filename.open("wb") as f:
         f.write(response.content)
 
-    with ZipFile(filename) as csv_zip:
-        with csv_zip.open("boardgames_ranks.csv") as rank_csv_file:
-            df = pd.read_csv(rank_csv_file)[lambda x: x["rank"] != 0]
-            logger.info(f"Parsed {len(df)} ranked boardgames from CSV.")
+    with (
+        ZipFile(filename) as csv_zip,
+        csv_zip.open("boardgames_ranks.csv") as rank_csv_file,
+    ):
+        df = pd.read_csv(rank_csv_file)
+
+    df = df[df["rank"] != 0]
+    logger.info("Parsed %s ranked boardgames from CSV.", len(df))
 
     return df
 
@@ -89,7 +95,7 @@ async def ascrape_update() -> None:  # pragma: no cover
     logger.info("Starting scrape. Initializing DB connection.")
     await init_db()
 
-    date = datetime.today()
+    date = datetime.datetime.now(tz=datetime.UTC)
 
     games_df = download_zip()
     updated_games = 0
@@ -116,12 +122,12 @@ async def ascrape_update() -> None:  # pragma: no cover
                     bgg_geek_rating=game.bayesaverage,
                     bgg_average_rating=game.average,
                     year_published=game.yearpublished,
-                )
+                ),
             )
     if new_games:
         await models.Boardgame.insert_many(new_games)
-        logger.info(f"Inserted {len(new_games)} new boardgames.")
-    logger.info(f"Updated {updated_games} existing boardgames.")
+        logger.info("Inserted %s new boardgames.", len(new_games))
+    logger.info("Updated %s existing boardgames.", updated_games)
 
     new_rank_history = [
         models.RankHistory(
@@ -136,20 +142,25 @@ async def ascrape_update() -> None:  # pragma: no cover
 
     if new_rank_history:
         await models.RankHistory.insert_many(new_rank_history)
-        logger.info(f"Inserted {len(new_rank_history)} rank history entries.")
+        logger.info("Inserted %s rank history entries.", len(new_rank_history))
 
     all_games = await models.Boardgame.find().to_list()
 
     for game in all_games:
         rank_history = await models.RankHistory.find(
-            models.RankHistory.bgg_id == game.bgg_id
+            models.RankHistory.bgg_id == game.bgg_id,
         ).to_list()
         rank_volatility, geek_rating_volatility, average_rating_volatility = (
             calculate_volatility(
-                [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+                [schemas.RankHistory(**entry.model_dump()) for entry in rank_history],
             )
         )
         game.bgg_rank_volatility = rank_volatility
         game.bgg_geek_rating_volatility = geek_rating_volatility
         game.bgg_average_rating_volatility = average_rating_volatility
+
+        calculate_trends(
+            [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+        )
+
         await game.save()

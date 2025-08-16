@@ -1,3 +1,5 @@
+"""Service layer for designer."""
+
 from collections import defaultdict
 from itertools import combinations
 from typing import Any
@@ -10,13 +12,27 @@ logger = configure_logger()
 
 
 class DesignerService:
+    """Service layer for designer."""
+
     @staticmethod
     async def read_all_designers() -> list[schemas.Designer]:
+        """Read all designers.
+
+        Returns:
+            list[schemas.Designer]: List of designers.
+
+        """
         designer_list = await models.Designer.find().to_list()
         return [schemas.Designer(**designer.model_dump()) for designer in designer_list]
 
     @staticmethod
     async def get_designer_network() -> dict[str, list[dict[str, Any]]]:
+        """Construct a graph from designer data.
+
+        Returns:
+            dict[str, list[dict[str, Any]]]: Dictionary with nodes and connections.
+
+        """
         boardgames_cursor = Boardgame.find({}, fetch_links=True)
 
         edges_dict = defaultdict(list)
@@ -29,13 +45,9 @@ class DesignerService:
                 edges_dict[(a, b)].append(bgg_id)
             designer_ids_set.update(designers)
 
-        print(designer_ids_set, flush=True)
-
         designers_list = await Designer.find(
-            {"bgg_id": {"$in": list(designer_ids_set)}}
+            {"bgg_id": {"$in": list(designer_ids_set)}},
         ).to_list()
-
-        print(designers_list, flush=True)
 
         designer_lookup = {
             d.bgg_id: {"bgg_id": d.bgg_id, "name": d.name} for d in designers_list

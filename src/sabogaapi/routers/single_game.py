@@ -14,27 +14,33 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=BoardgameSingle)
+@router.get("")
 async def read_game(
     bgg_id: int,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
     mode: Literal["auto", "daily", "weekly", "yearly"] = "auto",
 ) -> BoardgameSingle:
-    """Returns a single board game from the database.
+    """Read a single game for the database.
 
-    \f
-    Parameters
-    ----------
-    bgg_id (int): The Boardgamegeek id of the board game.
+    Args:
+        bgg_id (int): ID.
+        start_date (datetime.date | None, optional): Start date for historic date.
+            Defaults to None.
+        end_date (datetime.date | None, optional): End date for historic date.
+            Defaults to None.
+        mode (Literal['auto', 'daily', 'weekly', 'yearly'], optional):
+            Mode for historic data. Defaults to "auto".
 
-    Returns
-    -------
-    Boardgame: The board game from the database.
+    Raises:
+        HTTPException: Exception if no game is found.
+
+    Returns:
+        BoardgameSingle: Boardgame.
 
     """
     if end_date is None:
-        end_date = datetime.datetime.now()
+        end_date = datetime.datetime.now(tz=datetime.UTC)
     else:
         end_date = datetime.datetime.combine(end_date, datetime.datetime.max.time())
     if start_date is None:
@@ -42,21 +48,24 @@ async def read_game(
     else:
         start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
     game = await BoardgameService.get_boardgame_with_historical_data(
-        bgg_id=bgg_id, start_date=start_date, end_date=end_date, mode=mode
+        bgg_id=bgg_id,
+        start_date=start_date,
+        end_date=end_date,
+        mode=mode,
     )
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
 
 
-@router.get("/forecast", response_model=ForecastData)
+@router.get("/forecast")
 async def forecast(
     bgg_id: int,
     start_date: datetime.datetime | None = None,
     end_date: datetime.datetime | None = None,
 ) -> ForecastData:
     if end_date is None:
-        end_date = datetime.datetime.now()
+        end_date = datetime.datetime.now(tz=datetime.UTC)
     else:
         end_date = datetime.datetime.combine(end_date, datetime.datetime.max.time())
     if start_date is None:
@@ -65,7 +74,8 @@ async def forecast(
         start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
 
     bgg_rank_history = await RankHistoryService.get_rank_history_before_date(
-        bgg_id=bgg_id, end_date=end_date
+        bgg_id=bgg_id,
+        end_date=end_date,
     )
     if not bgg_rank_history:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -79,25 +89,15 @@ async def forecast(
 
 
 @router.get("/rank-history")
-async def rank_history():
+async def rank_history() -> dict[str, str]:
     return {"status": "not yet implemented"}
 
 
 @router.get("/statistics")
-async def game_statistics():
-    return {"status": "not yet implemented"}
-
-
-@router.get("/reviews/summary")
-async def reviews_summary():
-    return {"status": "not yet implemented"}
-
-
-@router.get("/reviews/sentiment")
-async def reviews_sentiment():
+async def game_statistics() -> dict[str, str]:
     return {"status": "not yet implemented"}
 
 
 @router.get("/similar")
-async def similar_games():
+async def similar_games() -> dict[str, str]:
     return {"status": "not yet implemented"}

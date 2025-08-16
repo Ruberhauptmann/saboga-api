@@ -59,3 +59,16 @@ type = [
     "types-beautifulsoup4>=4.12.0.20241020",
     "types-requests>=2.32.0.20241016",
 ]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D203", # check for blank line before class docstring
+    "D213", # summary on first line
+    "PLR2004", # check for magic values
+    "S101", # check for assert
+    "COM812", # trailing comma
+    "PD901", # check for generic name df for DataFrames
+    "D",
+    "RUF012" # Mutable class vars
+]
