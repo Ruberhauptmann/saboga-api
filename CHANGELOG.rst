@@ -1,4 +1,19 @@
 
+.. _changelog-0.0.44:
+
+0.0.44 — 2025-08-16
+-------------------
+
+Changed
+^^^^^^^
+
+- Layout of designer network graph for Sigma.js
+
+Fixed
+^^^^^
+
+- Bug in trending games when designer links were not fetched
+
 .. _changelog-0.0.43:
 
 0.0.43 — 2025-08-16
