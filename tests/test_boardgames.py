@@ -29,6 +29,7 @@ def test_trending_small(
 
     assert response.status_code == 200
 
+
 def test_declining_small(
     app: FastAPI, small_dataset: Callable[[], tuple[Boardgame, RankHistory]]
 ):

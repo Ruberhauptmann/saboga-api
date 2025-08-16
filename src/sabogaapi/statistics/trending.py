@@ -11,7 +11,9 @@ from sabogaapi.schemas import RankHistory
 logger = configure_logger()
 
 
-def calculate_trends(rank_history: list[RankHistory]) -> tuple[float, float, float]:
+def calculate_trends(
+    rank_history: list[RankHistory],
+) -> tuple[float, float, float] | tuple[None, None, None]:
     """Calculate trends.
 
     Args:
@@ -25,7 +27,7 @@ def calculate_trends(rank_history: list[RankHistory]) -> tuple[float, float, flo
 
     if not rank_history:
         logger.warning("No rank history data provided.")
-        return []
+        return None, None, None
 
     logger.debug("Received %s rank history records.", len(rank_history))
 
