@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 from itertools import combinations
-from typing import Any
 
 from sabogaapi import models, schemas
 from sabogaapi.logger import configure_logger
@@ -26,7 +25,7 @@ class DesignerService:
         return [schemas.Designer(**designer.model_dump()) for designer in designer_list]
 
     @staticmethod
-    async def get_designer_network() -> dict[str, list[dict[str, Any]]]:
+    async def get_designer_network() -> schemas.DesignerNetwork:
         """Construct a graph from designer data.
 
         Returns:
@@ -54,17 +53,25 @@ class DesignerService:
         }
 
         nodes = [
-            {"id": designer_lookup[did]["bgg_id"], "name": designer_lookup[did]["name"]}
+            schemas.DesignerNode(
+                id=str(designer_lookup[did]["bgg_id"]),
+                label=designer_lookup[did]["name"],
+                x=1,
+                y=1,
+                size=15,
+            )
             for did in designer_ids_set
         ]
-        edges = [
-            {
-                "source": designer_lookup[a]["bgg_id"],
-                "target": designer_lookup[b]["bgg_id"],
-                "bgg_ids": w,
-                "weight": len(w),
-            }
-            for (a, b), w in edges_dict.items()
-        ]
 
-        return {"nodes": nodes, "edges": edges}
+        edges = []
+        for edge_count, ((a, b), w) in enumerate(edges_dict.items()):
+            edges.append(
+                schemas.DesignerEdge(
+                    id=f"e{edge_count}",
+                    source=str(designer_lookup[a]["bgg_id"]),
+                    target=str(designer_lookup[b]["bgg_id"]),
+                    size=len(w),
+                )
+            )
+
+        return schemas.DesignerNetwork(nodes=nodes, edges=edges)

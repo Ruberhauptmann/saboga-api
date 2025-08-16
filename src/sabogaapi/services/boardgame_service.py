@@ -247,7 +247,10 @@ class BoardgameService:
 
         """
         results = (
-            await models.Boardgame.find().sort("+bgg_rank_trend").limit(limit).to_list()
+            await models.Boardgame.find(fetch_links=True)
+            .sort("+bgg_rank_trend")
+            .limit(limit)
+            .to_list()
         )
         return [schemas.BoardgameSingle(**result.model_dump()) for result in results]
 
@@ -263,6 +266,9 @@ class BoardgameService:
 
         """
         results = (
-            await models.Boardgame.find().sort("-bgg_rank_trend").limit(limit).to_list()
+            await models.Boardgame.find(fetch_links=True)
+            .sort("-bgg_rank_trend")
+            .limit(limit)
+            .to_list()
         )
         return [schemas.BoardgameSingle(**result.model_dump()) for result in results]
