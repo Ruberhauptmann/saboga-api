@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 from itertools import combinations
-from typing import Any
 
 from sabogaapi import models, schemas
 from sabogaapi.logger import configure_logger
@@ -65,9 +64,7 @@ class DesignerService:
         ]
 
         edges = []
-        edge_count = 0
-        for (a, b), w in edges_dict.items():
-            edge_count += 1
+        for edge_count, ((a, b), w) in enumerate(edges_dict.items()):
             edges.append(
                 schemas.DesignerEdge(
                     id=f"e{edge_count}",

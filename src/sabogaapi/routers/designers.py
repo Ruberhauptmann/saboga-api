@@ -1,7 +1,5 @@
 """Routes for viewing the designers data."""
 
-from typing import Any
-
 from fastapi import APIRouter
 
 from sabogaapi.logger import configure_logger
