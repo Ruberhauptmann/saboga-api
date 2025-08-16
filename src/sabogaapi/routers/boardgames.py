@@ -3,7 +3,6 @@
 import datetime
 import math
 import time
-from typing import List
 
 from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
@@ -26,17 +25,18 @@ async def read_all_games():
     return {"status": "not yet implemented"}
 
 
-@router.get("/rank-history", response_model=List[BoardgameInList])
+@router.get("/rank-history", response_model=list[BoardgameInList])
 async def read_games_with_rank_changes(
     response: Response,
     request: Request,
     compare_to: datetime.date | None = None,
     page: int = 1,
     per_page: int = 50,
-) -> List[BoardgameInList]:
+) -> list[BoardgameInList]:
     """Returns a list of boardgames from the database, sorted by rank.
 
     \f
+
     Parameters
     ----------
     response (Response): FastAPI response object, to inject the link header in the reponse.
@@ -72,7 +72,8 @@ async def read_games_with_rank_changes(
             },
         )
         raise HTTPException(
-            status_code=422, detail="Page number must be greater than 1"
+            status_code=422,
+            detail="Page number must be greater than 1",
         )
 
     if compare_to is None:
@@ -89,7 +90,9 @@ async def read_games_with_rank_changes(
     compare_to = compare_to.replace(hour=0, minute=0, second=0, microsecond=0)
 
     top_ranked_data = await BoardgameService.get_top_ranked_boardgames(
-        compare_to=compare_to, page=page, page_size=per_page
+        compare_to=compare_to,
+        page=page,
+        page_size=per_page,
     )
 
     total_count = await BoardgameService.get_total_count()
@@ -128,16 +131,13 @@ async def read_games_with_volatility():
     return {"status": "not yet implemented"}
 
 
-@router.get("/clusters")
-async def game_clusters() -> dict[str, str]:
-    return {"status": "not yet implemented"}
+@router.get("/trending")
+async def read_trending_games():
+    games = await BoardgameService.get_trending_games()
+    return games
 
 
-@router.get("/recommendations")
-async def recommend_games() -> dict[str, str]:
-    return {"status": "not yet implemented"}
-
-
-@router.get("/recommendations/{username}")
-async def recommend_games_for_user() -> dict[str, str]:
-    return {"status": "not yet implemented"}
+@router.get("/declining")
+async def read_declining_games():
+    games = await BoardgameService.get_declining_games()
+    return games

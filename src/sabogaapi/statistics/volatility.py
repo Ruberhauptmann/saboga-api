@@ -1,5 +1,3 @@
-from typing import List
-
 import pandas as pd
 
 from sabogaapi.logger import configure_logger
@@ -8,7 +6,7 @@ from sabogaapi.schemas import RankHistory
 logger = configure_logger()
 
 
-def calculate_volatility(rank_history: List[RankHistory]):
+def calculate_volatility(rank_history: list[RankHistory]):
     logger.info("Starting volatility calculation.")
 
     if not rank_history:
@@ -17,9 +15,7 @@ def calculate_volatility(rank_history: List[RankHistory]):
 
     logger.debug(f"Received {len(rank_history)} rank history records.")
 
-    df = pd.DataFrame([dict(entry) for entry in rank_history])
-    df.drop(columns=["id", "revision_id"], inplace=True)
-    df.dropna(inplace=True)
+    df = pd.DataFrame([dict(entry) for entry in rank_history]).dropna()
 
     rank_volatility = df["bgg_rank"].std() / df["bgg_rank"].mean()
     geek_rating_volatility = df["bgg_geek_rating"].std() / df["bgg_geek_rating"].mean()

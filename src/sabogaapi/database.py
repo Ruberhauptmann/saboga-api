@@ -10,7 +10,7 @@ from .config import settings
 
 async def init_db() -> None:  # pragma: no cover
     client = AsyncIOMotorClient(  # type: ignore
-        f"{settings.mongodb_uri}"
+        f"{settings.mongodb_uri}",
     )
     await init_beanie(
         database=client.get_database(),

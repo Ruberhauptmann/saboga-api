@@ -37,45 +37,47 @@ class BoardgameService:
                                 "$expr": {
                                     "$and": [
                                         {"$eq": ["$bgg_id", "$$bgg_id"]},
-                                    ]
-                                }
-                            }
+                                    ],
+                                },
+                            },
                         },
                         {"$sort": {"date": -1}},
                         {
                             "$match": {
-                                "date": {"$lt": compare_to + datetime.timedelta(days=1)}
-                            }
+                                "date": {
+                                    "$lt": compare_to + datetime.timedelta(days=1)
+                                },
+                            },
                         },
                         {"$limit": 1},
                     ],
                     "as": "rank_history",
-                }
+                },
             },
             {"$unwind": {"path": "$rank_history", "preserveNullAndEmptyArrays": True}},
             {
                 "$set": {
                     "bgg_rank_change": {
-                        "$subtract": ["$rank_history.bgg_rank", "$bgg_rank"]
+                        "$subtract": ["$rank_history.bgg_rank", "$bgg_rank"],
                     },
                     "bgg_average_rating_change": {
                         "$subtract": [
                             "$bgg_average_rating",
                             "$rank_history.bgg_average_rating",
-                        ]
+                        ],
                     },
                     "bgg_geek_rating_change": {
                         "$subtract": [
                             "$bgg_geek_rating",
                             "$rank_history.bgg_geek_rating",
-                        ]
+                        ],
                     },
-                }
+                },
             },
         ]
 
         rank_data = await Boardgame.aggregate(
-            aggregation_pipeline=find_rank_comparison
+            aggregation_pipeline=find_rank_comparison,
         ).to_list()
         logger.info(
             "Top ranked boardgames fetched",
@@ -112,7 +114,8 @@ class BoardgameService:
             else:
                 mode = "yearly"
             logger.debug(
-                "Auto-detected mode", extra={"mode": mode, "date_diff_days": date_diff}
+                "Auto-detected mode",
+                extra={"mode": mode, "date_diff_days": date_diff},
             )
 
         pipeline = [
@@ -126,12 +129,12 @@ class BoardgameService:
                             "$match": {
                                 "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
                                 "date": {"$lte": end_date, "$gte": start_date},
-                            }
+                            },
                         },
                         {"$sort": {"date": 1}},
                     ],
                     "as": "bgg_rank_history",
-                }
+                },
             },
             {
                 "$lookup": {
@@ -139,7 +142,7 @@ class BoardgameService:
                     "localField": "designers.$id",
                     "foreignField": "_id",
                     "as": "designers",
-                }
+                },
             },
         ]
 
@@ -168,7 +171,10 @@ class BoardgameService:
         boardgame_data["bgg_rank_history"] = [
             {
                 "date": entry["date"].replace(
-                    hour=0, minute=0, second=0, microsecond=0
+                    hour=0,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
                 ),
                 "bgg_id": entry["bgg_id"],
                 "bgg_rank": entry["bgg_rank"],
@@ -199,3 +205,13 @@ class BoardgameService:
             .to_list()
         )
         return [SearchResult(**result.model_dump()) for result in results]
+
+    @staticmethod
+    async def get_trending_games(limit: int = 10):
+        results = await Boardgame.find().sort("+bgg_rank_trend").limit(limit).to_list()
+        return results
+
+    @staticmethod
+    async def get_declining_games(limit: int = 10):
+        results = await Boardgame.find().sort("-bgg_rank_trend").limit(limit).to_list()
+        return results

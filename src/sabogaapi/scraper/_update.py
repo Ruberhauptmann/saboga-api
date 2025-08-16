@@ -1,6 +1,7 @@
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 from zipfile import ZipFile
 
 import pandas as pd
@@ -15,16 +16,17 @@ from sabogaapi import models, schemas
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.logger import configure_logger
+from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
 logger = configure_logger()
 
 
-def download_zip():  # pragma: no cover
+def download_zip() -> pd.DataFrame:  # pragma: no cover
     logger.info("Starting ZIP download process")
 
-    download_dir = os.path.abspath("download")
-    os.makedirs(download_dir, exist_ok=True)
+    download_dir = Path("download").resolve()
+    download_dir.mkdir(parents=True, exist_ok=True)
 
     # Firefox options
     options = Options()
@@ -33,13 +35,14 @@ def download_zip():  # pragma: no cover
     options.set_preference("browser.download.folderList", 2)  # Use custom download path
     options.set_preference("browser.download.dir", download_dir)
     options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
-    options.set_preference("browser.download.manager.showWhenStarting", False)
-    options.set_preference("pdfjs.disabled", True)
+    options.set_preference("browser.download.manager.showWhenStarting", value=False)
+    options.set_preference("pdfjs.disabled", value=True)
 
     logger.info("Launching headless Firefox browser")
     # Start browser
     driver = webdriver.Firefox(
-        service=Service(GeckoDriverManager().install()), options=options
+        service=Service(GeckoDriverManager().install()),
+        options=options,
     )
     try:
         logger.info("Navigating to BGG login page")
@@ -116,7 +119,7 @@ async def ascrape_update() -> None:  # pragma: no cover
                     bgg_geek_rating=game.bayesaverage,
                     bgg_average_rating=game.average,
                     year_published=game.yearpublished,
-                )
+                ),
             )
     if new_games:
         await models.Boardgame.insert_many(new_games)
@@ -142,14 +145,19 @@ async def ascrape_update() -> None:  # pragma: no cover
 
     for game in all_games:
         rank_history = await models.RankHistory.find(
-            models.RankHistory.bgg_id == game.bgg_id
+            models.RankHistory.bgg_id == game.bgg_id,
         ).to_list()
         rank_volatility, geek_rating_volatility, average_rating_volatility = (
             calculate_volatility(
-                [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+                [schemas.RankHistory(**entry.model_dump()) for entry in rank_history],
             )
         )
         game.bgg_rank_volatility = rank_volatility
         game.bgg_geek_rating_volatility = geek_rating_volatility
         game.bgg_average_rating_volatility = average_rating_volatility
+
+        calculate_trends(
+            [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+        )
+
         await game.save()

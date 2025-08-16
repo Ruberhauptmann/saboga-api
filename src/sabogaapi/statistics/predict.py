@@ -1,4 +1,4 @@
-from typing import List, cast
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,7 @@ from sabogaapi.schemas import Prediction, RankHistory
 logger = configure_logger()
 
 
-async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Prediction]:
+async def forecast_game_ranking(rank_history: list[RankHistory]) -> list[Prediction]:
     logger.info("Starting game ranking forecast.")
 
     if not rank_history:
@@ -26,7 +26,7 @@ async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Predict
     df.index = pd.to_datetime(df.index)
     df = df.groupby(df.index).last()
     df.sort_index(inplace=True)
-    df.index = cast(pd.DatetimeIndex, df.index).to_period("D")
+    df.index = cast("pd.DatetimeIndex", df.index).to_period("D")
 
     print(df, flush=True)
 
@@ -70,6 +70,7 @@ async def forecast_game_ranking(rank_history: List[RankHistory]) -> List[Predict
             merged_df["bgg_geek_rating"],
             merged_df[f"bgg_geek_rating_{interval}_lower"],
             merged_df[f"bgg_geek_rating_{interval}_upper"],
+            strict=False,
         )
     ]
 

@@ -12,7 +12,10 @@ test *args:
 
 
 lint:
-    uv run ruff check --fix .
+    uv run ruff check --fix src
+
+format:
+    uv run ruff format .
 
 type:
     uv run mypy --ignore-missing-imports src/

@@ -1,4 +1,5 @@
-from typing import Any, Callable, Coroutine
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from prometheus_client import Gauge
 from prometheus_fastapi_instrumentator import Instrumentator
@@ -16,9 +17,7 @@ BOARDGAMES_WITHOUT_RANK = Gauge(
 def count_games_without_rank() -> (
     Callable[[Info], Coroutine[Any, Any, None]]
 ):  # pragma: no cover
-    """
-    Function returning an instrumentation function that updates the Prometheus metric.
-    """
+    """Function returning an instrumentation function that updates the Prometheus metric."""
 
     async def instrumentation(_: Info) -> None:
         pipeline = [
@@ -30,12 +29,12 @@ def count_games_without_rank() -> (
                                 "$sortArray": {
                                     "input": "$bgg_rank_history",
                                     "sortBy": {"date": -1},
-                                }
+                                },
                             },
                             0,
-                        ]
-                    }
-                }
+                        ],
+                    },
+                },
             },
             {"$match": {"latest_rank.bgg_rank": None}},
             {"$count": "count"},

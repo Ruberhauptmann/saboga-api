@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter
 
 from sabogaapi.schemas import SearchResult
@@ -12,7 +10,7 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=List[SearchResult])
+@router.get("", response_model=list[SearchResult])
 async def search(query: str, limit: int = 10) -> list[SearchResult]:
     results = await BoardgameService.search(query=query, limit=limit)
     return results

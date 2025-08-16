@@ -24,6 +24,7 @@ async def read_game(
     """Returns a single board game from the database.
 
     \f
+
     Parameters
     ----------
     bgg_id (int): The Boardgamegeek id of the board game.
@@ -42,7 +43,10 @@ async def read_game(
     else:
         start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
     game = await BoardgameService.get_boardgame_with_historical_data(
-        bgg_id=bgg_id, start_date=start_date, end_date=end_date, mode=mode
+        bgg_id=bgg_id,
+        start_date=start_date,
+        end_date=end_date,
+        mode=mode,
     )
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
@@ -65,7 +69,8 @@ async def forecast(
         start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
 
     bgg_rank_history = await RankHistoryService.get_rank_history_before_date(
-        bgg_id=bgg_id, end_date=end_date
+        bgg_id=bgg_id,
+        end_date=end_date,
     )
     if not bgg_rank_history:
         raise HTTPException(status_code=404, detail="Game not found")

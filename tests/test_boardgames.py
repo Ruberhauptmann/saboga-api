@@ -1,7 +1,14 @@
+from collections.abc import Callable
+
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from sabogaapi.models import Boardgame, RankHistory
 
-def test_rank_history_small(app, small_dataset):
+
+def test_rank_history_small(
+    app: FastAPI, small_dataset: Callable[[], tuple[Boardgame, RankHistory]]
+):
     bg, rh = small_dataset()
 
     with TestClient(app) as client:

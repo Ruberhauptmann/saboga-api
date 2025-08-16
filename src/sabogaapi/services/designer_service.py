@@ -32,7 +32,7 @@ class DesignerService:
         print(designer_ids_set, flush=True)
 
         designers_list = await Designer.find(
-            {"bgg_id": {"$in": list(designer_ids_set)}}
+            {"bgg_id": {"$in": list(designer_ids_set)}},
         ).to_list()
 
         print(designers_list, flush=True)

@@ -1,6 +1,7 @@
 import os
+from collections.abc import Callable, Mapping
 from contextlib import AbstractAsyncContextManager
-from typing import Any, Callable, Mapping, Optional
+from typing import Any, Optional
 
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
@@ -25,7 +26,7 @@ SECRET = os.getenv("FASTAPI-USERS-SECRET")
 class ErrorResponse(BaseModel):
     detail: str
     status_code: int
-    extra_info: Optional[dict] = None
+    extra_info: dict | None = None
 
 
 def create_app(

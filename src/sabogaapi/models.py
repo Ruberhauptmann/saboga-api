@@ -1,7 +1,7 @@
 """Beanie database models."""
 
 import datetime
-from typing import Annotated, List
+from typing import Annotated
 
 from beanie import Document, Indexed, Link, TimeSeriesConfig
 from pydantic import BaseModel, Field
@@ -54,8 +54,11 @@ class Boardgame(Document):
     bgg_geek_rating: float | None = None
     bgg_average_rating: float | None = None
     bgg_rank_volatility: float | None = None
+    bgg_rank_trend: float | None = None
     bgg_geek_rating_volatility: float | None = None
+    bgg_geek_rating_trend: float | None = None
     bgg_average_rating_volatility: float | None = None
+    bgg_average_rating_trend: float | None = None
     description: str | None = None
     image_url: str | None = None
     thumbnail_url: str | None = None
@@ -65,10 +68,10 @@ class Boardgame(Document):
     playingtime: int | None = None
     minplaytime: int | None = None
     maxplaytime: int | None = None
-    categories: List[Category] = []
-    families: List[Family] = []
-    mechanics: List[Mechanic] = []
-    designers: List[Link[Designer]] = []
+    categories: list[Category] = []
+    families: list[Family] = []
+    mechanics: list[Mechanic] = []
+    designers: list[Link[Designer]] = []
 
     class Settings:
         name = "boardgames"
