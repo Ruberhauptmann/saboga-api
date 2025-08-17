@@ -35,7 +35,9 @@ def generate_rank_history(
     base_rank = random.randint(100, 900)
 
     history = []
-    today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    today = datetime.datetime.now(datetime.UTC).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
     for i in range(days):
         noise = random.gauss(0, 5)
