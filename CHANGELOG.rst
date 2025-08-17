@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.45:
+
+0.0.45 — 2025-08-17
+-------------------
+
+Added
+^^^^^
+
+- Scraper that fills in the metadata for games (designers, categories, images, etc.)
+
 .. _changelog-0.0.44:
 
 0.0.44 — 2025-08-16
