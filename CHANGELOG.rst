@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.46:
+
+0.0.46 — 2025-08-17
+-------------------
+
+Fixed
+^^^^^
+
+- Some bugs in metadata scraper
+
 .. _changelog-0.0.45:
 
 0.0.45 — 2025-08-17

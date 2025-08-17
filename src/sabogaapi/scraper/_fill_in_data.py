@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import xml.etree.ElementTree as ET
 
 import aiohttp
@@ -20,13 +19,9 @@ class BoardgameBGGIDs(BaseModel):
     bgg_id: int
 
 
-async def analyse_api_response(  # noqa: PLR0915, C901
+async def analyse_api_response(  # noqa: C901
     item: ET.Element,
-) -> (
-    tuple[None, None, None]
-    | tuple[models.Boardgame, None, list[models.Designer] | None]
-    | tuple[models.Boardgame, models.RankHistory, list[models.Designer] | None]
-):
+) -> tuple[None, None] | tuple[models.Boardgame, list[models.Designer] | None]:
     data = parse_boardgame_data(item)
 
     # Get boardgame from database or create a new one
@@ -37,7 +32,7 @@ async def analyse_api_response(  # noqa: PLR0915, C901
         if boardgame is not None:
             await boardgame.delete()
             logger.info("Deleted boardgame %s due to missing rank.", data["bgg_id"])
-        return None, None, None  # Don't process further
+        return None, None
 
     if boardgame is None:
         boardgame = models.Boardgame(bgg_id=data["bgg_id"], bgg_rank=data["rank"])
@@ -107,33 +102,7 @@ async def analyse_api_response(  # noqa: PLR0915, C901
             for bgg_id, name in designer_names_ids
         ]
 
-    # Process rank history
-    last_rank_history = (
-        await models.RankHistory.find({"bgg_id": boardgame.bgg_id})
-        .sort("-date")
-        .limit(1)
-        .first_or_none()
-    )
-    if (
-        last_rank_history
-        and (datetime.datetime.now(tz=datetime.UTC) - last_rank_history.date).days < 1
-    ):
-        return boardgame, None, designers
-
-    boardgame.bgg_rank = data["rank"]
-    boardgame.bgg_geek_rating = data["geek_rating"]
-    boardgame.bgg_average_rating = data["average_rating"]
-    rank_history = models.RankHistory(
-        bgg_id=boardgame.bgg_id,
-        bgg_rank=data["rank"],
-        bgg_geek_rating=data["geek_rating"],
-        bgg_average_rating=data["average_rating"],
-        date=datetime.datetime.now(tz=datetime.UTC).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        ),
-    )
-
-    return boardgame, rank_history, designers
+    return boardgame, designers
 
 
 async def process_designers(designers: list[models.Designer]) -> list[models.Designer]:
@@ -153,9 +122,9 @@ async def process_designers(designers: list[models.Designer]) -> list[models.Des
 
 
 async def process_item(
-    item: ET.Element[str],
-) -> tuple[models.Boardgame | None, models.RankHistory | None]:
-    boardgame, rank_history, designers = await analyse_api_response(item)
+    item: ET.Element,
+) -> models.Boardgame | None:
+    boardgame, designers = await analyse_api_response(item)
 
     if designers:
         designers_db = await process_designers(designers)
@@ -165,8 +134,7 @@ async def process_item(
     if boardgame:
         boardgame.designers = designers_db  # type: ignore[assignment]
         await boardgame.save(link_rule=WriteRules.DO_NOTHING)
-
-    return boardgame, rank_history
+    return None
 
 
 async def process_batch(ids: list[int]) -> None:
@@ -176,15 +144,9 @@ async def process_batch(ids: list[int]) -> None:
         return
 
     items = parsed_xml.findall("item")
-    rank_histories = []
-
     for item in items:
-        _, rank_history = await process_item(item)
-        if rank_history:
-            rank_histories.append(rank_history)
-
-    if rank_histories:
-        await models.RankHistory.insert_many(rank_histories)
+        await process_item(item)
+    return
 
 
 async def fill_in_data(step: int = 20) -> None:
