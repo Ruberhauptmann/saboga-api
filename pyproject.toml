@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-scrape = "sabogaapi.api_v1.scraper:scrape"
+scrape = "sabogaapi.scraper:scrape"
 
 [build-system]
 requires = ["hatchling"]
@@ -70,5 +70,6 @@ ignore = [
     "COM812", # trailing comma
     "PD901", # check for generic name df for DataFrames
     "D",
-    "RUF012" # Mutable class vars
+    "RUF012", # Mutable class vars
+    "S314" # Check for defusedxml
 ]
