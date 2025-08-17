@@ -131,7 +131,7 @@ async def ascrape_update() -> None:  # pragma: no cover
 
     new_rank_history = [
         models.RankHistory(
-            date=date,
+            date=date.replace(hour=0, minute=0, second=0, microsecond=0),
             bgg_id=entry.id,
             bgg_rank=entry.rank,
             bgg_geek_rating=entry.bayesaverage,
@@ -159,8 +159,11 @@ async def ascrape_update() -> None:  # pragma: no cover
         game.bgg_geek_rating_volatility = geek_rating_volatility
         game.bgg_average_rating_volatility = average_rating_volatility
 
-        calculate_trends(
+        rank_trend, geek_rating_trend, average_rating_trend = calculate_trends(
             [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
         )
+        game.bgg_rank_trend = rank_trend
+        game.bgg_geek_rating_trend = geek_rating_trend
+        game.bgg_average_rating_trend = average_rating_trend
 
         await game.save()

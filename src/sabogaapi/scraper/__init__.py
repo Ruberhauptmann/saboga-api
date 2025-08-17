@@ -5,6 +5,7 @@ import asyncio
 
 from sabogaapi.logger import configure_logger
 
+from ._fill_in_data import fill_in_data
 from ._update import ascrape_update
 
 logger = configure_logger()
@@ -19,5 +20,7 @@ def scrape() -> None:  # pragma: no cover
     match args.mode:
         case "update":
             asyncio.run(ascrape_update())
+        case "fill-data":
+            asyncio.run(fill_in_data())
         case _:
             logger.error("Scraper %s not implemented.", args.mode)
