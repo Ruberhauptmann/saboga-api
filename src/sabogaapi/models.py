@@ -18,7 +18,7 @@ class RankHistory(Document):
         timeseries = TimeSeriesConfig(
             time_field="date",
             meta_field="bgg_id",
-            bucket_rounding_second=86400,
+            bucket_rounding_seconds=86400,
             bucket_max_span_seconds=86400,
         )
         name = "rank_history"
