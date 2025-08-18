@@ -2,7 +2,9 @@ import asyncio
 import html
 import time
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 from collections.abc import Callable
+from itertools import combinations
 from typing import Any
 
 import aiohttp
@@ -21,6 +23,53 @@ logger = configure_logger()
 
 class BoardgameBGGIDs(BaseModel):
     bgg_id: int
+
+
+async def construct_designer_network() -> tuple[list[dict[str, Any]], list[Any]]:
+    """Construct a graph from designer data."""
+    boardgames_cursor = models.Boardgame.find({}, fetch_links=True)
+
+    edges_dict = defaultdict(list)
+    designer_ids_set = set()
+
+    async for bg in boardgames_cursor:
+        bgg_id = bg.bgg_id
+        designers = [d.bgg_id for d in bg.designers]
+        for a, b in combinations(sorted(designers), 2):
+            edges_dict[(a, b)].append(bgg_id)
+        designer_ids_set.update(designers)
+
+    designers_list = await models.Designer.find(
+        {"bgg_id": {"$in": list(designer_ids_set)}},
+    ).to_list()
+
+    designer_lookup = {
+        d.bgg_id: {"bgg_id": d.bgg_id, "name": d.name} for d in designers_list
+    }
+
+    nodes = [
+        {
+            "id": str(designer_lookup[did]["bgg_id"]),
+            "label": designer_lookup[did]["name"],
+            "x": 1,
+            "y": 1,
+            "size": 15,
+        }
+        for did in designer_ids_set
+    ]
+
+    edges = []
+    for edge_count, ((a, b), w) in enumerate(edges_dict.items()):
+        edges.append(
+            {
+                "id": f"e{edge_count}",
+                "source": str(designer_lookup[a]["bgg_id"]),
+                "target": str(designer_lookup[b]["bgg_id"]),
+                "size": len(w),
+            }
+        )
+
+    return nodes, edges
 
 
 def _timeout(e: str, number_of_tries: int) -> None:
@@ -298,3 +347,10 @@ async def fill_in_data(step: int = 20) -> None:
         await process_batch(ids_int)
         run_index += 1
         await asyncio.sleep(5)
+
+    nodes, edges = await construct_designer_network()
+    models.DesignerNetwork.find_one({}).upsert(
+        set__nodes=nodes,
+        set__edges=edges,
+        on_insert=models.DesignerNetwork(nodes=nodes, edges=edges),
+    )

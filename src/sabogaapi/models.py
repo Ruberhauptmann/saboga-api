@@ -47,6 +47,14 @@ class Designer(Document):
         name = "designers"
 
 
+class DesignerNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "designer_network"
+
+
 class Boardgame(Document):
     bgg_id: Annotated[int, Indexed(unique=True)]
     bgg_rank: Annotated[int, Indexed()]

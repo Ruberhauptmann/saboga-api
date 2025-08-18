@@ -13,11 +13,11 @@
 ..
 .. - A bullet item for the Added category.
 ..
-.. Changed
-.. ^^^^^^^
-..
-.. - A bullet item for the Changed category.
-..
+Changed
+^^^^^^^
+
+- Save designer network graph in database for faster API calls
+
 .. Deprecated
 .. ^^^^^^^^^^
 ..

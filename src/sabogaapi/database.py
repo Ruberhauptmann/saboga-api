@@ -5,7 +5,7 @@ from typing import Any
 from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from sabogaapi.models import Boardgame, Designer, RankHistory
+from sabogaapi import models
 
 from .config import settings
 
@@ -16,5 +16,10 @@ async def init_db() -> None:  # pragma: no cover
     )
     await init_beanie(
         database=client.get_database(),
-        document_models=[Boardgame, RankHistory, Designer],
+        document_models=[
+            models.Boardgame,
+            models.RankHistory,
+            models.Designer,
+            models.DesignerNetwork,
+        ],
     )

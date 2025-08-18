@@ -3,8 +3,6 @@ from collections.abc import Callable
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from sabogaapi.models import Boardgame, RankHistory
-
 
 def test_single_boardgame_small(app: FastAPI, small_dataset):
     bg, rh, de = small_dataset()

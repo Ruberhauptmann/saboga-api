@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from sabogaapi import models, schemas
 from sabogaapi.config import settings
+from sabogaapi.scraper._fill_in_data import construct_designer_network
 from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
@@ -166,7 +167,12 @@ async def generate_data():
     client = AsyncIOMotorClient(f"{settings.mongodb_uri}")
     await init_beanie(
         database=client.get_database(),
-        document_models=[models.Boardgame, models.RankHistory, models.Designer],
+        document_models=[
+            models.Boardgame,
+            models.RankHistory,
+            models.Designer,
+            models.DesignerNetwork,
+        ],
     )
 
     await models.Boardgame.delete_all()
@@ -187,6 +193,14 @@ async def generate_data():
 
     await models.Boardgame.insert_many(games)
     await models.RankHistory.insert_many(history_entries)
+
+    nodes, edges = await construct_designer_network()
+    await models.DesignerNetwork.delete_all()
+    new_graph = models.DesignerNetwork(
+        nodes=nodes,
+        edges=edges,
+    )
+    await new_graph.insert()
 
     print(
         f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries.",

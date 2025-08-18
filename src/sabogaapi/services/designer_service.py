@@ -1,11 +1,8 @@
 """Service layer for designer."""
 
-from collections import defaultdict
-from itertools import combinations
 
 from sabogaapi import models, schemas
 from sabogaapi.logger import configure_logger
-from sabogaapi.models import Boardgame, Designer
 
 logger = configure_logger()
 
@@ -26,52 +23,9 @@ class DesignerService:
 
     @staticmethod
     async def get_designer_network() -> schemas.DesignerNetwork:
-        """Construct a graph from designer data.
+        network = await models.DesignerNetwork.find().first_or_none()
 
-        Returns:
-            dict[str, list[dict[str, Any]]]: Dictionary with nodes and connections.
+        if network is None:
+            return schemas.DesignerNetwork(nodes=[], edges=[])
 
-        """
-        boardgames_cursor = Boardgame.find({}, fetch_links=True)
-
-        edges_dict = defaultdict(list)
-        designer_ids_set = set()
-
-        async for bg in boardgames_cursor:
-            bgg_id = bg.bgg_id
-            designers = [d.bgg_id for d in bg.designers]
-            for a, b in combinations(sorted(designers), 2):
-                edges_dict[(a, b)].append(bgg_id)
-            designer_ids_set.update(designers)
-
-        designers_list = await Designer.find(
-            {"bgg_id": {"$in": list(designer_ids_set)}},
-        ).to_list()
-
-        designer_lookup = {
-            d.bgg_id: {"bgg_id": d.bgg_id, "name": d.name} for d in designers_list
-        }
-
-        nodes = [
-            schemas.DesignerNode(
-                id=str(designer_lookup[did]["bgg_id"]),
-                label=designer_lookup[did]["name"],
-                x=1,
-                y=1,
-                size=15,
-            )
-            for did in designer_ids_set
-        ]
-
-        edges = []
-        for edge_count, ((a, b), w) in enumerate(edges_dict.items()):
-            edges.append(
-                schemas.DesignerEdge(
-                    id=f"e{edge_count}",
-                    source=str(designer_lookup[a]["bgg_id"]),
-                    target=str(designer_lookup[b]["bgg_id"]),
-                    size=len(w),
-                )
-            )
-
-        return schemas.DesignerNetwork(nodes=nodes, edges=edges)
+        return schemas.DesignerNetwork(**network.model_dump())
