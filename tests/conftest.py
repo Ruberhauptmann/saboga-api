@@ -12,11 +12,11 @@ from faker import Faker
 from fastapi import FastAPI
 from pydantic import MongoDsn
 
-from sabogaapi import create_app
+from sabogaapi import create_app, models
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.main import lifespan
-from sabogaapi.models import Boardgame, Designer, RankHistory
+from sabogaapi.scraper._fill_in_data import construct_designer_network
 
 fake = Faker()
 
@@ -71,19 +71,19 @@ def small_dataset(
             )
             await init_db()
 
-            await Boardgame.delete_all()
-            await RankHistory.delete_all()
-            await Designer.delete_all()
+            await models.Boardgame.delete_all()
+            await models.RankHistory.delete_all()
+            await models.Designer.delete_all()
 
             de = [
-                Designer(name="Vlaada Chvátil", bgg_id=1),
-                Designer(name="Klaus Teuber", bgg_id=2),
+                models.Designer(name="Vlaada Chvátil", bgg_id=1),
+                models.Designer(name="Klaus Teuber", bgg_id=2),
             ]
-            insert_result = await Designer.insert_many(de)
-            de = [await Designer.get(_id) for _id in insert_result.inserted_ids]
+            insert_result = await models.Designer.insert_many(de)
+            de = [await models.Designer.get(_id) for _id in insert_result.inserted_ids]
 
             bg = [
-                Boardgame(
+                models.Boardgame(
                     name="Through the Ages: A New Story of Civilization",
                     bgg_id=1,
                     bgg_rank=1,
@@ -91,7 +91,7 @@ def small_dataset(
                     bgg_average_rating=8.4,
                     designers=[de[0]],
                 ),
-                Boardgame(
+                models.Boardgame(
                     name="Catan",
                     bgg_id=2,
                     bgg_rank=2,
@@ -99,7 +99,7 @@ def small_dataset(
                     bgg_average_rating=7.6,
                     designers=[de[1]],
                 ),
-                Boardgame(
+                models.Boardgame(
                     name="Yet undisclosed Teuber-Chvátil game",
                     bgg_id=3,
                     bgg_rank=3,
@@ -108,23 +108,23 @@ def small_dataset(
                     designers=de,
                 ),
             ]
-            await Boardgame.insert_many(bg)
+            await models.Boardgame.insert_many(bg)
             rh = [
-                RankHistory(
+                models.RankHistory(
                     bgg_id=bg[0].bgg_id,
                     bgg_rank=2,
                     bgg_geek_rating=7.8,
                     bgg_average_rating=7.9,
                     date=datetime.datetime.now() - datetime.timedelta(days=7),
                 ),
-                RankHistory(
+                models.RankHistory(
                     bgg_id=bg[1].bgg_id,
                     bgg_rank=1,
                     bgg_geek_rating=8.1,
                     bgg_average_rating=8.2,
                     date=datetime.datetime.now() - datetime.timedelta(days=7),
                 ),
-                RankHistory(
+                models.RankHistory(
                     bgg_id=bg[2].bgg_id,
                     bgg_rank=3,
                     bgg_geek_rating=7.0,
@@ -132,7 +132,15 @@ def small_dataset(
                     date=datetime.datetime.now() - datetime.timedelta(days=7),
                 ),
             ]
-            await RankHistory.insert_many(rh)
+            await models.RankHistory.insert_many(rh)
+            nodes, edges = await construct_designer_network()
+            await models.DesignerNetwork.delete_all()
+            new_graph = models.DesignerNetwork(
+                nodes=nodes,
+                edges=edges,
+            )
+            await new_graph.insert()
+
             return bg, rh, de
 
         return asyncio.run(_inner())
