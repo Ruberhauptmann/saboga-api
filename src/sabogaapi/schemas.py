@@ -89,10 +89,12 @@ class DesignerNode(BaseModel):
     x: float
     y: float
     size: float
+    cluster: int
 
 
 class DesignerEdge(BaseModel):
     id: str
+    label: str
     source: str
     target: str
     size: float

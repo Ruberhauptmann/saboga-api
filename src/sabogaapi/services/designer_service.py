@@ -1,6 +1,5 @@
 """Service layer for designer."""
 
-
 from sabogaapi import models, schemas
 from sabogaapi.logger import configure_logger
 

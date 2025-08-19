@@ -2,12 +2,12 @@ import asyncio
 import html
 import time
 import xml.etree.ElementTree as ET
-from collections import defaultdict
 from collections.abc import Callable
-from itertools import combinations
 from typing import Any
 
 import aiohttp
+import community as community_louvain
+import networkx as nx
 import requests
 from beanie import WriteRules
 from PIL import Image
@@ -25,51 +25,75 @@ class BoardgameBGGIDs(BaseModel):
     bgg_id: int
 
 
-async def construct_designer_network() -> tuple[list[dict[str, Any]], list[Any]]:
-    """Construct a graph from designer data."""
-    boardgames_cursor = models.Boardgame.find({}, fetch_links=True)
-
-    edges_dict = defaultdict(list)
-    designer_ids_set = set()
-
-    async for bg in boardgames_cursor:
-        bgg_id = bg.bgg_id
-        designers = [d.bgg_id for d in bg.designers]
-        for a, b in combinations(sorted(designers), 2):
-            edges_dict[(a, b)].append(bgg_id)
-        designer_ids_set.update(designers)
-
-    designers_list = await models.Designer.find(
-        {"bgg_id": {"$in": list(designer_ids_set)}},
-    ).to_list()
-
-    designer_lookup = {
-        d.bgg_id: {"bgg_id": d.bgg_id, "name": d.name} for d in designers_list
+def graph_to_dict(G: nx.Graph) -> dict[str, Any]:
+    return {
+        "nodes": [
+            {
+                "id": str(n),
+                "label": G.nodes[n].get("label", str(n)),
+                "x": G.nodes[n]["x"],
+                "y": G.nodes[n]["y"],
+                "size": G.nodes[n]["size"],
+                "cluster": G.nodes[n]["cluster"],
+            }
+            for n in G.nodes
+        ],
+        "edges": [
+            {"id": f"{u}-{v}", "label": d["label"], "source": str(u), "target": str(v), "size": d["size"]}
+            for u, v, d in G.edges(data=True)
+        ],
     }
 
-    nodes = [
-        {
-            "id": str(designer_lookup[did]["bgg_id"]),
-            "label": designer_lookup[did]["name"],
-            "x": 1,
-            "y": 1,
-            "size": 15,
-        }
-        for did in designer_ids_set
-    ]
 
-    edges = []
-    for edge_count, ((a, b), w) in enumerate(edges_dict.items()):
-        edges.append(
-            {
-                "id": f"e{edge_count}",
-                "source": str(designer_lookup[a]["bgg_id"]),
-                "target": str(designer_lookup[b]["bgg_id"]),
-                "size": len(w),
-            }
-        )
+def build_designer_graph(
+    boardgames: list[models.Boardgame], designers: list[models.Designer]
+):
+    G = nx.Graph()
 
-    return nodes, edges
+    # Add all designers as nodes (isolated nodes included)
+    for d in designers:
+        G.add_node(d.bgg_id, label=d.name)
+
+    # Add edges based on co-design
+    for g in boardgames:
+        d_ids = [d.bgg_id for d in g.designers]
+        for i in range(len(d_ids)):
+            for j in range(i + 1, len(d_ids)):
+                if G.has_edge(d_ids[i], d_ids[j]):
+                    G[d_ids[i]][d_ids[j]]["weight"] += 1
+                else:
+                    G.add_edge(d_ids[i], d_ids[j], weight=1)
+
+    # Clustering
+    partition = community_louvain.best_partition(G, weight="weight")
+    for n in G.nodes:
+        if G.degree[n] == 0:
+            partition[n] = -1  # isolated nodes
+
+    pos = nx.spring_layout(G, seed=42, weight="weight", k=0.5)
+
+    centrality = nx.betweenness_centrality(G)
+
+    for n, data in G.nodes(data=True):
+        data["x"] = float(pos[n][0])
+        data["y"] = float(pos[n][1])
+        data["size"] = centrality.get(n, 0) * 30 + 5
+        data["cluster"] = partition[n]
+
+    for u, v, data in G.edges(data=True):
+        data["size"] = data.get("weight", 1)
+        data["label"] = str(data.get("weight", 1))
+
+    return G
+
+
+async def construct_designer_network() -> nx.Graph:
+    """Construct a graph from designer data."""
+    boardgames = await models.Boardgame.find({}, fetch_links=True).to_list()
+    designers = await models.Designer.find().to_list()
+    graph = build_designer_graph(boardgames, designers)
+
+    return graph
 
 
 def _timeout(e: str, number_of_tries: int) -> None:
@@ -348,9 +372,7 @@ async def fill_in_data(step: int = 20) -> None:
         run_index += 1
         await asyncio.sleep(5)
 
-    nodes, edges = await construct_designer_network()
-    models.DesignerNetwork.find_one({}).upsert(
-        set__nodes=nodes,
-        set__edges=edges,
-        on_insert=models.DesignerNetwork(nodes=nodes, edges=edges),
-    )
+    graph = await construct_designer_network()
+    await models.DesignerNetwork.delete_all()
+    graph_db = models.DesignerNetwork(**graph_to_dict(graph))
+    await graph_db.insert()
