@@ -25,75 +25,77 @@ class BoardgameBGGIDs(BaseModel):
     bgg_id: int
 
 
-def graph_to_dict(G: nx.Graph) -> dict[str, Any]:
+def graph_to_dict(graph: nx.Graph) -> dict[str, Any]:
     return {
         "nodes": [
             {
                 "id": str(n),
-                "label": G.nodes[n].get("label", str(n)),
-                "x": G.nodes[n]["x"],
-                "y": G.nodes[n]["y"],
-                "size": G.nodes[n]["size"],
-                "cluster": G.nodes[n]["cluster"],
+                "label": graph.nodes[n].get("label", str(n)),
+                "x": graph.nodes[n]["x"],
+                "y": graph.nodes[n]["y"],
+                "size": graph.nodes[n]["size"],
+                "cluster": graph.nodes[n]["cluster"],
             }
-            for n in G.nodes
+            for n in graph.nodes
         ],
         "edges": [
-            {"id": f"{u}-{v}", "label": d["label"], "source": str(u), "target": str(v), "size": d["size"]}
-            for u, v, d in G.edges(data=True)
+            {
+                "id": f"{u}-{v}",
+                "label": d["label"],
+                "source": str(u),
+                "target": str(v),
+                "size": d["size"],
+            }
+            for u, v, d in graph.edges(data=True)
         ],
     }
 
 
 def build_designer_graph(
     boardgames: list[models.Boardgame], designers: list[models.Designer]
-):
-    G = nx.Graph()
+) -> nx.Graph:
+    graph = nx.Graph()
 
-    # Add all designers as nodes (isolated nodes included)
     for d in designers:
-        G.add_node(d.bgg_id, label=d.name)
+        graph.add_node(d.bgg_id, label=d.name)
 
-    # Add edges based on co-design
     for g in boardgames:
         d_ids = [d.bgg_id for d in g.designers]
         for i in range(len(d_ids)):
             for j in range(i + 1, len(d_ids)):
-                if G.has_edge(d_ids[i], d_ids[j]):
-                    G[d_ids[i]][d_ids[j]]["weight"] += 1
+                if graph.has_edge(d_ids[i], d_ids[j]):
+                    graph[d_ids[i]][d_ids[j]]["weight"] += 1
                 else:
-                    G.add_edge(d_ids[i], d_ids[j], weight=1)
+                    graph.add_edge(d_ids[i], d_ids[j], weight=1)
 
     # Clustering
-    partition = community_louvain.best_partition(G, weight="weight")
-    for n in G.nodes:
-        if G.degree[n] == 0:
+    partition = community_louvain.best_partition(graph, weight="weight")
+    for n in graph.nodes:
+        if graph.degree[n] == 0:
             partition[n] = -1  # isolated nodes
 
-    pos = nx.spring_layout(G, seed=42, weight="weight", k=0.5)
+    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.5)
 
-    centrality = nx.betweenness_centrality(G)
+    centrality = nx.betweenness_centrality(graph)
 
-    for n, data in G.nodes(data=True):
+    for n, data in graph.nodes(data=True):
         data["x"] = float(pos[n][0])
         data["y"] = float(pos[n][1])
         data["size"] = centrality.get(n, 0) * 30 + 5
         data["cluster"] = partition[n]
 
-    for u, v, data in G.edges(data=True):
+    for _u, _v, data in graph.edges(data=True):
         data["size"] = data.get("weight", 1)
         data["label"] = str(data.get("weight", 1))
 
-    return G
+    return graph
 
 
 async def construct_designer_network() -> nx.Graph:
     """Construct a graph from designer data."""
     boardgames = await models.Boardgame.find({}, fetch_links=True).to_list()
     designers = await models.Designer.find().to_list()
-    graph = build_designer_graph(boardgames, designers)
-
-    return graph
+    return build_designer_graph(boardgames, designers)
 
 
 def _timeout(e: str, number_of_tries: int) -> None:

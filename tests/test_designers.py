@@ -28,7 +28,6 @@ def test_designer_network_small(app: FastAPI, small_dataset):
 
     assert response.status_code == 200
     data = dict(response.json())
-    print(data, flush=True)
     assert len(data["nodes"]) == len(de)
     assert len(data["edges"]) == 1
     assert int(data["edges"][0]["source"]) == 1

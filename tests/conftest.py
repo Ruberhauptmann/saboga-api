@@ -1,12 +1,9 @@
 import asyncio
 import datetime
 import time
-from collections.abc import Callable
-from contextlib import asynccontextmanager
 
 import docker
 import pytest
-from beanie import init_beanie
 from docker.models.containers import Container
 from faker import Faker
 from fastapi import FastAPI
@@ -16,7 +13,7 @@ from sabogaapi import create_app, models
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.main import lifespan
-from sabogaapi.scraper._fill_in_data import construct_designer_network
+from sabogaapi.scraper._fill_in_data import construct_designer_network, graph_to_dict
 
 fake = Faker()
 
@@ -133,13 +130,11 @@ def small_dataset(
                 ),
             ]
             await models.RankHistory.insert_many(rh)
-            nodes, edges = await construct_designer_network()
+
+            graph = await construct_designer_network()
             await models.DesignerNetwork.delete_all()
-            new_graph = models.DesignerNetwork(
-                nodes=nodes,
-                edges=edges,
-            )
-            await new_graph.insert()
+            graph_db = models.DesignerNetwork(**graph_to_dict(graph))
+            await graph_db.insert()
 
             return bg, rh, de
 
