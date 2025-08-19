@@ -60,7 +60,7 @@ def build_designer_graph(
         graph.add_node(d.bgg_id, label=d.name)
 
     for g in boardgames:
-        d_ids = [d.bgg_id for d in g.designers]
+        d_ids = [d.bgg_id for d in g.designers]  # type: ignore[attr-defined]
         for i in range(len(d_ids)):
             for j in range(i + 1, len(d_ids)):
                 if graph.has_edge(d_ids[i], d_ids[j]):
