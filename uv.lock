@@ -923,6 +923,15 @@ wheels = [
 ]
 
 [[package]]
+name = "networkx"
+version = "3.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/4f/ccdb8ad3a38e583f214547fd2f7ff1fc160c43a75af88e6aec213404b96a/networkx-3.5.tar.gz", hash = "sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037", size = 2471065, upload-time = "2025-05-29T11:35:07.804Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/eb/8d/776adee7bbf76365fdd7f2552710282c79a4ead5d2a46408c9043a2b70ba/networkx-3.5-py3-none-any.whl", hash = "sha256:0030d386a9a06dee3565298b4a734b68589749a544acbb6c412dc9e2489ec6ec", size = 2034406, upload-time = "2025-05-29T11:35:04.961Z" },
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1534,6 +1543,16 @@ wheels = [
 ]
 
 [[package]]
+name = "python-louvain"
+version = "0.16"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "networkx" },
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7c/0d/8787b021d52eb8764c0bb18ab95f720cf554902044c6a5cb1865daf45763/python-louvain-0.16.tar.gz", hash = "sha256:b7ba2df5002fd28d3ee789a49532baad11fe648e4f2117cf0798e7520a1da56b", size = 204641, upload-time = "2022-01-29T15:53:03.532Z" }
+
+[[package]]
 name = "python-multipart"
 version = "0.0.20"
 source = { registry = "https://pypi.org/simple" }
@@ -1684,7 +1703,7 @@ wheels = [
 
 [[package]]
 name = "sabogaapi"
-version = "0.0.45"
+version = "0.0.46"
 source = { editable = "." }
 dependencies = [
     { name = "aioresponses" },
@@ -1692,10 +1711,12 @@ dependencies = [
     { name = "beanie" },
     { name = "fastapi", extra = ["standard"] },
     { name = "loki-logger-handler" },
+    { name = "networkx" },
     { name = "pandas" },
     { name = "pillow" },
     { name = "prometheus-fastapi-instrumentator" },
     { name = "pydantic-settings" },
+    { name = "python-louvain" },
     { name = "requests" },
     { name = "selenium" },
     { name = "sktime" },
@@ -1741,10 +1762,12 @@ requires-dist = [
     { name = "beanie", specifier = ">=1.27.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.6" },
     { name = "loki-logger-handler", specifier = ">=1.1.1" },
+    { name = "networkx", specifier = ">=3.5" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "pillow", specifier = ">=11.1.0" },
     { name = "prometheus-fastapi-instrumentator", specifier = ">=7.1.0" },
     { name = "pydantic-settings", specifier = ">=2.9.1" },
+    { name = "python-louvain", specifier = ">=0.16" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "selenium", specifier = ">=4.34.0" },
     { name = "sktime", specifier = ">=0.36.0" },

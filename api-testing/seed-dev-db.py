@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from sabogaapi import models, schemas
 from sabogaapi.config import settings
+from sabogaapi.scraper._fill_in_data import construct_designer_network, graph_to_dict
 from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
@@ -156,7 +157,7 @@ def generate_boardgame(
         categories=random.sample(CATEGORIES, k=random.randint(1, 3)),
         mechanics=random.sample(MECHANICS, k=random.randint(1, 2)),
         families=random.sample(FAMILIES, k=random.randint(0, 2)),
-        designers=random.sample(designers, k=2),  # type: ignore
+        designers=random.sample(designers, k=random.randint(1, 4)),  # type: ignore
     )
 
     return boardgame, rank_history
@@ -166,14 +167,19 @@ async def generate_data():
     client = AsyncIOMotorClient(f"{settings.mongodb_uri}")
     await init_beanie(
         database=client.get_database(),
-        document_models=[models.Boardgame, models.RankHistory, models.Designer],
+        document_models=[
+            models.Boardgame,
+            models.RankHistory,
+            models.Designer,
+            models.DesignerNetwork,
+        ],
     )
 
     await models.Boardgame.delete_all()
     await models.RankHistory.delete_all()
     await models.Designer.delete_all()
 
-    designers = [models.Designer(name=fake.name(), bgg_id=i) for i in range(1, 10)]
+    designers = [models.Designer(name=fake.name(), bgg_id=i) for i in range(1, 25)]
     await models.Designer.insert_many(designers)
     designers = await models.Designer.find_all(fetch_links=True).to_list()
 
@@ -187,6 +193,11 @@ async def generate_data():
 
     await models.Boardgame.insert_many(games)
     await models.RankHistory.insert_many(history_entries)
+
+    graph = await construct_designer_network()
+    await models.DesignerNetwork.delete_all()
+    graph_db = models.DesignerNetwork(**graph_to_dict(graph))
+    await graph_db.insert()
 
     print(
         f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries.",

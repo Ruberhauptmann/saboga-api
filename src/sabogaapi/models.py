@@ -18,7 +18,7 @@ class RankHistory(Document):
         timeseries = TimeSeriesConfig(
             time_field="date",
             meta_field="bgg_id",
-            bucket_rounding_second=86400,
+            bucket_rounding_seconds=86400,
             bucket_max_span_seconds=86400,
         )
         name = "rank_history"
@@ -45,6 +45,14 @@ class Designer(Document):
 
     class Settings:
         name = "designers"
+
+
+class DesignerNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "designer_network"
 
 
 class Boardgame(Document):

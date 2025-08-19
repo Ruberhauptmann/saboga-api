@@ -1,41 +1,32 @@
-from collections.abc import Callable
-
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from sabogaapi.models import Boardgame, RankHistory
 
-
-def test_rank_history_small(
-    app: FastAPI, small_dataset: Callable[[], tuple[Boardgame, RankHistory]]
-):
-    bg, rh = small_dataset()
+def test_rank_history_small(app: FastAPI, small_dataset):
+    bg, rh, de = small_dataset()
 
     with TestClient(app) as client:
         response = client.get("/boardgames/rank-history")
 
     assert response.status_code == 200
-    data = response.json()
-    assert any(item["bgg_id"] == bg.bgg_id for item in data)
+    data = list(response.json())
 
+    assert len(data) == len(bg)
 
-def test_trending_small(
-    app: FastAPI, small_dataset: Callable[[], tuple[Boardgame, RankHistory]]
-):
-    bg, rh = small_dataset()
+    for i, game in enumerate(bg):
+        history_entry = rh[i]
+        game_api = data[i]
 
-    with TestClient(app) as client:
-        response = client.get("/boardgames/trending")
-
-    assert response.status_code == 200
-
-
-def test_declining_small(
-    app: FastAPI, small_dataset: Callable[[], tuple[Boardgame, RankHistory]]
-):
-    bg, rh = small_dataset()
-
-    with TestClient(app) as client:
-        response = client.get("/boardgames/declining")
-
-    assert response.status_code == 200
+        assert game.bgg_rank == game_api["bgg_rank"]
+        assert pytest.approx(game_api["bgg_rank_change"]) == -(
+            game.bgg_rank - history_entry.bgg_rank
+        )
+        assert (
+            pytest.approx(game_api["bgg_geek_rating_change"])
+            == game.bgg_geek_rating - history_entry.bgg_geek_rating
+        )
+        assert (
+            pytest.approx(game_api["bgg_average_rating_change"])
+            == game.bgg_average_rating - history_entry.bgg_average_rating
+        )
