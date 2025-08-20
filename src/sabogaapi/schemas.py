@@ -47,6 +47,10 @@ class BaseBoardgame(BaseModel):
     bgg_rank: int
     bgg_geek_rating: float | None = None
     bgg_average_rating: float | None = None
+    bgg_rank_trend: float | None = None
+    bgg_geek_rating_trend: float | None = None
+    bgg_average_rating_trend: float | None = None
+    mean_trend: float | None = None
 
 
 class BoardgameInList(BaseBoardgame):

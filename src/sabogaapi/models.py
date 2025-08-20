@@ -67,6 +67,7 @@ class Boardgame(Document):
     bgg_geek_rating_trend: float | None = None
     bgg_average_rating_volatility: float | None = None
     bgg_average_rating_trend: float | None = None
+    mean_trend: float | None = None
     description: str | None = None
     image_url: str | None = None
     thumbnail_url: str | None = None

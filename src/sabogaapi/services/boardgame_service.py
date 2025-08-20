@@ -236,7 +236,7 @@ class BoardgameService:
         return [schemas.SearchResult(**result.model_dump()) for result in results]
 
     @staticmethod
-    async def get_trending_games(limit: int = 10) -> list[schemas.BoardgameSingle]:
+    async def get_trending_games(limit: int = 5) -> list[schemas.BoardgameInList]:
         """Get trending games.
 
         Args:
@@ -246,16 +246,59 @@ class BoardgameService:
             list[schemas.BoardgameSingle]: List of boardgames.
 
         """
-        results = (
-            await models.Boardgame.find(fetch_links=True)
-            .sort("+bgg_rank_trend")
-            .limit(limit)
-            .to_list()
+        compare_to = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+            days=30
         )
-        return [schemas.BoardgameSingle(**result.model_dump()) for result in results]
+
+        pipeline = [
+            {"$sort": {"mean_trend": -1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": models.RankHistory.Settings.name,
+                    "let": {"bgg_id": "$bgg_id"},
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
+                                "date": {
+                                    "$lt": compare_to + datetime.timedelta(days=1)
+                                },
+                            }
+                        },
+                        {"$sort": {"date": -1}},
+                        {"$limit": 1},
+                    ],
+                    "as": "rank_history",
+                }
+            },
+            {"$unwind": {"path": "$rank_history", "preserveNullAndEmptyArrays": True}},
+            {
+                "$set": {
+                    "bgg_rank_change": {
+                        "$subtract": ["$rank_history.bgg_rank", "$bgg_rank"]
+                    },
+                    "bgg_average_rating_change": {
+                        "$subtract": [
+                            "$bgg_average_rating",
+                            "$rank_history.bgg_average_rating",
+                        ]
+                    },
+                    "bgg_geek_rating_change": {
+                        "$subtract": [
+                            "$bgg_geek_rating",
+                            "$rank_history.bgg_geek_rating",
+                        ]
+                    },
+                }
+            },
+        ]
+        results = await models.Boardgame.aggregate(pipeline).to_list()
+
+        return [schemas.BoardgameInList(**result) for result in results]
 
     @staticmethod
-    async def get_declining_games(limit: int = 10) -> list[schemas.BoardgameSingle]:
+    async def get_declining_games(limit: int = 5) -> list[schemas.BoardgameInList]:
         """Get declining games.
 
         Args:
@@ -265,10 +308,53 @@ class BoardgameService:
             list[schemas.BoardgameSingle]: List of boardgames.
 
         """
-        results = (
-            await models.Boardgame.find(fetch_links=True)
-            .sort("-bgg_rank_trend")
-            .limit(limit)
-            .to_list()
+        compare_to = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+            days=30
         )
-        return [schemas.BoardgameSingle(**result.model_dump()) for result in results]
+
+        pipeline = [
+            {"$sort": {"mean_trend": 1}},
+            {"$limit": limit},
+            {
+                "$lookup": {
+                    "from": models.RankHistory.Settings.name,
+                    "let": {"bgg_id": "$bgg_id"},
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
+                                "date": {
+                                    "$lt": compare_to + datetime.timedelta(days=1)
+                                },
+                            }
+                        },
+                        {"$sort": {"date": -1}},
+                        {"$limit": 1},
+                    ],
+                    "as": "rank_history",
+                }
+            },
+            {"$unwind": {"path": "$rank_history", "preserveNullAndEmptyArrays": True}},
+            {
+                "$set": {
+                    "bgg_rank_change": {
+                        "$subtract": ["$rank_history.bgg_rank", "$bgg_rank"]
+                    },
+                    "bgg_average_rating_change": {
+                        "$subtract": [
+                            "$bgg_average_rating",
+                            "$rank_history.bgg_average_rating",
+                        ]
+                    },
+                    "bgg_geek_rating_change": {
+                        "$subtract": [
+                            "$bgg_geek_rating",
+                            "$rank_history.bgg_geek_rating",
+                        ]
+                    },
+                }
+            },
+        ]
+        results = await models.Boardgame.aggregate(pipeline).to_list()
+
+        return [schemas.BoardgameInList(**result) for result in results]
