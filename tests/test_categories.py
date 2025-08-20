@@ -15,7 +15,7 @@ def test_all_categories(app: FastAPI, small_dataset):
     assert all([item["bgg_id"] in me_ids for item in api_data])
 
 
-def test_single_mechanic(app: FastAPI, small_dataset):
+def test_single_category(app: FastAPI, small_dataset):
     data = small_dataset()
     de_ids = [item.bgg_id for item in data["categories"]]
 
@@ -26,3 +26,10 @@ def test_single_mechanic(app: FastAPI, small_dataset):
         assert response.status_code == 200
         api_data = response.json()
         assert data["categories"][i].name == api_data["name"]
+
+def test_nonexisting_category(app: FastAPI, small_dataset):
+    _ = small_dataset()
+    with TestClient(app) as client:
+        response = client.get(f"/categories/1000")
+
+    assert response.status_code == 404

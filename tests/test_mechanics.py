@@ -30,3 +30,10 @@ def test_single_mechanic(app: FastAPI, small_dataset):
         assert response.status_code == 200
         api_data = response.json()
         assert data["mechanics"][i].name == api_data["name"]
+
+def test_nonexisting_mechanic(app: FastAPI, small_dataset):
+    _ = small_dataset()
+    with TestClient(app) as client:
+        response = client.get(f"/mechanics/1000")
+
+    assert response.status_code == 404

@@ -32,6 +32,14 @@ def test_single_designer(app: FastAPI, small_dataset):
         assert data["designers"][i].name == api_data["name"]
 
 
+def test_nonexisting_designer(app: FastAPI, small_dataset):
+    _ = small_dataset()
+    with TestClient(app) as client:
+        response = client.get(f"/designers/1000")
+
+    assert response.status_code == 404
+
+
 def test_designer_network(app: FastAPI, small_dataset):
     data = small_dataset()
 
