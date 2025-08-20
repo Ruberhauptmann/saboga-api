@@ -11,7 +11,7 @@
 Added
 ^^^^^
 
-- Endpoins for categories, mechanics, families
+- Endpoints for categories, mechanics, families
 
 .. Changed
 .. ^^^^^^^
