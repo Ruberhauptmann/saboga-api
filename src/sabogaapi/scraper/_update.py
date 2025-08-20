@@ -159,8 +159,10 @@ async def ascrape_update() -> None:  # pragma: no cover
         game.bgg_geek_rating_volatility = geek_rating_volatility
         game.bgg_average_rating_volatility = average_rating_volatility
 
-        rank_trend, geek_rating_trend, average_rating_trend, mean_trend = calculate_trends(
-            [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+        rank_trend, geek_rating_trend, average_rating_trend, mean_trend = (
+            calculate_trends(
+                [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+            )
         )
         game.bgg_rank_trend = rank_trend
         game.bgg_geek_rating_trend = geek_rating_trend

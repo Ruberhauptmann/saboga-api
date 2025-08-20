@@ -246,7 +246,9 @@ class BoardgameService:
             list[schemas.BoardgameSingle]: List of boardgames.
 
         """
-        compare_to = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=30)
+        compare_to = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+            days=30
+        )
 
         pipeline = [
             {"$sort": {"mean_trend": -1}},
@@ -259,7 +261,9 @@ class BoardgameService:
                         {
                             "$match": {
                                 "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
-                                "date": {"$lt": compare_to + datetime.timedelta(days=1)},
+                                "date": {
+                                    "$lt": compare_to + datetime.timedelta(days=1)
+                                },
                             }
                         },
                         {"$sort": {"date": -1}},
@@ -293,7 +297,6 @@ class BoardgameService:
 
         return [schemas.BoardgameInList(**result) for result in results]
 
-
     @staticmethod
     async def get_declining_games(limit: int = 5) -> list[schemas.BoardgameInList]:
         """Get declining games.
@@ -305,7 +308,9 @@ class BoardgameService:
             list[schemas.BoardgameSingle]: List of boardgames.
 
         """
-        compare_to = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=30)
+        compare_to = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(
+            days=30
+        )
 
         pipeline = [
             {"$sort": {"mean_trend": 1}},
@@ -318,7 +323,9 @@ class BoardgameService:
                         {
                             "$match": {
                                 "$expr": {"$eq": ["$bgg_id", "$$bgg_id"]},
-                                "date": {"$lt": compare_to + datetime.timedelta(days=1)},
+                                "date": {
+                                    "$lt": compare_to + datetime.timedelta(days=1)
+                                },
                             }
                         },
                         {"$sort": {"date": -1}},

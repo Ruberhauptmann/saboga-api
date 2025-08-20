@@ -48,10 +48,12 @@ def calculate_trends(
 
     rank_trend = (-rank_linfit.slope * days_span) / mean_rank * 100
     geek_rating_trend = (geek_rating_linfit.slope * days_span) / mean_geek_rating * 100
-    average_rating_trend = (average_rating_linfit.slope * days_span) / mean_average_rating * 100
-
-    mean_trend = float(np.mean(np.array([rank_trend, geek_rating_trend, average_rating_trend])))
-
-    return (
-        rank_trend, geek_rating_trend, average_rating_trend, mean_trend
+    average_rating_trend = (
+        (average_rating_linfit.slope * days_span) / mean_average_rating * 100
     )
+
+    mean_trend = float(
+        np.mean(np.array([rank_trend, geek_rating_trend, average_rating_trend]))
+    )
+
+    return (rank_trend, geek_rating_trend, average_rating_trend, mean_trend)

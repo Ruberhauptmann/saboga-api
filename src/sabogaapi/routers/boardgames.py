@@ -8,7 +8,7 @@ from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import BoardgameInList, BoardgameSingle
+from sabogaapi.schemas import BoardgameInList
 from sabogaapi.services import BoardgameService
 
 logger = configure_logger()
