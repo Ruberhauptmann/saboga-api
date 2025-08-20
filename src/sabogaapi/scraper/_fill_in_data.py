@@ -3,7 +3,7 @@ import html
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
-from typing import Any
+from typing import Any, TypeVar
 
 import aiohttp
 import community as community_louvain
@@ -224,7 +224,16 @@ def parse_boardgame_data(item: ET.Element) -> dict:
 
 async def analyse_api_response(  # noqa: C901
     item: ET.Element,
-) -> tuple[None, None] | tuple[models.Boardgame, list[models.Designer] | None]:
+) -> (
+    tuple[None, None, None, None, None]
+    | tuple[
+        models.Boardgame,
+        list[models.Category] | None,
+        list[models.Designer] | None,
+        list[models.Family] | None,
+        list[models.Mechanic] | None,
+    ]
+):
     data = parse_boardgame_data(item)
 
     # Get boardgame from database or create a new one
@@ -235,7 +244,7 @@ async def analyse_api_response(  # noqa: C901
         if boardgame is not None:
             await boardgame.delete()
             logger.info("Deleted boardgame %s due to missing rank.", data["bgg_id"])
-        return None, None
+        return None, None, None, None, None
 
     if boardgame is None:
         boardgame = models.Boardgame(bgg_id=data["bgg_id"], bgg_rank=data["rank"])
@@ -275,23 +284,26 @@ async def analyse_api_response(  # noqa: C901
 
     # Process categories
     category_names_ids = data["categories"]
+    categories = None
     if category_names_ids:
-        boardgame.categories = [
+        categories = [
             models.Category(name=name, bgg_id=bgg_id)
             for bgg_id, name in category_names_ids
         ]
 
     # Process families
     family_names_ids = data["families"]
+    families = None
     if family_names_ids:
-        boardgame.families = [
+        families = [
             models.Family(name=name, bgg_id=bgg_id) for bgg_id, name in family_names_ids
         ]
 
     # Process mechanics
     mechanic_names_ids = data["mechanics"]
+    mechanics = None
     if mechanic_names_ids:
-        boardgame.mechanics = [
+        mechanics = [
             models.Mechanic(name=name, bgg_id=bgg_id)
             for bgg_id, name in mechanic_names_ids
         ]
@@ -305,37 +317,84 @@ async def analyse_api_response(  # noqa: C901
             for bgg_id, name in designer_names_ids
         ]
 
-    return boardgame, designers
+    return boardgame, categories, designers, families, mechanics
 
 
-async def process_designers(designers: list[models.Designer]) -> list[models.Designer]:
-    designers_db = []
-    for designer in designers:
-        existing = await models.Designer.find(
-            models.Designer.bgg_id == designer.bgg_id
+T = TypeVar("T", bound=models.Document)
+
+
+async def process_entities(
+    entities: list[T],
+    model: type[T],
+    id_field: str = "bgg_id",
+    update_fields: list[str] | None = None,
+) -> list[T]:
+    """
+    Insert or update entities of a given model.
+
+    Args:
+        entities: List of model instances to process.
+        model: The model class (e.g., models.Designer).
+        id_field: The unique field used for lookup (default "bgg_id").
+        update_fields: Fields to update if entity exists. Defaults to all.
+
+    Returns:
+        List of entities as stored in the database.
+    """
+    entities_db: list[T] = []
+    for entity in entities:
+        entity_id = getattr(entity, id_field)
+        existing = await model.find(
+            getattr(model, id_field) == entity_id
         ).first_or_none()
+
         if existing:
-            existing.name = designer.name
+            # update selected fields
+            if update_fields is None:
+                update_fields = [f for f in entity.model_dump() if f != id_field]
+
+            for field in update_fields:
+                setattr(existing, field, getattr(entity, field))
             await existing.save()
-            designers_db.append(existing)
+            entities_db.append(existing)
         else:
-            new = await models.Designer.insert(designer)
-            designers_db.append(new)
-    return designers_db
+            new = await model.insert(entity)
+            entities_db.append(new)
+
+    return entities_db
 
 
 async def process_item(
     item: ET.Element,
 ) -> models.Boardgame | None:
-    boardgame, designers = await analyse_api_response(item)
+    boardgame, categories, designers, families, mechanics = await analyse_api_response(
+        item
+    )
 
+    if categories:
+        categories_db = await process_entities(
+            model=models.Category, entities=categories
+        )
+    else:
+        categories_db = []
     if designers:
-        designers_db = await process_designers(designers)
+        designers_db = await process_entities(model=models.Designer, entities=designers)
     else:
         designers_db = []
+    if families:
+        families_db = await process_entities(model=models.Family, entities=families)
+    else:
+        families_db = []
+    if mechanics:
+        mechanics_db = await process_entities(model=models.Mechanic, entities=mechanics)
+    else:
+        mechanics_db = []
 
     if boardgame:
+        boardgame.categories = categories_db  # type: ignore[assignment]
         boardgame.designers = designers_db  # type: ignore[assignment]
+        boardgame.families = families_db  # type: ignore[assignment]
+        boardgame.mechanics = mechanics_db  # type: ignore[assignment]
         await boardgame.save(link_rule=WriteRules.DO_NOTHING)
     return None
 

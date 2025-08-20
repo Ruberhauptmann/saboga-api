@@ -155,6 +155,30 @@ class BoardgameService:
                     "as": "designers",
                 },
             },
+            {
+                "$lookup": {
+                    "from": f"{models.Family.Settings.name}",
+                    "localField": "families.$id",
+                    "foreignField": "_id",
+                    "as": "families",
+                },
+            },
+            {
+                "$lookup": {
+                    "from": f"{models.Category.Settings.name}",
+                    "localField": "categories.$id",
+                    "foreignField": "_id",
+                    "as": "categories",
+                },
+            },
+            {
+                "$lookup": {
+                    "from": f"{models.Mechanic.Settings.name}",
+                    "localField": "mechanics.$id",
+                    "foreignField": "_id",
+                    "as": "mechanics",
+                },
+            },
         ]
 
         result = await models.Boardgame.aggregate(

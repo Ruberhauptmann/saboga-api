@@ -19,7 +19,10 @@ async def init_db() -> None:  # pragma: no cover
         document_models=[
             models.Boardgame,
             models.RankHistory,
+            models.Category,
             models.Designer,
             models.DesignerNetwork,
+            models.Family,
+            models.Mechanic,
         ],
     )
