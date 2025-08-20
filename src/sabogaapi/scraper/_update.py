@@ -21,7 +21,7 @@ from sabogaapi.statistics.volatility import calculate_volatility
 logger = configure_logger()
 
 
-def download_zip() -> pd.DataFrame:  # pragma: no cover
+def download_zip() -> pd.DataFrame:
     logger.info("Starting ZIP download process")
 
     download_dir = Path("download").resolve()
@@ -91,7 +91,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
     return df
 
 
-async def ascrape_update() -> None:  # pragma: no cover
+async def ascrape_update() -> None:
     logger.info("Starting scrape. Initializing DB connection.")
     await init_db()
 
