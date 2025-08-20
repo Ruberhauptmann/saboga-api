@@ -4,7 +4,7 @@ import datetime
 from typing import Annotated
 
 from beanie import Document, Indexed, Link, TimeSeriesConfig
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 
 class RankHistory(Document):
@@ -24,19 +24,28 @@ class RankHistory(Document):
         name = "rank_history"
 
 
-class Category(BaseModel):
+class Category(Document):
     name: str
-    bgg_id: int
+    bgg_id: Annotated[int, Indexed(unique=True)]
+
+    class Settings:
+        name = "categories"
 
 
-class Family(BaseModel):
+class Family(Document):
     name: str
-    bgg_id: int
+    bgg_id: Annotated[int, Indexed(unique=True)]
+
+    class Settings:
+        name = "families"
 
 
-class Mechanic(BaseModel):
+class Mechanic(Document):
     name: str
-    bgg_id: int
+    bgg_id: Annotated[int, Indexed(unique=True)]
+
+    class Settings:
+        name = "mechanics"
 
 
 class Designer(Document):
@@ -77,9 +86,9 @@ class Boardgame(Document):
     playingtime: int | None = None
     minplaytime: int | None = None
     maxplaytime: int | None = None
-    categories: list[Category] = []
-    families: list[Family] = []
-    mechanics: list[Mechanic] = []
+    categories: list[Link[Category]] = []
+    families: list[Link[Family]] = []
+    mechanics: list[Link[Mechanic]] = []
     designers: list[Link[Designer]] = []
 
     class Settings:

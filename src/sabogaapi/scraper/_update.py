@@ -1,6 +1,7 @@
 import datetime
 import time
 from pathlib import Path
+from typing import Any
 from zipfile import ZipFile
 
 import pandas as pd
@@ -90,17 +91,11 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 
     return df
 
-
-async def ascrape_update() -> None:  # pragma: no cover
-    logger.info("Starting scrape. Initializing DB connection.")
-    await init_db()
+async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
+    logger.info("Processing boardgames from CSV.")
 
     date = datetime.datetime.now(tz=datetime.UTC)
-
-    games_df = download_zip()
     updated_games = 0
-
-    logger.info("Processing boardgames from CSV.")
     new_games = []
     for game in games_df.itertuples():
         game_db = await models.Boardgame.find_one(models.Boardgame.bgg_id == game.id)
@@ -126,8 +121,6 @@ async def ascrape_update() -> None:  # pragma: no cover
             )
     if new_games:
         await models.Boardgame.insert_many(new_games)
-        logger.info("Inserted %s new boardgames.", len(new_games))
-    logger.info("Updated %s existing boardgames.", updated_games)
 
     new_rank_history = [
         models.RankHistory(
@@ -170,3 +163,17 @@ async def ascrape_update() -> None:  # pragma: no cover
         game.mean_trend = mean_trend
 
         await game.save()
+
+    return new_games, updated_games
+
+
+async def ascrape_update() -> None:  # pragma: no cover
+    logger.info("Starting scrape. Initializing DB connection.")
+    await init_db()
+
+    games_df = download_zip()
+
+    new_games, updated_games = await insert_games(games_df)
+
+    logger.info("Inserted %s new boardgames.", len(new_games))
+    logger.info("Updated %s existing boardgames.", updated_games)

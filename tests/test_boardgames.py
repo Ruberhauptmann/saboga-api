@@ -4,19 +4,19 @@ from fastapi.testclient import TestClient
 
 
 def test_rank_history_small(app: FastAPI, small_dataset):
-    bg, rh, de = small_dataset()
+    data = small_dataset()
 
     with TestClient(app) as client:
         response = client.get("/boardgames/rank-history")
 
     assert response.status_code == 200
-    data = list(response.json())
+    data_api = list(response.json())
 
-    assert len(data) == len(bg)
+    assert len(data_api) == len(data["boardgames"])
 
-    for i, game in enumerate(bg):
-        history_entry = rh[i]
-        game_api = data[i]
+    for i, game in enumerate(data["boardgames"]):
+        history_entry = data["rank_histories"][i]
+        game_api = data_api[i]
 
         assert game.bgg_rank == game_api["bgg_rank"]
         assert pytest.approx(game_api["bgg_rank_change"]) == -(

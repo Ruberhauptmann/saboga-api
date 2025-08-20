@@ -19,10 +19,6 @@ fake = Faker()
 NUM_GAMES = 20
 HISTORY_DAYS = 35
 
-CATEGORIES = [models.Category(name=fake.word(), bgg_id=i) for i in range(1, 10)]
-MECHANICS = [models.Mechanic(name=fake.word(), bgg_id=i) for i in range(1, 10)]
-FAMILIES = [models.Family(name=fake.word(), bgg_id=i) for i in range(1, 10)]
-
 
 def clean_title(text: str) -> str:
     return re.sub(r"[^\w\s]$", "", text.strip())
@@ -99,6 +95,9 @@ def generate_image_with_text(filepath: str, text: str, size: tuple[int, int]):
 def generate_boardgame(
     bgg_id: int,
     designers: list[models.Designer],
+    categories: list[models.Category],
+    families: list[models.Family],
+    mechanics: list[models.Mechanic],
 ) -> tuple[models.Boardgame, list[models.RankHistory]]:
     rank_history, latest = generate_rank_history(bgg_id, HISTORY_DAYS)
 
@@ -155,9 +154,9 @@ def generate_boardgame(
         playingtime=random.randint(minplay, maxplay),
         minplaytime=minplay,
         maxplaytime=maxplay,
-        categories=random.sample(CATEGORIES, k=random.randint(1, 3)),
-        mechanics=random.sample(MECHANICS, k=random.randint(1, 2)),
-        families=random.sample(FAMILIES, k=random.randint(0, 2)),
+        categories=random.sample(categories, k=random.randint(1, 3)),  # type: ignore
+        mechanics=random.sample(mechanics, k=random.randint(1, 2)),  # type: ignore
+        families=random.sample(families, k=random.randint(0, 2)),  # type: ignore
         designers=random.sample(designers, k=random.randint(1, 4)),  # type: ignore
     )
 
@@ -172,6 +171,9 @@ async def generate_data():
             models.Boardgame,
             models.RankHistory,
             models.Designer,
+            models.Family,
+            models.Category,
+            models.Mechanic,
             models.DesignerNetwork,
         ],
     )
@@ -179,16 +181,37 @@ async def generate_data():
     await models.Boardgame.delete_all()
     await models.RankHistory.delete_all()
     await models.Designer.delete_all()
+    await models.Family.delete_all()
+    await models.Mechanic.delete_all()
+    await models.Category.delete_all()
 
     designers = [models.Designer(name=fake.name(), bgg_id=i) for i in range(1, 25)]
     await models.Designer.insert_many(designers)
-    designers = await models.Designer.find_all(fetch_links=True).to_list()
+    designers = await models.Designer.find_all().to_list()
+
+    categories = [models.Category(name=fake.word(), bgg_id=i) for i in range(1, 20)]
+    await models.Category.insert_many(categories)
+    categories = await models.Category.find_all().to_list()
+
+    families = [models.Family(name=fake.word(), bgg_id=i) for i in range(1, 20)]
+    await models.Family.insert_many(families)
+    families = await models.Family.find_all().to_list()
+
+    mechanics = [models.Mechanic(name=fake.word(), bgg_id=i) for i in range(1, 20)]
+    await models.Mechanic.insert_many(mechanics)
+    mechanics = await models.Mechanic.find_all().to_list()
 
     games = []
     history_entries = []
 
     for i in range(NUM_GAMES):
-        game, history = generate_boardgame(1000 + i, designers)
+        game, history = generate_boardgame(
+            bgg_id=1000 + i,
+            designers=designers,
+            families=families,
+            mechanics=mechanics,
+            categories=categories,
+        )
         games.append(game)
         history_entries.extend(history)
 
