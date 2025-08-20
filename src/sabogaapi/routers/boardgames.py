@@ -143,10 +143,10 @@ async def read_games_with_volatility() -> dict[str, str]:
 
 
 @router.get("/trending")
-async def read_trending_games() -> list[BoardgameSingle]:
-    return await BoardgameService.get_trending_games()
+async def read_trending_games() -> list[BoardgameInList]:
+    return await BoardgameService.get_trending_games(limit=5)
 
 
 @router.get("/declining")
-async def read_declining_games() -> list[BoardgameSingle]:
-    return await BoardgameService.get_declining_games()
+async def read_declining_games() -> list[BoardgameInList]:
+    return await BoardgameService.get_declining_games(limit=5)

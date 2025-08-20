@@ -17,7 +17,7 @@ from sabogaapi.statistics.volatility import calculate_volatility
 fake = Faker()
 
 NUM_GAMES = 20
-HISTORY_DAYS = 30
+HISTORY_DAYS = 35
 
 CATEGORIES = [models.Category(name=fake.word(), bgg_id=i) for i in range(1, 10)]
 MECHANICS = [models.Mechanic(name=fake.word(), bgg_id=i) for i in range(1, 10)]
@@ -116,7 +116,7 @@ def generate_boardgame(
         )
     )
 
-    rank_trend, geek_rating_trend, average_rating_trend = calculate_trends(
+    rank_trend, geek_rating_trend, average_rating_trend, mean_trend = calculate_trends(
         [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
     )
 
@@ -144,6 +144,7 @@ def generate_boardgame(
         bgg_geek_rating_trend=geek_rating_trend,
         bgg_average_rating_volatility=average_rating_volatility,
         bgg_average_rating_trend=average_rating_trend,
+        mean_trend=mean_trend,
         name=title,
         description=fake.paragraph(nb_sentences=10),
         image_url=f"/img/{main_image_path}",

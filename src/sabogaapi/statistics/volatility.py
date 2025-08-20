@@ -28,7 +28,7 @@ def calculate_volatility(
 
     logger.debug("Received %s rank history records.", len(rank_history))
 
-    df = pd.DataFrame([dict(entry) for entry in rank_history]).dropna()
+    df = pd.DataFrame([dict(entry) for entry in rank_history[-30:]]).dropna()
 
     rank_volatility = df["bgg_rank"].std() / df["bgg_rank"].mean()
     geek_rating_volatility = df["bgg_geek_rating"].std() / df["bgg_geek_rating"].mean()

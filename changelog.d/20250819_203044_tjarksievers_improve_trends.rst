@@ -16,7 +16,7 @@
 Changed
 ^^^^^^^
 
-- Proper calculation of trends
+- Better calculation of trends
 
 .. Deprecated
 .. ^^^^^^^^^^
