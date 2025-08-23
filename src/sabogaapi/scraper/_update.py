@@ -16,6 +16,7 @@ from sabogaapi import models, schemas
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.logger import configure_logger
+from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
 logger = configure_logger()
@@ -149,6 +150,12 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
         rank_history = await models.RankHistory.find(
             models.RankHistory.bgg_id == game.bgg_id,
         ).to_list()
+        for doc in rank_history:
+            new_date = datetime.datetime(doc.date.year, doc.date.month, doc.date.day)
+            if doc.date != new_date:
+                doc.date = new_date
+                await doc.save()
+
         rank_volatility, geek_rating_volatility, average_rating_volatility = (
             calculate_volatility(
                 [schemas.RankHistory(**entry.model_dump()) for entry in rank_history],
@@ -158,7 +165,6 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
         game.bgg_geek_rating_volatility = geek_rating_volatility
         game.bgg_average_rating_volatility = average_rating_volatility
 
-        """
         rank_trend, geek_rating_trend, average_rating_trend, mean_trend = (
             calculate_trends(
                 [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
@@ -168,7 +174,6 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
         game.bgg_geek_rating_trend = geek_rating_trend
         game.bgg_average_rating_trend = average_rating_trend
         game.mean_trend = mean_trend
-        """
 
         await game.save()
 
