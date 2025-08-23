@@ -179,7 +179,7 @@ def small_dataset(
                 "designers": de,
                 "mechanics": me,
                 "families": fa,
-                "categories": ca
+                "categories": ca,
             }
 
         return asyncio.run(_inner())

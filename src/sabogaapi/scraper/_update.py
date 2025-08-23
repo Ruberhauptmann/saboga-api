@@ -16,7 +16,6 @@ from sabogaapi import models, schemas
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.logger import configure_logger
-from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
 logger = configure_logger()
@@ -69,9 +68,6 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
         logger.info("Login submitted. Waiting for redirect")
         time.sleep(5)
 
-        with open("bgg_site", "w") as f:
-            f.write(driver.page_source)
-
         driver.get("https://boardgamegeek.com/data_dumps/bg_ranks")
         time.sleep(3)
 
@@ -99,6 +95,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
     logger.info("Parsed %s ranked boardgames from CSV.", len(df))
 
     return df
+
 
 async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
     logger.info("Processing boardgames from CSV.")
