@@ -27,6 +27,7 @@ def test_single_category(app: FastAPI, small_dataset):
         api_data = response.json()
         assert data["categories"][i].name == api_data["name"]
 
+
 def test_nonexisting_category(app: FastAPI, small_dataset):
     _ = small_dataset()
     with TestClient(app) as client:

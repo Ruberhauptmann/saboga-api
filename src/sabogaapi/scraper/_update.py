@@ -16,7 +16,6 @@ from sabogaapi import models, schemas
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.logger import configure_logger
-from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
 logger = configure_logger()
@@ -50,6 +49,12 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
         time.sleep(2)
 
         cookie_button = driver.find_element(By.CLASS_NAME, "fc-cta-consent")
+
+        cookie_button.click()
+        logger.debug("Cookie consent clicked.")
+
+        cookie_button = driver.find_element(By.ID, "c-s-bn")
+
         cookie_button.click()
         logger.debug("Cookie consent clicked.")
 
@@ -57,7 +62,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
         password = settings.bgg_password
 
         driver.find_element(By.ID, "inputUsername").send_keys(username)
-        driver.find_element(By.NAME, "password").send_keys(password)
+        driver.find_element(By.ID, "inputPassword").send_keys(password)
         driver.find_element(By.CSS_SELECTOR, "[type='submit']").click()
 
         logger.info("Login submitted. Waiting for redirect")
@@ -90,6 +95,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
     logger.info("Parsed %s ranked boardgames from CSV.", len(df))
 
     return df
+
 
 async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
     logger.info("Processing boardgames from CSV.")
@@ -152,6 +158,7 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
         game.bgg_geek_rating_volatility = geek_rating_volatility
         game.bgg_average_rating_volatility = average_rating_volatility
 
+        """
         rank_trend, geek_rating_trend, average_rating_trend, mean_trend = (
             calculate_trends(
                 [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
@@ -161,6 +168,7 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
         game.bgg_geek_rating_trend = geek_rating_trend
         game.bgg_average_rating_trend = average_rating_trend
         game.mean_trend = mean_trend
+        """
 
         await game.save()
 
