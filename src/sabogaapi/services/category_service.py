@@ -10,8 +10,11 @@ class CategoryService:
     """Service layer for category."""
 
     @staticmethod
-    async def read_all_categories() -> list[schemas.Category]:
-        category_list = await models.Category.find().to_list()
+    async def read_all_categories(
+        page: int = 1,
+        page_size: int = 50,
+    ) -> list[schemas.Category]:
+        category_list = await models.Category.find().sort("name").skip((page -1) * page_size).limit(page_size).to_list()
         return [schemas.Category(**category.model_dump()) for category in category_list]
 
     @staticmethod
