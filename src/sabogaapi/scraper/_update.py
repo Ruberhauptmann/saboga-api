@@ -151,7 +151,9 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
             models.RankHistory.bgg_id == game.bgg_id,
         ).to_list()
         for doc in rank_history:
-            new_date = datetime.datetime(doc.date.year, doc.date.month, doc.date.day)
+            new_date = datetime.datetime(
+                doc.date.year, doc.date.month, doc.date.day, tzinfo=datetime.UTC
+            )
             if doc.date != new_date:
                 doc.date = new_date
                 await doc.save()
