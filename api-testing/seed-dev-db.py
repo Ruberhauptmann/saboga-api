@@ -186,7 +186,9 @@ async def generate_data():
     await models.Mechanic.delete_all()
     await models.Category.delete_all()
 
-    designers = [models.Designer(name=fake.name(), bgg_id=i) for i in range(1, NUM_DESIGNERS)]
+    designers = [
+        models.Designer(name=fake.name(), bgg_id=i) for i in range(1, NUM_DESIGNERS)
+    ]
     await models.Designer.insert_many(designers)
     designers = await models.Designer.find_all().to_list()
 
