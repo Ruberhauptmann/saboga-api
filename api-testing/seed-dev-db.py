@@ -16,7 +16,8 @@ from sabogaapi.statistics.volatility import calculate_volatility
 
 fake = Faker()
 
-NUM_GAMES = 20
+NUM_GAMES = 200
+NUM_DESIGNERS = 150
 HISTORY_DAYS = 35
 
 
@@ -156,8 +157,8 @@ def generate_boardgame(
         maxplaytime=maxplay,
         categories=random.sample(categories, k=random.randint(1, 3)),  # type: ignore
         mechanics=random.sample(mechanics, k=random.randint(1, 2)),  # type: ignore
-        families=random.sample(families, k=random.randint(0, 2)),  # type: ignore
-        designers=random.sample(designers, k=random.randint(1, 4)),  # type: ignore
+        families=random.sample(families, k=random.randint(1, 2)),  # type: ignore
+        designers=random.sample(designers, k=random.randint(1, 2)),  # type: ignore
     )
 
     return boardgame, rank_history
@@ -185,7 +186,7 @@ async def generate_data():
     await models.Mechanic.delete_all()
     await models.Category.delete_all()
 
-    designers = [models.Designer(name=fake.name(), bgg_id=i) for i in range(1, 25)]
+    designers = [models.Designer(name=fake.name(), bgg_id=i) for i in range(1, NUM_DESIGNERS)]
     await models.Designer.insert_many(designers)
     designers = await models.Designer.find_all().to_list()
 
