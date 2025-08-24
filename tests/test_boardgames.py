@@ -53,6 +53,12 @@ def test_rank_history_small(app: FastAPI, small_dataset):
     assert response.status_code == 422
 
     with TestClient(app) as client:
+        response = client.get("/boardgames/rank-history?page=2&per_page=1")
+    data_api = response.json()
+    assert response.status_code == 200
+    assert data_api[0]["bgg_id"] == 2
+
+    with TestClient(app) as client:
         response = client.get("/boardgames/rank-history?compare_to=2025-08-24")
     assert response.status_code == 200
 
