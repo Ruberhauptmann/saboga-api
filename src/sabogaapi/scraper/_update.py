@@ -101,7 +101,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
     logger.info("Processing boardgames from CSV.")
 
-    date = datetime.datetime.now(tz=datetime.UTC)
+    date = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1)
     updated_games = 0
     new_games = []
     for game in games_df.itertuples():
@@ -154,9 +154,17 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
             new_date = datetime.datetime(
                 doc.date.year, doc.date.month, doc.date.day, tzinfo=datetime.UTC
             )
+            new_date = doc.date.replace(hour=0, minute=0, second=0, microsecond=0)
             if doc.date != new_date:
-                doc.date = new_date
-                await doc.save()
+                await doc.delete()
+                corrected = models.RankHistory(
+                    date=new_date,
+                    bgg_id=doc.bgg_id,
+                    bgg_rank=doc.bgg_rank,
+                    bgg_geek_rating=doc.bgg_geek_rating,
+                    bgg_average_rating=doc.bgg_average_rating,
+                )
+                await corrected.insert()
 
         rank_volatility, geek_rating_volatility, average_rating_volatility = (
             calculate_volatility(
