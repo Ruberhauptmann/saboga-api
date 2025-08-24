@@ -101,7 +101,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
     logger.info("Processing boardgames from CSV.")
 
-    date = datetime.datetime.now(tz=datetime.UTC)
+    date = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1)
     updated_games = 0
     new_games = []
     for game in games_df.itertuples():

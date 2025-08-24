@@ -328,7 +328,7 @@ async def process_entities(
     model: type[T],
     id_field: str = "bgg_id",
     update_fields: list[str] | None = None,
-) -> list[T]:
+) -> list[T | None]:
     """
     Insert or update entities of a given model.
 
@@ -341,21 +341,25 @@ async def process_entities(
     Returns:
         List of entities as stored in the database.
     """
-    entities_db: list[T] = []
+    entities_db = []
     for entity in entities:
         entity_id = getattr(entity, id_field)
         existing = await model.find(
             getattr(model, id_field) == entity_id
         ).first_or_none()
 
-        if existing:
-            # update selected fields
-            if update_fields is None:
-                update_fields = [f for f in entity.model_dump() if f != id_field]
+        fields_to_update = update_fields or [
+            f for f in entity.model_dump() if f != id_field
+        ]
 
-            for field in update_fields:
-                setattr(existing, field, getattr(entity, field))
-            await existing.save()
+        if existing:
+            update_dict = {field: getattr(entity, field) for field in fields_to_update}
+            await model.find(getattr(model, id_field) == entity_id).update(
+                {"$set": update_dict}
+            )
+            existing = await model.find(
+                getattr(model, id_field) == entity_id
+            ).first_or_none()
             entities_db.append(existing)
         else:
             new = await model.insert(entity)
