@@ -10,11 +10,12 @@ from faker import Faker
 from fastapi import FastAPI
 from pydantic import MongoDsn
 
-from sabogaapi import create_app, models
+from sabogaapi import create_app, models, schemas
 from sabogaapi.config import settings
 from sabogaapi.database import init_db
 from sabogaapi.main import lifespan
 from sabogaapi.scraper._fill_in_data import construct_designer_network, graph_to_dict
+from sabogaapi.statistics import calculate_trends
 
 fake = Faker()
 
@@ -149,24 +150,83 @@ def small_dataset(
                     bgg_rank=2,
                     bgg_geek_rating=7.8,
                     bgg_average_rating=7.9,
-                    date=datetime.datetime.now() - datetime.timedelta(days=7),
+                    date=datetime.datetime.now(tz=datetime.UTC).replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
+                    - datetime.timedelta(days=7),
+                ),
+                models.RankHistory(
+                    bgg_id=bg[0].bgg_id,
+                    bgg_rank=1,
+                    bgg_geek_rating=8.2,
+                    bgg_average_rating=8.2,
+                    date=datetime.datetime.now(tz=datetime.UTC).replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
+                    - datetime.timedelta(days=6),
                 ),
                 models.RankHistory(
                     bgg_id=bg[1].bgg_id,
                     bgg_rank=1,
                     bgg_geek_rating=8.1,
                     bgg_average_rating=8.2,
-                    date=datetime.datetime.now() - datetime.timedelta(days=7),
+                    date=datetime.datetime.now(tz=datetime.UTC).replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
+                    - datetime.timedelta(days=7),
+                ),
+                models.RankHistory(
+                    bgg_id=bg[1].bgg_id,
+                    bgg_rank=2,
+                    bgg_geek_rating=7.6,
+                    bgg_average_rating=7.8,
+                    date=datetime.datetime.now(tz=datetime.UTC).replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
+                    - datetime.timedelta(days=6),
                 ),
                 models.RankHistory(
                     bgg_id=bg[2].bgg_id,
                     bgg_rank=3,
                     bgg_geek_rating=7.0,
                     bgg_average_rating=7.1,
-                    date=datetime.datetime.now() - datetime.timedelta(days=7),
+                    date=datetime.datetime.now(tz=datetime.UTC).replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
+                    - datetime.timedelta(days=7),
+                ),
+                models.RankHistory(
+                    bgg_id=bg[2].bgg_id,
+                    bgg_rank=3,
+                    bgg_geek_rating=6.8,
+                    bgg_average_rating=7.0,
+                    date=datetime.datetime.now(tz=datetime.UTC).replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
+                    - datetime.timedelta(days=6),
                 ),
             ]
             await models.RankHistory.insert_many(rh)
+
+            bg = await models.Boardgame.find_all().to_list()
+            for game in bg:
+                rank_hist = await models.RankHistory.find(
+                    models.RankHistory.bgg_id == game.bgg_id
+                ).to_list()
+
+                rank_trend, geek_rating_trend, average_rating_trend, mean_trend = (
+                    calculate_trends(
+                        [
+                            schemas.RankHistory(**entry.model_dump())
+                            for entry in rank_hist
+                        ]
+                    )
+                )
+                game.bgg_rank_trend = rank_trend
+                game.bgg_geek_rating_trend = geek_rating_trend
+                game.bgg_average_rating_trend = average_rating_trend
+                game.mean_trend = mean_trend
+                await game.save()
 
             graph = await construct_designer_network()
             await models.DesignerNetwork.delete_all()

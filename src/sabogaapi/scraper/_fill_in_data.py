@@ -57,11 +57,12 @@ def build_designer_graph(
     graph = nx.Graph()
 
     for d in designers:
-        graph.add_node(d.bgg_id, label=d.name)
+        graph.add_node(d.bgg_id, label=d.name, size=1)
 
     for g in boardgames:
-        d_ids = [d.bgg_id for d in g.designers]  # type: ignore[attr-defined]
+        d_ids = [int(d.bgg_id) for d in g.designers]  # type: ignore[attr-defined]
         for i in range(len(d_ids)):
+            graph.nodes[d_ids[i]]["size"] += 3
             for j in range(i + 1, len(d_ids)):
                 if graph.has_edge(d_ids[i], d_ids[j]):
                     graph[d_ids[i]][d_ids[j]]["weight"] += 1
@@ -74,14 +75,11 @@ def build_designer_graph(
         if graph.degree[n] == 0:
             partition[n] = -1  # isolated nodes
 
-    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.5)
-
-    centrality = nx.betweenness_centrality(graph)
+    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.2)
 
     for n, data in graph.nodes(data=True):
         data["x"] = float(pos[n][0])
         data["y"] = float(pos[n][1])
-        data["size"] = centrality.get(n, 0) * 30 + 5
         data["cluster"] = partition[n]
 
     for _u, _v, data in graph.edges(data=True):
@@ -163,7 +161,6 @@ def parse_boardgame_data(item: ET.Element) -> dict:
         name = _map_to(str, name_element.get("value"))
 
     image_url = None
-    thumbnail_url = None
     bgg_image_url_element = item.find("image")
     if bgg_image_url_element is not None and bgg_image_url_element.text:
         image_url = bgg_image_url_element.text
@@ -204,7 +201,6 @@ def parse_boardgame_data(item: ET.Element) -> dict:
         "bgg_id": bgg_id,
         "name": name,
         "image_url": image_url,
-        "thumbnail_url": thumbnail_url,
         "description": description,
         "rank": rank,
         "average_rating": average_rating,
