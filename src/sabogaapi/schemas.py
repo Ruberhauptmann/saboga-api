@@ -5,65 +5,6 @@ import datetime
 from pydantic import BaseModel
 
 
-class RankHistory(BaseModel):
-    date: datetime.date
-    bgg_rank: int | None
-    bgg_geek_rating: float | None
-    bgg_average_rating: float | None
-
-
-class BaseCategory(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Category(BaseCategory):
-    pass
-
-
-class CategoryWithBoardgames(BaseCategory):
-    boardgames: list["BoardgameInList"]
-
-
-class BaseFamily(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Family(BaseFamily):
-    pass
-
-
-class FamilyWithBoardgames(BaseFamily):
-    boardgames: list["BoardgameInList"]
-
-
-class BaseDesigner(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Designer(BaseDesigner):
-    pass
-
-
-class DesignerWithBoardgames(BaseDesigner):
-    boardgames: list["BoardgameInList"]
-
-
-class BaseMechanic(BaseModel):
-    name: str
-    bgg_id: int
-
-
-class Mechanic(BaseMechanic):
-    pass
-
-
-class MechanicWithBoardgames(BaseMechanic):
-    boardgames: list["BoardgameInList"]
-
-
 class BaseBoardgame(BaseModel):
     bgg_id: int
     name: str | None = None
@@ -92,11 +33,70 @@ class BoardgameInList(BaseBoardgame):
 
 
 class BoardgameSingle(BaseBoardgame):
-    categories: list[Category] = []
-    families: list[Family] = []
-    designers: list[Designer] = []
-    mechanics: list[Mechanic] = []
-    bgg_rank_history: list[RankHistory] = []
+    categories: list["Category"] = []
+    families: list["Family"] = []
+    designers: list["Designer"] = []
+    mechanics: list["Mechanic"] = []
+    bgg_rank_history: list["RankHistory"] = []
+
+
+class BaseCategory(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Category(BaseCategory):
+    pass
+
+
+class CategoryWithBoardgames(BaseCategory):
+    boardgames: list["BoardgameInList"]
+
+
+class BaseDesigner(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Designer(BaseDesigner):
+    pass
+
+
+class DesignerWithBoardgames(BaseDesigner):
+    boardgames: list["BoardgameInList"]
+
+
+class BaseFamily(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Family(BaseFamily):
+    pass
+
+
+class FamilyWithBoardgames(BaseFamily):
+    boardgames: list["BoardgameInList"]
+
+
+class RankHistory(BaseModel):
+    date: datetime.date
+    bgg_rank: int | None
+    bgg_geek_rating: float | None
+    bgg_average_rating: float | None
+
+
+class BaseMechanic(BaseModel):
+    name: str
+    bgg_id: int
+
+
+class Mechanic(BaseMechanic):
+    pass
+
+
+class MechanicWithBoardgames(BaseMechanic):
+    boardgames: list["BoardgameInList"]
 
 
 class Prediction(BaseModel):
@@ -117,6 +117,7 @@ class ForecastData(BaseModel):
 class SearchResult(BaseModel):
     bgg_id: int
     name: str
+    type: str
 
 
 class DesignerNode(BaseModel):

@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from sabogaapi.schemas import SearchResult
-from sabogaapi.services import BoardgameService
+from sabogaapi.services import SearchService
 
 router = APIRouter(
     prefix="/search",
@@ -12,4 +12,4 @@ router = APIRouter(
 
 @router.get("")
 async def search(query: str, limit: int = 10) -> list[SearchResult]:
-    return await BoardgameService.search(query=query, limit=limit)
+    return await SearchService.search(query=query, limit=limit)

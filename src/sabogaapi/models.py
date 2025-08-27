@@ -1,79 +1,10 @@
 """Beanie database models."""
 
 import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from beanie import BackLink, Document, Indexed, Link, TimeSeriesConfig
 from pydantic import Field
-
-
-class RankHistory(Document):
-    date: datetime.datetime = Field(default_factory=datetime.datetime.now)
-    bgg_id: int
-    bgg_rank: int | None = None
-    bgg_geek_rating: float | None = None
-    bgg_average_rating: float | None = None
-
-    class Settings:
-        timeseries = TimeSeriesConfig(
-            time_field="date",
-            meta_field="bgg_id",
-            bucket_rounding_seconds=86400,
-            bucket_max_span_seconds=86400,
-        )
-        name = "rank_history"
-
-
-class Category(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "categories"}
-    )
-
-    class Settings:
-        name = "categories"
-
-
-class Family(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "families"}
-    )
-
-    class Settings:
-        name = "families"
-
-
-class Mechanic(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "mechanics"}
-    )
-
-    class Settings:
-        name = "mechanics"
-
-
-class Designer(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "designers"}
-    )
-
-    class Settings:
-        name = "designers"
-
-
-class DesignerNetwork(Document):
-    nodes: list[dict]
-    edges: list[dict]
-
-    class Settings:
-        name = "designer_network"
 
 
 class Boardgame(Document):
@@ -98,10 +29,84 @@ class Boardgame(Document):
     playingtime: int | None = None
     minplaytime: int | None = None
     maxplaytime: int | None = None
-    categories: list[Link[Category]] = []
-    families: list[Link[Family]] = []
-    mechanics: list[Link[Mechanic]] = []
-    designers: list[Link[Designer]] = []
+    categories: list[Link["Category"]] = []
+    families: list[Link["Family"]] = []
+    mechanics: list[Link["Mechanic"]] = []
+    designers: list[Link["Designer"]] = []
+    type: Literal["boardgame"] = "boardgame"
 
     class Settings:
         name = "boardgames"
+
+
+class Category(Document):
+    name: str
+    bgg_id: Annotated[int, Indexed(unique=True)]
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "categories"}
+    )
+    type: Literal["category"] = "category"
+
+    class Settings:
+        name = "categories"
+
+
+class Designer(Document):
+    name: str
+    bgg_id: Annotated[int, Indexed(unique=True)]
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "designers"}
+    )
+    type: Literal["designer"] = "designer"
+
+    class Settings:
+        name = "designers"
+
+
+class DesignerNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "designer_network"
+
+
+class Family(Document):
+    name: str
+    bgg_id: Annotated[int, Indexed(unique=True)]
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "families"}
+    )
+    type: Literal["family"] = "family"
+
+    class Settings:
+        name = "families"
+
+
+class Mechanic(Document):
+    name: str
+    bgg_id: Annotated[int, Indexed(unique=True)]
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "mechanics"}
+    )
+    type: Literal["mechanic"] = "mechanic"
+
+    class Settings:
+        name = "mechanics"
+
+
+class RankHistory(Document):
+    date: datetime.datetime = Field(default_factory=datetime.datetime.now)
+    bgg_id: int
+    bgg_rank: int | None = None
+    bgg_geek_rating: float | None = None
+    bgg_average_rating: float | None = None
+
+    class Settings:
+        timeseries = TimeSeriesConfig(
+            time_field="date",
+            meta_field="bgg_id",
+            bucket_rounding_seconds=86400,
+            bucket_max_span_seconds=86400,
+        )
+        name = "rank_history"

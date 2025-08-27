@@ -241,25 +241,6 @@ class BoardgameService:
         return await models.Boardgame.find_all().count()
 
     @staticmethod
-    async def search(query: str, limit: int = 10) -> list[schemas.SearchResult]:
-        """Search.
-
-        Args:
-            query (str): Search query.
-            limit (int, optional): Limit for results. Defaults to 10.
-
-        Returns:
-            list[schemas.SearchResult]: List of search results.
-
-        """
-        results = (
-            await models.Boardgame.find({"name": {"$regex": query, "$options": "i"}})
-            .limit(limit)
-            .to_list()
-        )
-        return [schemas.SearchResult(**result.model_dump()) for result in results]
-
-    @staticmethod
     async def get_trending_games(limit: int = 5) -> list[schemas.BoardgameInList]:
         """Get trending games.
 

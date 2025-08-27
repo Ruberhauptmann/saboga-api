@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from sabogaapi.logger import configure_logger
 from sabogaapi.schemas import Family, FamilyWithBoardgames
-from sabogaapi.services.family_service import FamilyService
+from sabogaapi.services import FamilyService
 
 logger = configure_logger()
 
