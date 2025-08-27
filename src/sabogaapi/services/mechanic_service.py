@@ -15,10 +15,10 @@ class MechanicService:
         return [schemas.Mechanic(**mechanic.model_dump()) for mechanic in mechanic_list]
 
     @staticmethod
-    async def read_mechanic(bgg_id: int) -> schemas.Mechanic | None:
+    async def read_mechanic(bgg_id: int) -> schemas.MechanicWithBoardgames | None:
         mechanic = await models.Mechanic.find(
-            models.Mechanic.bgg_id == bgg_id
+            models.Mechanic.bgg_id == bgg_id, fetch_links=True
         ).first_or_none()
         if mechanic is None:
             return None
-        return schemas.Mechanic(**mechanic.model_dump())
+        return schemas.MechanicWithBoardgames(**mechanic.model_dump())

@@ -15,10 +15,10 @@ class CategoryService:
         return [schemas.Category(**category.model_dump()) for category in category_list]
 
     @staticmethod
-    async def read_category(bgg_id: int) -> schemas.Category | None:
+    async def read_category(bgg_id: int) -> schemas.CategoryWithBoardgames | None:
         category = await models.Category.find(
-            models.Category.bgg_id == bgg_id
+            models.Category.bgg_id == bgg_id, fetch_links=True
         ).first_or_none()
         if category is None:
             return None
-        return schemas.Category(**category.model_dump())
+        return schemas.CategoryWithBoardgames(**category.model_dump())
