@@ -27,7 +27,9 @@ class RankHistory(Document):
 class Category(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(json_schema_extra={"original_field": "categories"})
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "categories"}
+    )
 
     class Settings:
         name = "categories"
@@ -36,7 +38,9 @@ class Category(Document):
 class Family(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(json_schema_extra={"original_field": "families"})
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "families"}
+    )
 
     class Settings:
         name = "families"
@@ -45,7 +49,9 @@ class Family(Document):
 class Mechanic(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(json_schema_extra={"original_field": "mechanics"})
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "mechanics"}
+    )
 
     class Settings:
         name = "mechanics"
@@ -54,7 +60,9 @@ class Mechanic(Document):
 class Designer(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(json_schema_extra={"original_field": "designers"})
+    boardgames: list[BackLink["Boardgame"]] = Field(
+        json_schema_extra={"original_field": "designers"}
+    )
 
     class Settings:
         name = "designers"

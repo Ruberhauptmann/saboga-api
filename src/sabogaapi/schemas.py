@@ -16,8 +16,10 @@ class BaseCategory(BaseModel):
     name: str
     bgg_id: int
 
+
 class Category(BaseCategory):
     pass
+
 
 class CategoryWithBoardgames(BaseCategory):
     boardgames: list["BoardgameInList"]
@@ -27,8 +29,10 @@ class BaseFamily(BaseModel):
     name: str
     bgg_id: int
 
+
 class Family(BaseFamily):
     pass
+
 
 class FamilyWithBoardgames(BaseFamily):
     boardgames: list["BoardgameInList"]
@@ -38,8 +42,10 @@ class BaseDesigner(BaseModel):
     name: str
     bgg_id: int
 
+
 class Designer(BaseDesigner):
     pass
+
 
 class DesignerWithBoardgames(BaseDesigner):
     boardgames: list["BoardgameInList"]
@@ -49,8 +55,10 @@ class BaseMechanic(BaseModel):
     name: str
     bgg_id: int
 
+
 class Mechanic(BaseMechanic):
     pass
+
 
 class MechanicWithBoardgames(BaseMechanic):
     boardgames: list["BoardgameInList"]
