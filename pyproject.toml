@@ -1,6 +1,6 @@
 [project]
 name = "sabogaapi"
-version = "0.0.49"
+version = "0.0.50"
 description = ""
 authors = [{name="Tjark Sievers", email="tjarksievers@icloud.com"}]
 readme = "README.md"
