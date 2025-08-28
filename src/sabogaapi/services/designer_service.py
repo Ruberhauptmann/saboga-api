@@ -15,13 +15,13 @@ class DesignerService:
         return [schemas.Designer(**designer.model_dump()) for designer in designer_list]
 
     @staticmethod
-    async def read_designer(bgg_id: int) -> schemas.Designer | None:
+    async def read_designer(bgg_id: int) -> schemas.DesignerWithBoardgames | None:
         designer = await models.Designer.find(
-            models.Designer.bgg_id == bgg_id
+            models.Designer.bgg_id == bgg_id, fetch_links=True
         ).first_or_none()
         if designer is None:
             return None
-        return schemas.Designer(**designer.model_dump())
+        return schemas.DesignerWithBoardgames(**designer.model_dump())
 
     @staticmethod
     async def get_designer_network() -> schemas.DesignerNetwork:
