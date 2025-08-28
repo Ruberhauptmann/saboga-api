@@ -156,7 +156,6 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
                 doc.date.year, doc.date.month, doc.date.day, tzinfo=datetime.UTC
             )
             new_date = doc.date.replace(hour=0, minute=0, second=0, microsecond=0)
-            #print(doc.date, new_date, flush=True)
             if doc.date != new_date:
                 await doc.delete()
                 corrected = models.RankHistory(
