@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
 
+import numpy as np
 import pandas as pd
 import requests
 from selenium import webdriver
@@ -101,7 +102,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
     logger.info("Processing boardgames from CSV.")
 
-    date = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(days=1)
+    date = datetime.datetime.now(tz=datetime.UTC)
     updated_games = 0
     new_games = []
     for game in games_df.itertuples():
@@ -155,6 +156,7 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
                 doc.date.year, doc.date.month, doc.date.day, tzinfo=datetime.UTC
             )
             new_date = doc.date.replace(hour=0, minute=0, second=0, microsecond=0)
+            #print(doc.date, new_date, flush=True)
             if doc.date != new_date:
                 await doc.delete()
                 corrected = models.RankHistory(
@@ -171,19 +173,35 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
                 [schemas.RankHistory(**entry.model_dump()) for entry in rank_history],
             )
         )
-        game.bgg_rank_volatility = rank_volatility
-        game.bgg_geek_rating_volatility = geek_rating_volatility
-        game.bgg_average_rating_volatility = average_rating_volatility
+        game.bgg_rank_volatility = (
+            np.nan_to_num(rank_volatility) if rank_volatility is not None else 0
+        )
+        game.bgg_geek_rating_volatility = (
+            np.nan_to_num(geek_rating_volatility)
+            if geek_rating_volatility is not None
+            else 0
+        )
+        game.bgg_average_rating_volatility = (
+            np.nan_to_num(average_rating_volatility)
+            if average_rating_volatility is not None
+            else 0
+        )
 
         rank_trend, geek_rating_trend, average_rating_trend, mean_trend = (
             calculate_trends(
                 [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
             )
         )
-        game.bgg_rank_trend = rank_trend
-        game.bgg_geek_rating_trend = geek_rating_trend
-        game.bgg_average_rating_trend = average_rating_trend
-        game.mean_trend = mean_trend
+        game.bgg_rank_trend = np.nan_to_num(rank_trend) if rank_trend is not None else 0
+        game.bgg_geek_rating_trend = (
+            np.nan_to_num(geek_rating_trend) if geek_rating_trend is not None else 0
+        )
+        game.bgg_average_rating_trend = (
+            np.nan_to_num(average_rating_trend)
+            if average_rating_trend is not None
+            else 0
+        )
+        game.mean_trend = np.nan_to_num(mean_trend) if mean_trend is not None else 0
 
         await game.save()
 
