@@ -8,10 +8,10 @@ from .search_service import SearchService
 
 __all__ = [
     "BoardgameService",
-    "DesignerService",
-    "RankHistoryService",
-    "FamilyService",
     "CategoryService",
+    "DesignerService",
+    "FamilyService",
     "MechanicService",
+    "RankHistoryService",
     "SearchService",
 ]
