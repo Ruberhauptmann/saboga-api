@@ -16,6 +16,7 @@ def test_single_boardgame(app: FastAPI, small_dataset):
         assert api_data["name"] == bg_single.name
         assert api_data["bgg_rank"] == bg_single.bgg_rank
 
+
 def test_nonexisting_boardgame(app: FastAPI, small_dataset):
     _ = small_dataset()
     with TestClient(app) as client:

@@ -91,6 +91,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 
     return df
 
+
 async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
     logger.info("Processing boardgames from CSV.")
 
