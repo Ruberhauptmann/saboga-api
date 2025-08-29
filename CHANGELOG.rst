@@ -1,4 +1,37 @@
 
+.. _changelog-0.0.50:
+
+0.0.50 — 2025-08-28
+-------------------
+
+Changed
+^^^^^^^
+
+- Better layout for designer network graph
+
+- Endpoints for categories, designers, families, mechanics also return linked boardgames
+
+- Search function now searches across categories, designers, families and mechanics as well
+
+.. _changelog-0.0.47:
+
+0.0.47 — 2025-08-23
+-------------------
+
+Added
+^^^^^
+
+- Endpoints for categories, mechanics, families
+
+Changed
+^^^^^^^
+
+- Save designer network graph in database for faster API calls
+
+- Cluster the designers in the network graph
+
+- Better calculation of trends
+
 .. _changelog-0.0.46:
 
 0.0.46 — 2025-08-17

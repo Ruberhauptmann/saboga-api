@@ -15,10 +15,11 @@ class FamilyService:
         return [schemas.Family(**family.model_dump()) for family in family_list]
 
     @staticmethod
-    async def read_family(bgg_id: int) -> schemas.Family | None:
+    async def read_family(bgg_id: int) -> schemas.FamilyWithBoardgames | None:
         family = await models.Family.find(
-            models.Family.bgg_id == bgg_id
+            models.Family.bgg_id == bgg_id, fetch_links=True
         ).first_or_none()
         if family is None:
             return None
-        return schemas.Family(**family.model_dump())
+
+        return schemas.FamilyWithBoardgames(**family.model_dump())

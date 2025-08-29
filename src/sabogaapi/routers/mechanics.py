@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import Mechanic
+from sabogaapi.schemas import Mechanic, MechanicWithBoardgames
 from sabogaapi.services.mechanic_service import MechanicService
 
 logger = configure_logger()
@@ -21,7 +21,7 @@ async def read_all_mechanics() -> list[Mechanic]:
 
 
 @router.get("/{bgg_id}")
-async def read_mechanic(bgg_id: int) -> Mechanic:
+async def read_mechanic(bgg_id: int) -> MechanicWithBoardgames:
     mechanic = await MechanicService.read_mechanic(bgg_id=bgg_id)
     if not mechanic:
         raise HTTPException(status_code=404, detail="Mechanic not found")

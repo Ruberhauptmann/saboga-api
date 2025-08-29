@@ -3,8 +3,8 @@
 from fastapi import APIRouter, HTTPException
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import Family
-from sabogaapi.services.family_service import FamilyService
+from sabogaapi.schemas import Family, FamilyWithBoardgames
+from sabogaapi.services import FamilyService
 
 logger = configure_logger()
 
@@ -21,8 +21,8 @@ async def read_all_families() -> list[Family]:
 
 
 @router.get("/{bgg_id}")
-async def read_family(bgg_id: int) -> Family:
+async def read_family(bgg_id: int) -> FamilyWithBoardgames:
     family = await FamilyService.read_family(bgg_id=bgg_id)
     if not family:
-        raise HTTPException(status_code=404, detail="Mechanic not found")
+        raise HTTPException(status_code=404, detail="Family not found")
     return family
