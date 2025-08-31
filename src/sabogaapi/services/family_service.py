@@ -10,8 +10,27 @@ class FamilyService:
     """Service layer for mechanics."""
 
     @staticmethod
-    async def read_all_families() -> list[schemas.Family]:
-        family_list = await models.Family.find().to_list()
+    async def get_total_count() -> int:
+        """Get number of families.
+
+        Returns:
+            int: Number of families.
+
+        """
+        return await models.Family.find_all().count()
+
+    @staticmethod
+    async def read_all_families(
+        page: int,
+        per_page: int,
+    ) -> list[schemas.Family]:
+        family_list = (
+            await models.Family.find()
+            .sort("+name")
+            .skip((page - 1) * per_page)
+            .limit(per_page)
+            .to_list()
+        )
         return [schemas.Family(**family.model_dump()) for family in family_list]
 
     @staticmethod
