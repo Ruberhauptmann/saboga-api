@@ -10,6 +10,16 @@ class CategoryService:
     """Service layer for category."""
 
     @staticmethod
+    async def get_total_count() -> int:
+        """Get number of category.
+
+        Returns:
+            int: Number of categories.
+
+        """
+        return await models.Category.find_all().count()
+
+    @staticmethod
     async def read_all_categories(
         page: int = 1,
         page_size: int = 50,

@@ -10,8 +10,27 @@ class DesignerService:
     """Service layer for designer."""
 
     @staticmethod
-    async def read_all_designers() -> list[schemas.Designer]:
-        designer_list = await models.Designer.find().to_list()
+    async def get_total_count() -> int:
+        """Get number of designers.
+
+        Returns:
+            int: Number of designers.
+
+        """
+        return await models.Designer.find_all().count()
+
+    @staticmethod
+    async def read_all_designers(
+        page: int,
+        per_page: int,
+    ) -> list[schemas.Designer]:
+        designer_list = (
+            await models.Designer.find()
+            .sort("+name")
+            .skip((page - 1) * per_page)
+            .limit(per_page)
+            .to_list()
+        )
         return [schemas.Designer(**designer.model_dump()) for designer in designer_list]
 
     @staticmethod
