@@ -43,7 +43,7 @@ class Category(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
     boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "categories"}
+        json_schema_extra={"original_field": "categories"}, default=[]
     )
     type: Literal["category"] = "category"
 
@@ -55,12 +55,28 @@ class Designer(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
     boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "designers"}
+        json_schema_extra={"original_field": "designers"}, default=[]
     )
     type: Literal["designer"] = "designer"
 
     class Settings:
         name = "designers"
+
+
+class BoardgameNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "boardgame_network"
+
+
+class CategoryNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "category_network"
 
 
 class DesignerNetwork(Document):
@@ -71,11 +87,27 @@ class DesignerNetwork(Document):
         name = "designer_network"
 
 
+class FamilyNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "family_network"
+
+
+class MechanicNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "mechanic_network"
+
+
 class Family(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
     boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "families"}
+        json_schema_extra={"original_field": "families"}, default=[]
     )
     type: Literal["family"] = "family"
 
@@ -87,7 +119,7 @@ class Mechanic(Document):
     name: str
     bgg_id: Annotated[int, Indexed(unique=True)]
     boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "mechanics"}
+        json_schema_extra={"original_field": "mechanics"}, default=[]
     )
     type: Literal["mechanic"] = "mechanic"
 

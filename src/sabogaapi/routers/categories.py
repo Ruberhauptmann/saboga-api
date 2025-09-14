@@ -5,7 +5,7 @@ import math
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import Category, CategoryWithBoardgames
+from sabogaapi.schemas import Category, CategoryWithBoardgames, Network
 from sabogaapi.services.category_service import CategoryService
 
 logger = configure_logger()
@@ -60,6 +60,11 @@ async def read_all_categories(
     response.headers["link"] = ", ".join(links)
 
     return await CategoryService.read_all_categories()
+
+
+@router.get("/clusters")
+async def read_category_clusters() -> Network:
+    return await CategoryService.get_category_network()
 
 
 @router.get("/{bgg_id}")
