@@ -185,7 +185,7 @@ async def generate_data():
             models.Family,
             models.FamilyNetwork,
             models.Mechanic,
-            models.MechanicNetwork
+            models.MechanicNetwork,
         ],
     )
 

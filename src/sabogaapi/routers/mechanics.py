@@ -66,6 +66,7 @@ async def read_all_mechanics(
 async def read_mechanic_clusters() -> Network:
     return await MechanicService.get_mechanic_network()
 
+
 @router.get("/{bgg_id}")
 async def read_mechanic(bgg_id: int) -> MechanicWithBoardgames:
     mechanic = await MechanicService.read_mechanic(bgg_id=bgg_id)
