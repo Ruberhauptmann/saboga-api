@@ -313,15 +313,21 @@ async def process_item(
     else:
         categories_db = []
     if designers:
-        designers_db = await process_entities(model=models.Designer, entities=designers, update_fields=["name", "bgg_id"])
+        designers_db = await process_entities(
+            model=models.Designer, entities=designers, update_fields=["name", "bgg_id"]
+        )
     else:
         designers_db = []
     if families:
-        families_db = await process_entities(model=models.Family, entities=families, update_fields=["name", "bgg_id"])
+        families_db = await process_entities(
+            model=models.Family, entities=families, update_fields=["name", "bgg_id"]
+        )
     else:
         families_db = []
     if mechanics:
-        mechanics_db = await process_entities(model=models.Mechanic, entities=mechanics, update_fields=["name", "bgg_id"])
+        mechanics_db = await process_entities(
+            model=models.Mechanic, entities=mechanics, update_fields=["name", "bgg_id"]
+        )
     else:
         mechanics_db = []
 
