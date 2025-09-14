@@ -1,4 +1,21 @@
 
+.. _changelog-0.0.51:
+
+0.0.51 — 2025-09-14
+-------------------
+
+Added
+^^^^^
+
+- Cluster boardgames by categories, designers, families, mechanics
+
+- Cluster categories, designers, families, mechanics connected by boardgames (similar to designers)
+
+Changed
+^^^^^^^
+
+- Endpoints for categories, designers, mechanics, families with pagination
+
 .. _changelog-0.0.50:
 
 0.0.50 — 2025-08-28
