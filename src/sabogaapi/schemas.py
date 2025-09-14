@@ -120,7 +120,7 @@ class SearchResult(BaseModel):
     type: str
 
 
-class DesignerNode(BaseModel):
+class Node(BaseModel):
     id: str
     label: str
     x: float
@@ -129,7 +129,7 @@ class DesignerNode(BaseModel):
     cluster: int
 
 
-class DesignerEdge(BaseModel):
+class Edge(BaseModel):
     id: str
     label: str
     source: str
@@ -137,6 +137,6 @@ class DesignerEdge(BaseModel):
     size: float
 
 
-class DesignerNetwork(BaseModel):
-    nodes: list[DesignerNode]
-    edges: list[DesignerEdge]
+class Network(BaseModel):
+    nodes: list[Node]
+    edges: list[Edge]

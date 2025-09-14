@@ -41,3 +41,12 @@ class CategoryService:
         if category is None:
             return None
         return schemas.CategoryWithBoardgames(**category.model_dump())
+
+    @staticmethod
+    async def get_category_network() -> schemas.Network:
+        network = await models.CategoryNetwork.find().first_or_none()
+
+        if network is None:
+            return schemas.Network(nodes=[], edges=[])
+
+        return schemas.Network(**network.model_dump())

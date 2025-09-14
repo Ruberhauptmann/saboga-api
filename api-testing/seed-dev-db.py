@@ -11,13 +11,19 @@ from PIL import Image, ImageDraw, ImageFont
 from sabogaapi import models, schemas
 from sabogaapi.config import settings
 from sabogaapi.scraper._fill_in_data import construct_designer_network, graph_to_dict
+from sabogaapi.statistics.clusters import (
+    construct_boardgame_network,
+    construct_category_network,
+    construct_family_network,
+    construct_mechanic_network,
+)
 from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
 fake = Faker()
 
-NUM_GAMES = 200
-NUM_DESIGNERS = 150
+NUM_GAMES = 10
+NUM_DESIGNERS = 4
 HISTORY_DAYS = 35
 
 
@@ -170,12 +176,16 @@ async def generate_data():
         database=client.get_database(),
         document_models=[
             models.Boardgame,
+            models.BoardgameNetwork,
             models.RankHistory,
-            models.Designer,
-            models.Family,
             models.Category,
-            models.Mechanic,
+            models.CategoryNetwork,
+            models.Designer,
             models.DesignerNetwork,
+            models.Family,
+            models.FamilyNetwork,
+            models.Mechanic,
+            models.MechanicNetwork
         ],
     )
 
@@ -221,10 +231,30 @@ async def generate_data():
     await models.Boardgame.insert_many(games)
     await models.RankHistory.insert_many(history_entries)
 
-    graph = await construct_designer_network()
+    category_graph = await construct_category_network()
+    await models.CategoryNetwork.delete_all()
+    category_graph_db = models.CategoryNetwork(**graph_to_dict(category_graph))
+    await category_graph_db.insert()
+
+    designer_graph = await construct_designer_network()
     await models.DesignerNetwork.delete_all()
-    graph_db = models.DesignerNetwork(**graph_to_dict(graph))
-    await graph_db.insert()
+    designer_graph_db = models.DesignerNetwork(**graph_to_dict(designer_graph))
+    await designer_graph_db.insert()
+
+    family_graph = await construct_family_network()
+    await models.FamilyNetwork.delete_all()
+    family_graph_db = models.FamilyNetwork(**graph_to_dict(family_graph))
+    await family_graph_db.insert()
+
+    mechanic_graph = await construct_mechanic_network()
+    await models.MechanicNetwork.delete_all()
+    mechanic_graph_db = models.MechanicNetwork(**graph_to_dict(mechanic_graph))
+    await mechanic_graph_db.insert()
+
+    boardgame_graph = await construct_boardgame_network()
+    await models.BoardgameNetwork.delete_all()
+    boardgame_graph_db = models.BoardgameNetwork(**graph_to_dict(boardgame_graph))
+    await boardgame_graph_db.insert()
 
     print(
         f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries.",

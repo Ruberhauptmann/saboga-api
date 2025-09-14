@@ -16,6 +16,12 @@ from sabogaapi.database import init_db
 from sabogaapi.main import lifespan
 from sabogaapi.scraper._fill_in_data import construct_designer_network, graph_to_dict
 from sabogaapi.statistics import calculate_trends
+from sabogaapi.statistics.clusters import (
+    construct_boardgame_network,
+    construct_category_network,
+    construct_family_network,
+    construct_mechanic_network,
+)
 
 fake = Faker()
 
@@ -228,10 +234,32 @@ def small_dataset(
                 game.mean_trend = mean_trend
                 await game.save()
 
-            graph = await construct_designer_network()
+            category_graph = await construct_category_network()
+            await models.CategoryNetwork.delete_all()
+            category_graph_db = models.DesignerNetwork(**graph_to_dict(category_graph))
+            await category_graph_db.insert()
+
+            designer_graph = await construct_designer_network()
             await models.DesignerNetwork.delete_all()
-            graph_db = models.DesignerNetwork(**graph_to_dict(graph))
-            await graph_db.insert()
+            designer_graph_db = models.DesignerNetwork(**graph_to_dict(designer_graph))
+            await designer_graph_db.insert()
+
+            family_graph = await construct_family_network()
+            await models.FamilyNetwork.delete_all()
+            family_graph_db = models.FamilyNetwork(**graph_to_dict(family_graph))
+            await family_graph_db.insert()
+
+            mechanic_graph = await construct_mechanic_network()
+            await models.MechanicNetwork.delete_all()
+            mechanic_graph_db = models.MechanicNetwork(**graph_to_dict(mechanic_graph))
+            await mechanic_graph_db.insert()
+
+            boardgame_graph = await construct_boardgame_network()
+            await models.BoardgameNetwork.delete_all()
+            boardgame_graph_db = models.BoardgameNetwork(
+                **graph_to_dict(boardgame_graph)
+            )
+            await boardgame_graph_db.insert()
 
             return {
                 "boardgames": bg,

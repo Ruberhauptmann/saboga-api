@@ -63,12 +63,44 @@ class Designer(Document):
         name = "designers"
 
 
+class BoardgameNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "boardgame_network"
+
+
+class CategoryNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "category_network"
+
+
 class DesignerNetwork(Document):
     nodes: list[dict]
     edges: list[dict]
 
     class Settings:
         name = "designer_network"
+
+
+class FamilyNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "family_network"
+
+
+class MechanicNetwork(Document):
+    nodes: list[dict]
+    edges: list[dict]
+
+    class Settings:
+        name = "mechanic_network"
 
 
 class Family(Document):

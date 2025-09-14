@@ -5,7 +5,7 @@ import math
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import Designer, DesignerNetwork, DesignerWithBoardgames
+from sabogaapi.schemas import Designer, DesignerWithBoardgames, Network
 from sabogaapi.services import DesignerService
 
 logger = configure_logger()
@@ -63,7 +63,7 @@ async def read_all_designers(
 
 
 @router.get("/clusters")
-async def read_designer_clusters() -> DesignerNetwork:
+async def read_designer_clusters() -> Network:
     return await DesignerService.get_designer_network()
 
 

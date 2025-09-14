@@ -42,3 +42,12 @@ class FamilyService:
             return None
 
         return schemas.FamilyWithBoardgames(**family.model_dump())
+
+    @staticmethod
+    async def get_family_network() -> schemas.Network:
+        network = await models.FamilyNetwork.find().first_or_none()
+
+        if network is None:
+            return schemas.Network(nodes=[], edges=[])
+
+        return schemas.Network(**network.model_dump())

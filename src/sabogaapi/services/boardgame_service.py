@@ -363,3 +363,12 @@ class BoardgameService:
         results = await models.Boardgame.aggregate(pipeline).to_list()
 
         return [schemas.BoardgameInList(**result) for result in results]
+
+    @staticmethod
+    async def get_boardgame_network() -> schemas.Network:
+        network = await models.BoardgameNetwork.find().first_or_none()
+
+        if network is None:
+            return schemas.Network(nodes=[], edges=[])
+
+        return schemas.Network(**network.model_dump())

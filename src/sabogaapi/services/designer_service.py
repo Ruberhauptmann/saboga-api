@@ -43,10 +43,10 @@ class DesignerService:
         return schemas.DesignerWithBoardgames(**designer.model_dump())
 
     @staticmethod
-    async def get_designer_network() -> schemas.DesignerNetwork:
+    async def get_designer_network() -> schemas.Network:
         network = await models.DesignerNetwork.find().first_or_none()
 
         if network is None:
-            return schemas.DesignerNetwork(nodes=[], edges=[])
+            return schemas.Network(nodes=[], edges=[])
 
-        return schemas.DesignerNetwork(**network.model_dump())
+        return schemas.Network(**network.model_dump())

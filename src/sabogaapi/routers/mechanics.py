@@ -5,7 +5,7 @@ import math
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import Mechanic, MechanicWithBoardgames
+from sabogaapi.schemas import Mechanic, MechanicWithBoardgames, Network
 from sabogaapi.services.mechanic_service import MechanicService
 
 logger = configure_logger()
@@ -61,6 +61,10 @@ async def read_all_mechanics(
 
     return await MechanicService.read_all_mechanics(page=page, per_page=per_page)
 
+
+@router.get("/clusters")
+async def read_mechanic_clusters() -> Network:
+    return await MechanicService.get_mechanic_network()
 
 @router.get("/{bgg_id}")
 async def read_mechanic(bgg_id: int) -> MechanicWithBoardgames:

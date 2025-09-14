@@ -11,7 +11,9 @@
 Added
 ^^^^^
 
-- Clustering boardgames by mechanics, etc as well as mechanics etc. connected by boardgames
+- Cluster boardgames by categories, designers, families, mechanics
+
+- Cluster categories, designers, families, mechanics connected by boardgames (similar to designers)
 
 .. Changed
 .. ^^^^^^^

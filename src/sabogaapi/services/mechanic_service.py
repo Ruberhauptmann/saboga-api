@@ -41,3 +41,12 @@ class MechanicService:
         if mechanic is None:
             return None
         return schemas.MechanicWithBoardgames(**mechanic.model_dump())
+
+    @staticmethod
+    async def get_mechanic_network() -> schemas.Network:
+        network = await models.MechanicNetwork.find().first_or_none()
+
+        if network is None:
+            return schemas.Network(nodes=[], edges=[])
+
+        return schemas.Network(**network.model_dump())

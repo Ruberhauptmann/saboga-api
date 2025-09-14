@@ -18,11 +18,15 @@ async def init_db() -> None:  # pragma: no cover
         database=client.get_database(),
         document_models=[
             models.Boardgame,
+            models.BoardgameNetwork,
             models.RankHistory,
             models.Category,
+            models.CategoryNetwork,
             models.Designer,
             models.DesignerNetwork,
             models.Family,
+            models.FamilyNetwork,
             models.Mechanic,
+            models.MechanicNetwork,
         ],
     )
