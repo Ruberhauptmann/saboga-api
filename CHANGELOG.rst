@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.53:
+
+0.0.53 — 2025-09-14
+-------------------
+
+Fixed
+^^^^^
+
+- Catch timeout errors in scraper
+
 .. _changelog-0.0.52:
 
 0.0.52 — 2025-09-14
