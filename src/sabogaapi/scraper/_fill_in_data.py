@@ -50,6 +50,7 @@ def scrape_api(ids: list[int]) -> ET.Element | None:
         except (
             requests.exceptions.ChunkedEncodingError,
             requests.exceptions.ConnectionError,
+            requests.exceptions.ReadTimeout,
             ET.ParseError,
         ) as e:
             _timeout(repr(e), number_of_tries)
