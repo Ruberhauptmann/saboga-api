@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.52:
+
+0.0.52 — 2025-09-14
+-------------------
+
+Fixed
+^^^^^
+
+- Scraper with new backlink field for boardgames
+
 .. _changelog-0.0.51:
 
 0.0.51 — 2025-09-14
