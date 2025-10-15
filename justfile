@@ -20,6 +20,10 @@ format:
 type:
     uv run mypy --ignore-missing-imports src/
 
+migration MESSAGE:
+    docker exec -it saboga-api uv run alembic revision --autogenerate -m "{{MESSAGE}}"
+    docker cp saboga-api:/app/alembic ./
+
 # Install the development environment
 environment:
 	@if command -v uv > /dev/null; then \

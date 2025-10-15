@@ -30,4 +30,5 @@ COPY --from=builder --chown=app:app /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Run the FastAPI application by default
-CMD ["fastapi", "run", "/app/src/sabogaapi/main.py", "--root-path", "/api", "--host", "0.0.0.0", "--proxy-headers", "--port", "8000"]
+CMD [
+"uv", "run", "alembic", "upgrade", "head", "&&", "fastapi", "run", "/app/src/sabogaapi/main.py", "--root-path", "/api", "--host", "0.0.0.0", "--proxy-headers", "--port", "8000"]
