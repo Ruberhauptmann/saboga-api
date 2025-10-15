@@ -11,8 +11,9 @@ ADD src /app/src
 ADD pyproject.toml /app/
 ADD uv.lock /app/
 ADD README.md /app/
-ADD alembic ./alembic
-ADD alembic.ini ./
+ADD entrypoint.sh /app/
+ADD alembic /app/alembic
+ADD alembic.ini /app/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
@@ -31,5 +32,6 @@ COPY --from=builder --chown=app:app /app /app
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Run the FastAPI application by default
-CMD ["alembic", "upgrade", "head", "&&", "fastapi", "run", "/app/src/sabogaapi/main.py", "--root-path", "/api", "--host", "0.0.0.0", "--proxy-headers", "--port", "8000"]
+RUN chmod +x /app/api-testing/entrypoint.sh
+
+CMD ["/app/entrypoint.sh"]
