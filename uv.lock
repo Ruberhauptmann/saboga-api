@@ -1829,7 +1829,7 @@ wheels = [
 
 [[package]]
 name = "sabogaapi"
-version = "0.0.54"
+version = "0.0.56"
 source = { editable = "." }
 dependencies = [
     { name = "aioresponses" },
