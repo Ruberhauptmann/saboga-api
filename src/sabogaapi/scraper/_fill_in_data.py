@@ -333,7 +333,7 @@ async def process_item(
     skip_fields = {"id", "type"}
     if existing:
         # Update simple columns
-        for f in boardgame.__table__.columns:
+        for f in boardgame.__table__.columns.keys():
             if f not in skip_fields:
                 setattr(existing, f, getattr(boardgame, f))
         # Assign relationships directly (objects are already in session)
