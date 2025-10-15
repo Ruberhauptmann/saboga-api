@@ -2,8 +2,11 @@ from typing import Any
 
 import community as community_louvain
 import networkx as nx
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from sabogaapi import models
+from sabogaapi.database import sessionmanager
 
 
 def graph_to_dict(graph: nx.Graph) -> dict[str, Any]:
@@ -72,8 +75,14 @@ def build_designer_graph(
 
 async def construct_designer_network() -> nx.Graph:
     """Construct a graph from designer data."""
-    boardgames = await models.Boardgame.find({}, fetch_links=True).to_list()
-    designers = await models.Designer.find().to_list()
+    async with sessionmanager.session() as db_session:
+        result_bg = await db_session.execute(
+            select(models.Boardgame).options(selectinload(models.Boardgame.designers))
+        )
+        boardgames = result_bg.scalars().all()
+
+        result_d = await db_session.execute(select(models.Designer))
+        designers = result_d.scalars().all()
     return build_designer_graph(boardgames, designers)
 
 
@@ -117,8 +126,14 @@ def build_category_graph(
 
 async def construct_category_network() -> nx.Graph:
     """Construct a graph from designer data."""
-    boardgames = await models.Boardgame.find({}, fetch_links=True).to_list()
-    categories = await models.Category.find().to_list()
+    async with sessionmanager.session() as db_session:
+        result_bg = await db_session.execute(
+            select(models.Boardgame).options(selectinload(models.Boardgame.categories))
+        )
+        boardgames = result_bg.scalars().all()
+
+        result_c = await db_session.execute(select(models.Category))
+        categories = result_c.scalars().all()
     return build_category_graph(boardgames, categories)
 
 
@@ -162,8 +177,15 @@ def build_family_graph(
 
 async def construct_family_network() -> nx.Graph:
     """Construct a graph from designer data."""
-    boardgames = await models.Boardgame.find({}, fetch_links=True).to_list()
-    families = await models.Family.find().to_list()
+    async with sessionmanager.session() as db_session:
+        result_bg = await db_session.execute(
+            select(models.Boardgame).options(selectinload(models.Boardgame.families))
+        )
+        boardgames = result_bg.scalars().all()
+
+        result_f = await db_session.execute(select(models.Family))
+        families = result_f.scalars().all()
+
     return build_family_graph(boardgames, families)
 
 
@@ -207,8 +229,15 @@ def build_mechanic_graph(
 
 async def construct_mechanic_network() -> nx.Graph:
     """Construct a graph from designer data."""
-    boardgames = await models.Boardgame.find({}, fetch_links=True).to_list()
-    mechanics = await models.Mechanic.find().to_list()
+    async with sessionmanager.session() as db_session:
+        result_bg = await db_session.execute(
+            select(models.Boardgame).options(selectinload(models.Boardgame.mechanics))
+        )
+        boardgames = result_bg.scalars().all()
+
+        result_m = await db_session.execute(select(models.Mechanic))
+        mechanics = result_m.scalars().all()
+
     return build_mechanic_graph(boardgames, mechanics)
 
 
@@ -286,10 +315,28 @@ def build_boardgame_graph(  # noqa: C901, PLR0912
 
 async def construct_boardgame_network() -> nx.Graph:
     """Construct a graph from designer data."""
-    boardgames = await models.Boardgame.find().to_list()
-    categories = await models.Category.find({}, fetch_links=True).to_list()
-    designers = await models.Designer.find({}, fetch_links=True).to_list()
-    families = await models.Family.find({}, fetch_links=True).to_list()
-    mechanics = await models.Mechanic.find({}, fetch_links=True).to_list()
+    async with sessionmanager.session() as db_session:
+        result_bg = await db_session.execute(select(models.Boardgame))
+        boardgames = result_bg.scalars().all()
+
+        result_c = await db_session.execute(
+            select(models.Category).options(selectinload(models.Category.boardgames))
+        )
+        categories = result_c.scalars().all()
+
+        result_d = await db_session.execute(
+            select(models.Designer).options(selectinload(models.Designer.boardgames))
+        )
+        designers = result_d.scalars().all()
+
+        result_f = await db_session.execute(
+            select(models.Family).options(selectinload(models.Family.boardgames))
+        )
+        families = result_f.scalars().all()
+
+        result_m = await db_session.execute(
+            select(models.Mechanic).options(selectinload(models.Mechanic.boardgames))
+        )
+        mechanics = result_m.scalars().all()
 
     return build_boardgame_graph(boardgames, categories, designers, families, mechanics)

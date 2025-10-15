@@ -61,14 +61,15 @@ services:
           path: ../pyproject.toml
 
   saboga-database:
-    image: mongo:8.0-noble
+    image: postgres:17
     container_name: saboga-database
     env_file:
       - .env
     volumes:
-      - saboga_db_data:/data/db
+      - saboga_db_data:/var/lib/postgresql/data
     networks:
       - saboga-api
+
 
 volumes:
   saboga_db_data:

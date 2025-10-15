@@ -3,6 +3,7 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException
 
+from sabogaapi.api.dependencies.core import DBSessionDep
 from sabogaapi.schemas import BoardgameSingle, ForecastData
 from sabogaapi.services import BoardgameService, RankHistoryService
 from sabogaapi.statistics.predict import forecast_game_ranking
@@ -16,6 +17,7 @@ router = APIRouter(
 
 @router.get("")
 async def read_game(
+    db_session: DBSessionDep,
     bgg_id: int,
     start_date: datetime.date | None = None,
     end_date: datetime.date | None = None,
@@ -38,6 +40,10 @@ async def read_game(
     Returns:
         BoardgameSingle: Boardgame.
 
+    Parameters
+    ----------
+    db_session
+
     """
     if end_date is None:
         end_date = datetime.datetime.now(tz=datetime.UTC)
@@ -48,6 +54,7 @@ async def read_game(
     else:
         start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
     game = await BoardgameService.get_boardgame_with_historical_data(
+        db_session=db_session,
         bgg_id=bgg_id,
         start_date=start_date,
         end_date=end_date,

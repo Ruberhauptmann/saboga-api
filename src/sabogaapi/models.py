@@ -1,144 +1,201 @@
-"""Beanie database models."""
-
 import datetime
-from typing import Annotated, Literal
 
-from beanie import BackLink, Document, Indexed, Link, TimeSeriesConfig
-from pydantic import Field
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Index, Integer, String, Table
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from sabogaapi.database import Base
 
-class Boardgame(Document):
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    bgg_rank: Annotated[int, Indexed()]
-    name: str = ""
-    bgg_geek_rating: float | None = None
-    bgg_average_rating: float | None = None
-    bgg_rank_volatility: float | None = None
-    bgg_rank_trend: float | None = None
-    bgg_geek_rating_volatility: float | None = None
-    bgg_geek_rating_trend: float | None = None
-    bgg_average_rating_volatility: float | None = None
-    bgg_average_rating_trend: float | None = None
-    mean_trend: float | None = None
-    description: str | None = None
-    image_url: str | None = None
-    thumbnail_url: str | None = None
-    year_published: int | None = None
-    minplayers: int | None = None
-    maxplayers: int | None = None
-    playingtime: int | None = None
-    minplaytime: int | None = None
-    maxplaytime: int | None = None
-    categories: list[Link["Category"]] = []
-    families: list[Link["Family"]] = []
-    mechanics: list[Link["Mechanic"]] = []
-    designers: list[Link["Designer"]] = []
-    type: Literal["boardgame"] = "boardgame"
+boardgame_category = Table(
+    "boardgame_category",
+    Base.metadata,
+    Column("boardgame_id", ForeignKey("boardgames.id"), primary_key=True),
+    Column("category_id", ForeignKey("categories.id"), primary_key=True),
+)
 
-    class Settings:
-        name = "boardgames"
+boardgame_family = Table(
+    "boardgame_family",
+    Base.metadata,
+    Column("boardgame_id", ForeignKey("boardgames.id"), primary_key=True),
+    Column("family_id", ForeignKey("families.id"), primary_key=True),
+)
+
+boardgame_mechanic = Table(
+    "boardgame_mechanic",
+    Base.metadata,
+    Column("boardgame_id", ForeignKey("boardgames.id"), primary_key=True),
+    Column("mechanic_id", ForeignKey("mechanics.id"), primary_key=True),
+)
+
+boardgame_designer = Table(
+    "boardgame_designer",
+    Base.metadata,
+    Column("boardgame_id", ForeignKey("boardgames.id"), primary_key=True),
+    Column("designer_id", ForeignKey("designers.id"), primary_key=True),
+)
 
 
-class Category(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "categories"}, default=[]
+class Boardgame(Base):
+    __tablename__ = "boardgames"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    bgg_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    bgg_rank: Mapped[int | None] = mapped_column(Integer, index=True)
+
+    name: Mapped[str] = mapped_column(String, default="")
+    bgg_geek_rating: Mapped[float | None]
+    bgg_average_rating: Mapped[float | None]
+    bgg_rank_volatility: Mapped[float | None]
+    bgg_rank_trend: Mapped[float | None]
+    bgg_geek_rating_volatility: Mapped[float | None]
+    bgg_geek_rating_trend: Mapped[float | None]
+    bgg_average_rating_volatility: Mapped[float | None]
+    bgg_average_rating_trend: Mapped[float | None]
+    mean_trend: Mapped[float | None]
+
+    description: Mapped[str | None]
+    image_url: Mapped[str | None]
+    thumbnail_url: Mapped[str | None]
+
+    year_published: Mapped[int | None]
+    minplayers: Mapped[int | None]
+    maxplayers: Mapped[int | None]
+    playingtime: Mapped[int | None]
+    minplaytime: Mapped[int | None]
+    maxplaytime: Mapped[int | None]
+
+    type: Mapped[str] = mapped_column(String, default="boardgame")
+
+    bgg_rank_history: Mapped[list["RankHistory"]] = relationship(
+        back_populates="boardgame",
+        cascade="all, delete-orphan",
+        lazy="noload",
     )
-    type: Literal["category"] = "category"
 
-    class Settings:
-        name = "categories"
-
-
-class Designer(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "designers"}, default=[]
+    # Relationships
+    categories = relationship(
+        "Category", secondary=boardgame_category, back_populates="boardgames"
     )
-    type: Literal["designer"] = "designer"
-
-    class Settings:
-        name = "designers"
-
-
-class BoardgameNetwork(Document):
-    nodes: list[dict]
-    edges: list[dict]
-
-    class Settings:
-        name = "boardgame_network"
-
-
-class CategoryNetwork(Document):
-    nodes: list[dict]
-    edges: list[dict]
-
-    class Settings:
-        name = "category_network"
-
-
-class DesignerNetwork(Document):
-    nodes: list[dict]
-    edges: list[dict]
-
-    class Settings:
-        name = "designer_network"
-
-
-class FamilyNetwork(Document):
-    nodes: list[dict]
-    edges: list[dict]
-
-    class Settings:
-        name = "family_network"
-
-
-class MechanicNetwork(Document):
-    nodes: list[dict]
-    edges: list[dict]
-
-    class Settings:
-        name = "mechanic_network"
-
-
-class Family(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "families"}, default=[]
+    families = relationship(
+        "Family", secondary=boardgame_family, back_populates="boardgames"
     )
-    type: Literal["family"] = "family"
-
-    class Settings:
-        name = "families"
-
-
-class Mechanic(Document):
-    name: str
-    bgg_id: Annotated[int, Indexed(unique=True)]
-    boardgames: list[BackLink["Boardgame"]] = Field(
-        json_schema_extra={"original_field": "mechanics"}, default=[]
+    mechanics = relationship(
+        "Mechanic", secondary=boardgame_mechanic, back_populates="boardgames"
     )
-    type: Literal["mechanic"] = "mechanic"
+    designers = relationship(
+        "Designer", secondary=boardgame_designer, back_populates="boardgames"
+    )
 
-    class Settings:
-        name = "mechanics"
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    bgg_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    type: Mapped[str] = mapped_column(String, default="category")
+
+    boardgames = relationship(
+        "Boardgame", secondary=boardgame_category, back_populates="categories"
+    )
 
 
-class RankHistory(Document):
-    date: datetime.datetime = Field(default_factory=datetime.datetime.now)
-    bgg_id: int
-    bgg_rank: int | None = None
-    bgg_geek_rating: float | None = None
-    bgg_average_rating: float | None = None
+class Designer(Base):
+    __tablename__ = "designers"
 
-    class Settings:
-        timeseries = TimeSeriesConfig(
-            time_field="date",
-            meta_field="bgg_id",
-            bucket_rounding_seconds=86400,
-            bucket_max_span_seconds=86400,
-        )
-        name = "rank_history"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    bgg_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    type: Mapped[str] = mapped_column(String, default="designer")
+
+    boardgames = relationship(
+        "Boardgame", secondary=boardgame_designer, back_populates="designers"
+    )
+
+
+class Family(Base):
+    __tablename__ = "families"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    bgg_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    type: Mapped[str] = mapped_column(String, default="family")
+
+    boardgames = relationship(
+        "Boardgame", secondary=boardgame_family, back_populates="families"
+    )
+
+
+class Mechanic(Base):
+    __tablename__ = "mechanics"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    bgg_id: Mapped[int] = mapped_column(Integer, unique=True, index=True)
+    type: Mapped[str] = mapped_column(String, default="mechanic")
+
+    boardgames = relationship(
+        "Boardgame", secondary=boardgame_mechanic, back_populates="mechanics"
+    )
+
+
+# --- Networks (JSON storage) ---
+class BoardgameNetwork(Base):
+    __tablename__ = "boardgame_network"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    nodes: Mapped[dict] = mapped_column(JSON)
+    edges: Mapped[dict] = mapped_column(JSON)
+
+
+class CategoryNetwork(Base):
+    __tablename__ = "category_network"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    nodes: Mapped[dict] = mapped_column(JSON)
+    edges: Mapped[dict] = mapped_column(JSON)
+
+
+class DesignerNetwork(Base):
+    __tablename__ = "designer_network"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    nodes: Mapped[dict] = mapped_column(JSON)
+    edges: Mapped[dict] = mapped_column(JSON)
+
+
+class FamilyNetwork(Base):
+    __tablename__ = "family_network"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    nodes: Mapped[dict] = mapped_column(JSON)
+    edges: Mapped[dict] = mapped_column(JSON)
+
+
+class MechanicNetwork(Base):
+    __tablename__ = "mechanic_network"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    nodes: Mapped[dict] = mapped_column(JSON)
+    edges: Mapped[dict] = mapped_column(JSON)
+
+
+class RankHistory(Base):
+    __tablename__ = "rank_history"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    date: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        index=True,
+    )
+    boardgame_id: Mapped[int] = mapped_column(
+        ForeignKey("boardgames.id", ondelete="CASCADE"),
+        index=True,
+    )
+    bgg_rank: Mapped[int | None]
+    bgg_geek_rating: Mapped[float | None]
+    bgg_average_rating: Mapped[float | None]
+
+    boardgame: Mapped["Boardgame"] = relationship(back_populates="bgg_rank_history")
+
+    __table_args__ = (Index("ix_rankhistory_boardgame_date", "boardgame_id", "date"),)

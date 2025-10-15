@@ -8,14 +8,17 @@ import numpy as np
 import pandas as pd
 import requests
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.service import Service
+from sqlalchemy import and_, select
+from sqlalchemy.orm import selectinload
 from webdriver_manager.firefox import GeckoDriverManager
 
 from sabogaapi import models, schemas
 from sabogaapi.config import settings
-from sabogaapi.database import init_db
+from sabogaapi.database import sessionmanager
 from sabogaapi.logger import configure_logger
 from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
@@ -31,16 +34,14 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 
     # Firefox options
     options = Options()
-    options.add_argument("--headless")  # Uncomment to run without browser window
-
-    options.set_preference("browser.download.folderList", 2)  # Use custom download path
+    options.add_argument("--headless")
+    options.set_preference("browser.download.folderList", 2)
     options.set_preference("browser.download.dir", f"{download_dir}")
     options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/zip")
     options.set_preference("browser.download.manager.showWhenStarting", value=False)
     options.set_preference("pdfjs.disabled", value=True)
 
     logger.info("Launching headless Firefox browser")
-    # Start browser
     driver = webdriver.Firefox(
         service=Service(GeckoDriverManager().install()),
         options=options,
@@ -50,15 +51,14 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
         driver.get("https://boardgamegeek.com/login")
         time.sleep(2)
 
-        cookie_button = driver.find_element(By.CLASS_NAME, "fc-cta-consent")
-
-        cookie_button.click()
-        logger.debug("Cookie consent clicked.")
-
-        cookie_button = driver.find_element(By.ID, "c-s-bn")
-
-        cookie_button.click()
-        logger.debug("Cookie consent clicked.")
+        for selector in ["fc-cta-consent", "c-s-bn"]:
+            try:
+                button = driver.find_element(By.CLASS_NAME, selector)
+                button.click()
+                logger.debug("Clicked cookie consent: %s", selector)
+                time.sleep(1)
+            except NoSuchElementException:
+                pass
 
         username = settings.bgg_username
         password = settings.bgg_password
@@ -102,115 +102,101 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
     logger.info("Processing boardgames from CSV.")
 
-    date = datetime.datetime.now(tz=datetime.UTC)
+    date = datetime.datetime.now(tz=datetime.UTC).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
     updated_games = 0
     new_games = []
-    for game in games_df.itertuples():
-        game_db = await models.Boardgame.find_one(models.Boardgame.bgg_id == game.id)
 
-        if game_db:
-            game_db.name = game.name
-            game_db.bgg_rank = game.rank
-            game_db.bgg_geek_rating = game.bayesaverage
-            game_db.bgg_average_rating = game.average
-            game_db.year_published = game.yearpublished
-            await game_db.save()
-            updated_games += 1
-        else:
-            new_games.append(
-                models.Boardgame(
+    async with sessionmanager.session() as session:
+        for game in games_df.itertuples():
+            result = await session.execute(
+                select(models.Boardgame).where(models.Boardgame.bgg_id == game.id)
+            )
+            game_db = result.scalar_one_or_none()
+
+            if game_db:
+                game_db.name = game.name
+                game_db.bgg_rank = game.rank
+                game_db.bgg_geek_rating = game.bayesaverage
+                game_db.bgg_average_rating = game.average
+                game_db.year_published = game.yearpublished
+                updated_games += 1
+            else:
+                game_db = models.Boardgame(
                     bgg_id=game.id,
                     name=game.name,
                     bgg_rank=game.rank,
                     bgg_geek_rating=game.bayesaverage,
                     bgg_average_rating=game.average,
                     year_published=game.yearpublished,
-                ),
-            )
-    if new_games:
-        await models.Boardgame.insert_many(new_games)
-
-    new_rank_history = [
-        models.RankHistory(
-            date=date.replace(hour=0, minute=0, second=0, microsecond=0),
-            bgg_id=entry.id,
-            bgg_rank=entry.rank,
-            bgg_geek_rating=entry.bayesaverage,
-            bgg_average_rating=entry.average,
-        )
-        for entry in games_df.itertuples()
-    ]
-
-    if new_rank_history:
-        await models.RankHistory.insert_many(new_rank_history)
-        logger.info("Inserted %s rank history entries.", len(new_rank_history))
-
-    all_games = await models.Boardgame.find().to_list()
-
-    for game in all_games:
-        rank_history = await models.RankHistory.find(
-            models.RankHistory.bgg_id == game.bgg_id,
-        ).to_list()
-        for doc in rank_history:
-            new_date = datetime.datetime(
-                doc.date.year, doc.date.month, doc.date.day, tzinfo=datetime.UTC
-            )
-            new_date = doc.date.replace(hour=0, minute=0, second=0, microsecond=0)
-            if doc.date != new_date:
-                await doc.delete()
-                corrected = models.RankHistory(
-                    date=new_date,
-                    bgg_id=doc.bgg_id,
-                    bgg_rank=doc.bgg_rank,
-                    bgg_geek_rating=doc.bgg_geek_rating,
-                    bgg_average_rating=doc.bgg_average_rating,
                 )
-                await corrected.insert()
+                session.add(game_db)
+                await session.flush()
 
-        rank_volatility, geek_rating_volatility, average_rating_volatility = (
-            calculate_volatility(
-                [schemas.RankHistory(**entry.model_dump()) for entry in rank_history],
+            rank_exists = await session.scalar(
+                select(models.RankHistory.id).where(
+                    and_(
+                        models.RankHistory.boardgame_id == game_db.id,
+                        models.RankHistory.date == date,
+                    )
+                )
             )
-        )
-        game.bgg_rank_volatility = (
-            np.nan_to_num(rank_volatility) if rank_volatility is not None else 0
-        )
-        game.bgg_geek_rating_volatility = (
-            np.nan_to_num(geek_rating_volatility)
-            if geek_rating_volatility is not None
-            else 0
-        )
-        game.bgg_average_rating_volatility = (
-            np.nan_to_num(average_rating_volatility)
-            if average_rating_volatility is not None
-            else 0
-        )
 
-        rank_trend, geek_rating_trend, average_rating_trend, mean_trend = (
-            calculate_trends(
-                [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+            if not rank_exists:
+                new_rank_history = models.RankHistory(
+                    date=date,
+                    boardgame=game_db,
+                    bgg_rank=game.rank,
+                    bgg_geek_rating=game.bayesaverage,
+                    bgg_average_rating=game.average,
+                )
+                session.add(new_rank_history)
+
+            await session.commit()
+
+        # Retrieve all boardgames to update statistics
+        all_games = (await session.scalars(select(models.Boardgame))).all()
+
+        for game in all_games:
+            rank_history = (
+                await session.scalars(
+                    select(models.RankHistory)
+                    .where(models.RankHistory.boardgame_id == game.id)
+                    .options(selectinload(models.RankHistory.boardgame))
+                )
+            ).all()
+
+            # Compute volatility
+            rank_volatility, geek_rating_volatility, average_rating_volatility = (
+                calculate_volatility(
+                    [schemas.RankHistory.from_orm(entry) for entry in rank_history]
+                )
             )
-        )
-        game.bgg_rank_trend = np.nan_to_num(rank_trend) if rank_trend is not None else 0
-        game.bgg_geek_rating_trend = (
-            np.nan_to_num(geek_rating_trend) if geek_rating_trend is not None else 0
-        )
-        game.bgg_average_rating_trend = (
-            np.nan_to_num(average_rating_trend)
-            if average_rating_trend is not None
-            else 0
-        )
-        game.mean_trend = np.nan_to_num(mean_trend) if mean_trend is not None else 0
+            game.bgg_rank_volatility = np.nan_to_num(rank_volatility or 0)
+            game.bgg_geek_rating_volatility = np.nan_to_num(geek_rating_volatility or 0)
+            game.bgg_average_rating_volatility = np.nan_to_num(
+                average_rating_volatility or 0
+            )
 
-        await game.save()
+            # Compute trends
+            rank_trend, geek_rating_trend, average_rating_trend, mean_trend = (
+                calculate_trends(
+                    [schemas.RankHistory.from_orm(entry) for entry in rank_history]
+                )
+            )
+            game.bgg_rank_trend = np.nan_to_num(rank_trend or 0)
+            game.bgg_geek_rating_trend = np.nan_to_num(geek_rating_trend or 0)
+            game.bgg_average_rating_trend = np.nan_to_num(average_rating_trend or 0)
+            game.mean_trend = np.nan_to_num(mean_trend or 0)
+
+        await session.commit()
 
     return new_games, updated_games
 
 
 async def ascrape_update() -> None:  # pragma: no cover
-    logger.info("Starting scrape. Initializing DB connection.")
-    await init_db()
-
+    logger.info("Starting scrape process.")
     games_df = download_zip()
 
     new_games, updated_games = await insert_games(games_df)
