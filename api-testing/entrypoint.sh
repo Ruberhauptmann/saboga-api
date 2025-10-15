@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Run migrations"
+uv run alembic upgrade head
+
 # Run DB seeding
 echo "Seeding database..."
 uv run python /app/api-testing/seed-dev-db.py

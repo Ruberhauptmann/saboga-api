@@ -32,6 +32,9 @@ dev-prod: # Serve the site locally for testing.
 dev-prod-monitoring: # Serve the site locally for testing.
 	cd api-testing && docker compose -f docker-compose.yml -f docker-compose.monitoring.yml up -d --build
 
+.PHONY: make-migrations
+make-migrations: # Create migrations
+
 
 .PHONY: dump-dev-db
 dump-dev-db: # Dump dev database

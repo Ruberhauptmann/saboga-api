@@ -14,6 +14,8 @@ RUN uv sync --frozen --no-install-project
 # Now copy in source (doesn't break dependency cache)
 ADD src ./src
 ADD api-testing ./api-testing
+ADD alembic ./alembic
+ADD alembic.ini ./
 
 RUN chmod +x /app/api-testing/entrypoint.sh
 
