@@ -248,23 +248,25 @@ async def get_or_create(
     **kwargs: dict[str, Any],
 ) -> T:
     stmt = select(model).filter_by(**kwargs)
-    instance = await session.scalar(stmt)
+    instance: T | None = await session.scalar(stmt)
     if instance:
         return instance
 
     params = {**kwargs}
     if defaults:
         params.update(defaults)
-    instance = model(**params)
-    session.add(instance)
+    instance_created: T = model(**params)
+    session.add(instance_created)
 
     try:
         await session.flush()
     except IntegrityError:
         await session.rollback()
-        instance = await session.scalar(stmt)
+        instance_new: T | None = await session.scalar(stmt)
+        if instance_new:
+            return instance_new
 
-    return instance
+    return instance_created
 
 
 async def process_entities(

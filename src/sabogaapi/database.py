@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.orm import declarative_base
 
 from .config import settings
@@ -21,7 +22,7 @@ class DatabaseSessionManager:
     def __init__(self, host: str, engine_kwargs: dict[str, Any] | None = None) -> None:
         if engine_kwargs is None:
             engine_kwargs = {}
-        self.engine = create_async_engine(host, **engine_kwargs)
+        self.engine: AsyncEngine | None = create_async_engine(host, **engine_kwargs)
         self.sessionmaker = async_sessionmaker(autocommit=False, bind=self.engine)
 
     async def close(self) -> None:
