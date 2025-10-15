@@ -2,7 +2,7 @@
 set -e
 
 echo "Running Alembic migrations..."
-alembic upgrade head
+cd /app && alembic upgrade head
 
 echo "Starting FastAPI..."
 fastapi run /app/src/sabogaapi/main.py --root-path /api --host 0.0.0.0 --proxy-headers --port 8000
