@@ -9,10 +9,10 @@ logger = configure_logger()
 
 class MechanicService(
     BaseEntityService[
-        models.Family,
-        schemas.Family,
-        schemas.FamilyWithBoardgames,
-        models.FamilyNetwork,
+        models.Mechanic,
+        schemas.Mechanic,
+        schemas.MechanicWithBoardgames,
+        models.MechanicNetwork,
     ]
 ):
     model = models.Mechanic

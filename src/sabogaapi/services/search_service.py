@@ -9,7 +9,7 @@ class SearchService:
     async def search(
         db_session: DBSessionDep, query: str, limit: int = 10
     ) -> list[schemas.SearchResult]:
-        search_models = [
+        search_models: list[type[models.Base]] = [
             models.Boardgame,
             models.Category,
             models.Designer,
@@ -17,7 +17,7 @@ class SearchService:
             models.Mechanic,
         ]
 
-        all_results = []
+        all_results: list[models.Base] = []
 
         for model in search_models:
             stmt = select(model).where(model.name.ilike(f"%{query}%")).limit(limit)

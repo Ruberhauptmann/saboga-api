@@ -64,5 +64,5 @@ class BaseEntityService(Generic[TModel, TSchema, TSchemaWithGames, TNetworkModel
         result = await db_session.execute(stmt)
         network = result.scalars().first()
         if not network:
-            return {"nodes": [], "edges": []}
+            return schemas.Network(nodes=[], edges=[])
         return schemas.Network.model_validate(network)

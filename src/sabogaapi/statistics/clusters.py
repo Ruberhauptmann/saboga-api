@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any
 
 import community as community_louvain
@@ -36,7 +37,7 @@ def graph_to_dict(graph: nx.Graph) -> dict[str, Any]:
 
 
 def build_designer_graph(
-    boardgames: list[models.Boardgame], designers: list[models.Designer]
+    boardgames: Sequence[models.Boardgame], designers: Sequence[models.Designer]
 ) -> nx.Graph:
     graph = nx.Graph()
 
@@ -87,7 +88,7 @@ async def construct_designer_network() -> nx.Graph:
 
 
 def build_category_graph(
-    boardgames: list[models.Boardgame], categories: list[models.Category]
+    boardgames: Sequence[models.Boardgame], categories: Sequence[models.Category]
 ) -> nx.Graph:
     graph = nx.Graph()
 
@@ -138,7 +139,7 @@ async def construct_category_network() -> nx.Graph:
 
 
 def build_family_graph(
-    boardgames: list[models.Boardgame], families: list[models.Family]
+    boardgames: Sequence[models.Boardgame], families: Sequence[models.Family]
 ) -> nx.Graph:
     graph = nx.Graph()
 
@@ -190,7 +191,7 @@ async def construct_family_network() -> nx.Graph:
 
 
 def build_mechanic_graph(
-    boardgames: list[models.Boardgame], mechanics: list[models.Mechanic]
+    boardgames: Sequence[models.Boardgame], mechanics: Sequence[models.Mechanic]
 ) -> nx.Graph:
     graph = nx.Graph()
 
@@ -242,11 +243,11 @@ async def construct_mechanic_network() -> nx.Graph:
 
 
 def build_boardgame_graph(  # noqa: C901, PLR0912
-    boardgames: list[models.Boardgame],
-    categories: list[models.Category],
-    designers: list[models.Designer],
-    families: list[models.Family],
-    mechanics: list[models.Mechanic],
+    boardgames: Sequence[models.Boardgame],
+    categories: Sequence[models.Category],
+    designers: Sequence[models.Designer],
+    families: Sequence[models.Family],
+    mechanics: Sequence[models.Mechanic],
 ) -> nx.Graph:
     graph = nx.Graph()
 

@@ -67,6 +67,7 @@ async def read_game(
 
 @router.get("/forecast")
 async def forecast(
+    db_session: DBSessionDep,
     bgg_id: int,
     start_date: datetime.datetime | None = None,
     end_date: datetime.datetime | None = None,
@@ -81,6 +82,7 @@ async def forecast(
         start_date = datetime.datetime.combine(start_date, datetime.datetime.min.time())
 
     bgg_rank_history = await RankHistoryService.get_rank_history_before_date(
+        db_session=db_session,
         bgg_id=bgg_id,
         end_date=end_date,
     )

@@ -45,7 +45,7 @@ async def read_all_families(
             detail="Page number must be greater than 1",
         )
 
-    total_count = await FamilyService.get_total_count()
+    total_count = await FamilyService.get_total_count(db_session=db_session)
     last_page = math.ceil(total_count / per_page)
 
     links = []

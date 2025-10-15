@@ -1,8 +1,8 @@
 """Database connection."""
 
 import contextlib
-from collections.abc import AsyncIterator
-from typing import Any
+from collections.abc import AsyncGenerator, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.ext.asyncio import (
     AsyncConnection,
@@ -10,7 +10,10 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.ext.asyncio.engine import AsyncEngine
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio.engine import AsyncEngine
+
 from sqlalchemy.orm import declarative_base
 
 from .config import settings
@@ -23,7 +26,9 @@ class DatabaseSessionManager:
         if engine_kwargs is None:
             engine_kwargs = {}
         self.engine: AsyncEngine | None = create_async_engine(host, **engine_kwargs)
-        self.sessionmaker = async_sessionmaker(autocommit=False, bind=self.engine)
+        self.sessionmaker: async_sessionmaker | None = async_sessionmaker(
+            autocommit=False, bind=self.engine
+        )
 
     async def close(self) -> None:
         if self.engine is None:
@@ -68,6 +73,6 @@ sessionmanager = DatabaseSessionManager(
 )
 
 
-async def get_db_session() -> AsyncSession:
+async def get_db_session() -> AsyncGenerator:
     async with sessionmanager.session() as session:
         yield session

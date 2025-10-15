@@ -1,7 +1,7 @@
 import datetime
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from zipfile import ZipFile
 
 import numpy as np
@@ -106,21 +106,49 @@ async def insert_games(games_df: pd.DataFrame) -> tuple[list[Any], int]:
         hour=0, minute=0, second=0, microsecond=0
     )
     updated_games = 0
-    new_games = []
+    new_games: list[models.Boardgame] = []
 
     async with sessionmanager.session() as session:
         for game in games_df.itertuples():
             result = await session.execute(
                 select(models.Boardgame).where(models.Boardgame.bgg_id == game.id)
             )
-            game_db = result.scalar_one_or_none()
+            game_db: models.Boardgame | None = result.scalar_one_or_none()
+
+            raw_rank = cast("float | int | None", game.rank)
+            raw_bayes = cast("float | None", game.bayesaverage)
+            raw_average = cast("float | None", game.average)
+            raw_year = cast("int | None", game.yearpublished)
+            raw_name = cast("str", game.name)
+
+            name = str(raw_name)
+            rank = (
+                int(raw_rank)
+                if raw_rank is not None and not pd.isna(raw_rank)
+                else None
+            )
+            geek_rating = (
+                float(raw_bayes)
+                if raw_bayes is not None and not pd.isna(raw_bayes)
+                else None
+            )
+            avg_rating = (
+                float(raw_average)
+                if raw_average is not None and not pd.isna(raw_average)
+                else None
+            )
+            year = (
+                int(raw_year)
+                if raw_year is not None and not pd.isna(raw_year)
+                else None
+            )
 
             if game_db:
-                game_db.name = game.name
-                game_db.bgg_rank = game.rank
-                game_db.bgg_geek_rating = game.bayesaverage
-                game_db.bgg_average_rating = game.average
-                game_db.year_published = game.yearpublished
+                game_db.name = name
+                game_db.bgg_rank = rank
+                game_db.bgg_geek_rating = geek_rating
+                game_db.bgg_average_rating = avg_rating
+                game_db.year_published = year
                 updated_games += 1
             else:
                 game_db = models.Boardgame(

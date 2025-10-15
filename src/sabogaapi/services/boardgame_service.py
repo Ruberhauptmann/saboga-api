@@ -206,10 +206,10 @@ class BoardgameService(
             history = list(reversed(yearly_history))
 
         latest_entry = history[-1] if history else None
-        bgg_rank = latest_entry.bgg_rank if latest_entry else None
+        bgg_rank = latest_entry.bgg_rank if latest_entry else -1
 
         schema = schemas.BoardgameSingle.model_validate(boardgame)
-        schema.bgg_rank = bgg_rank
+        schema.bgg_rank = bgg_rank if bgg_rank else -1
         schema.bgg_rank_history = [
             schemas.RankHistory.model_validate(rh) for rh in history
         ]
@@ -226,7 +226,7 @@ class BoardgameService(
             days=30
         )
 
-        rank_history_join = joined_rank_history_subquery(models, compare_to)
+        rank_history_join = joined_rank_history_subquery(compare_to)
 
         query = (
             select(
@@ -264,7 +264,7 @@ class BoardgameService(
             days=30
         )
 
-        rank_history_join = joined_rank_history_subquery(models, compare_to)
+        rank_history_join = joined_rank_history_subquery(compare_to)
 
         query = (
             select(
