@@ -29,6 +29,9 @@ def calculate_trends(
     if not rank_history:
         logger.warning("No rank history data provided.")
         return None, None, None, None
+    if len(rank_history) < 5:
+        logger.warning("Not enough rank history data provided.")
+        return None, None, None, None
 
     logger.debug("Received %s rank history records.", len(rank_history))
 

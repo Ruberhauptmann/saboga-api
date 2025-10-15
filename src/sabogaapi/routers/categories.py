@@ -4,6 +4,7 @@ import math
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
+from sabogaapi.api.dependencies.core import DBSessionDep
 from sabogaapi.logger import configure_logger
 from sabogaapi.schemas import Category, CategoryWithBoardgames, Network
 from sabogaapi.services.category_service import CategoryService
@@ -28,6 +29,7 @@ def make_link(request: Request, page: int, per_page: int, rel: str) -> str:
 async def read_all_categories(
     response: Response,
     request: Request,
+    db_session: DBSessionDep,
     page: int = 1,
     per_page: int = 50,
 ) -> list[Category]:
@@ -43,7 +45,7 @@ async def read_all_categories(
             detail="Page number must be greater than 1",
         )
 
-    total_count = await CategoryService.get_total_count()
+    total_count = await CategoryService.get_total_count(db_session=db_session)
     last_page = math.ceil(total_count / per_page)
 
     links = []
@@ -59,17 +61,19 @@ async def read_all_categories(
     )
     response.headers["link"] = ", ".join(links)
 
-    return await CategoryService.read_all_categories()
+    return await CategoryService.read_all(db_session=db_session)
 
 
 @router.get("/clusters")
-async def read_category_clusters() -> Network:
-    return await CategoryService.get_category_network()
+async def read_category_clusters(db_session: DBSessionDep) -> Network:
+    return await CategoryService.get_network(db_session=db_session)
 
 
 @router.get("/{bgg_id}")
-async def read_category(bgg_id: int) -> CategoryWithBoardgames:
-    category = await CategoryService.read_category(bgg_id=bgg_id)
+async def read_category(
+    db_session: DBSessionDep, bgg_id: int
+) -> CategoryWithBoardgames:
+    category = await CategoryService.read_one(db_session=db_session, bgg_id=bgg_id)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     return category

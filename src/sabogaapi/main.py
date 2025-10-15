@@ -4,17 +4,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from sabogaapi import create_app
-from sabogaapi.database import init_db
+from sabogaapi.database import sessionmanager
 from sabogaapi.logger import configure_logger
 from sabogaapi.metrics import instrumentator
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:  # pragma: no cover
-    logger.info("Got app %s", app.description)
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    logger.info("Got app %s", app.title)
     logger.info("Initialising database connection.")
-    await init_db()
     yield
+    if sessionmanager.engine is not None:
+        await sessionmanager.close()
 
 
 logger = configure_logger()

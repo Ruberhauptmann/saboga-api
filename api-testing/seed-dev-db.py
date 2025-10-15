@@ -3,19 +3,18 @@ import datetime
 import random
 import re
 
-from beanie import init_beanie
 from faker import Faker
-from motor.motor_asyncio import AsyncIOMotorClient
 from PIL import Image, ImageDraw, ImageFont
 
 from sabogaapi import models, schemas
-from sabogaapi.config import settings
-from sabogaapi.scraper._fill_in_data import construct_designer_network, graph_to_dict
+from sabogaapi.database import Base, sessionmanager
 from sabogaapi.statistics.clusters import (
     construct_boardgame_network,
     construct_category_network,
+    construct_designer_network,
     construct_family_network,
     construct_mechanic_network,
+    graph_to_dict,
 )
 from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
@@ -27,14 +26,12 @@ NUM_DESIGNERS = 4
 HISTORY_DAYS = 35
 
 
+# --- Helpers ---
 def clean_title(text: str) -> str:
     return re.sub(r"[^\w\s]$", "", text.strip())
 
 
-def generate_rank_history(
-    bgg_id: int,
-    days: int = 30,
-) -> tuple[list[models.RankHistory], dict]:
+def generate_rank_history(days: int = 30):
     trend_type = random.choice(["improving", "declining", "random"])
     base_rank = random.randint(100, 900)
 
@@ -52,14 +49,12 @@ def generate_rank_history(
         else:
             rank = min(1000, max(1, base_rank + random.gauss(0, 50)))
 
-        # Simulate rating following rank: better rank → better rating
         geek_rating = round(10 - (rank / 1000 * 3.5) + random.uniform(-0.05, 0.05), 2)
         avg_rating = round(geek_rating + random.uniform(-0.1, 0.1), 2)
 
         history.append(
             models.RankHistory(
                 date=today - datetime.timedelta(days=(days - i - 1)),
-                bgg_id=bgg_id,
                 bgg_rank=int(rank),
                 bgg_geek_rating=geek_rating,
                 bgg_average_rating=avg_rating,
@@ -77,19 +72,15 @@ def generate_rank_history(
 
 
 def generate_image_with_text(filepath: str, text: str, size: tuple[int, int]):
-    # Random background color
     bg_color = tuple(random.randint(100, 255) for _ in range(3))
-    # Create image
     img = Image.new("RGB", size, bg_color)
     draw = ImageDraw.Draw(img)
 
-    # Try to load a default font
     try:
         font = ImageFont.truetype("arial.ttf", size=int(min(size) / 4))
     except OSError:
         font = ImageFont.load_default()
 
-    # Center the text
     text_bbox = draw.textbbox((0, 0), text, font=font)
     text_width = text_bbox[2] - text_bbox[0]
     text_height = text_bbox[3] - text_bbox[1]
@@ -99,14 +90,8 @@ def generate_image_with_text(filepath: str, text: str, size: tuple[int, int]):
     img.save(filepath)
 
 
-def generate_boardgame(
-    bgg_id: int,
-    designers: list[models.Designer],
-    categories: list[models.Category],
-    families: list[models.Family],
-    mechanics: list[models.Mechanic],
-) -> tuple[models.Boardgame, list[models.RankHistory]]:
-    rank_history, latest = generate_rank_history(bgg_id, HISTORY_DAYS)
+def generate_boardgame(bgg_id, designers, categories, families, mechanics):
+    rank_history, latest = generate_rank_history(HISTORY_DAYS)
 
     minplayers = random.randint(1, 4)
     maxplayers = random.randint(minplayers + 1, min(minplayers + 5, 10))
@@ -118,12 +103,15 @@ def generate_boardgame(
 
     rank_volatility, geek_rating_volatility, average_rating_volatility = (
         calculate_volatility(
-            [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+            [
+                schemas.RankHistory.model_validate(entry.__dict__)
+                for entry in rank_history
+            ]
         )
     )
 
     rank_trend, geek_rating_trend, average_rating_trend, mean_trend = calculate_trends(
-        [schemas.RankHistory(**entry.model_dump()) for entry in rank_history]
+        [schemas.RankHistory.model_validate(entry.__dict__) for entry in rank_history]
     )
 
     if random.choice([True, False]):
@@ -161,103 +149,69 @@ def generate_boardgame(
         playingtime=random.randint(minplay, maxplay),
         minplaytime=minplay,
         maxplaytime=maxplay,
-        categories=random.sample(categories, k=random.randint(1, 3)),  # type: ignore
-        mechanics=random.sample(mechanics, k=random.randint(1, 2)),  # type: ignore
-        families=random.sample(families, k=random.randint(1, 2)),  # type: ignore
-        designers=random.sample(designers, k=random.randint(1, 2)),  # type: ignore
+        bgg_rank_history=rank_history,
+        categories=random.sample(categories, k=random.randint(1, 3)),
+        mechanics=random.sample(mechanics, k=random.randint(1, 2)),
+        families=random.sample(families, k=random.randint(1, 2)),
+        designers=random.sample(designers, k=random.randint(1, 2)),
     )
 
     return boardgame, rank_history
 
 
 async def generate_data():
-    client = AsyncIOMotorClient(f"{settings.mongodb_uri}")
-    await init_beanie(
-        database=client.get_database(),
-        document_models=[
-            models.Boardgame,
-            models.BoardgameNetwork,
-            models.RankHistory,
-            models.Category,
-            models.CategoryNetwork,
-            models.Designer,
-            models.DesignerNetwork,
-            models.Family,
-            models.FamilyNetwork,
-            models.Mechanic,
-            models.MechanicNetwork,
-        ],
-    )
+    async with sessionmanager.connect() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
-    await models.Boardgame.delete_all()
-    await models.RankHistory.delete_all()
-    await models.Designer.delete_all()
-    await models.Family.delete_all()
-    await models.Mechanic.delete_all()
-    await models.Category.delete_all()
+    async with sessionmanager.session() as session:
+        designers = [
+            models.Designer(name=fake.name(), bgg_id=i) for i in range(1, NUM_DESIGNERS)
+        ]
+        categories = [models.Category(name=fake.word(), bgg_id=i) for i in range(1, 20)]
+        families = [models.Family(name=fake.word(), bgg_id=i) for i in range(1, 20)]
+        mechanics = [models.Mechanic(name=fake.word(), bgg_id=i) for i in range(1, 20)]
 
-    designers = [
-        models.Designer(name=fake.name(), bgg_id=i) for i in range(1, NUM_DESIGNERS)
-    ]
-    await models.Designer.insert_many(designers)
-    designers = await models.Designer.find_all().to_list()
+        session.add_all(designers + categories + families + mechanics)
+        await session.commit()
 
-    categories = [models.Category(name=fake.word(), bgg_id=i) for i in range(1, 20)]
-    await models.Category.insert_many(categories)
-    categories = await models.Category.find_all().to_list()
+        games = []
+        history_entries = []
 
-    families = [models.Family(name=fake.word(), bgg_id=i) for i in range(1, 20)]
-    await models.Family.insert_many(families)
-    families = await models.Family.find_all().to_list()
+        for i in range(NUM_GAMES):
+            game, history = generate_boardgame(
+                bgg_id=1000 + i,
+                designers=designers,
+                families=families,
+                mechanics=mechanics,
+                categories=categories,
+            )
+            games.append(game)
+            history_entries.extend(history)
 
-    mechanics = [models.Mechanic(name=fake.word(), bgg_id=i) for i in range(1, 20)]
-    await models.Mechanic.insert_many(mechanics)
-    mechanics = await models.Mechanic.find_all().to_list()
+        session.add_all(games + history_entries)
+        await session.commit()
 
-    games = []
-    history_entries = []
+        # networks (if you want to persist those too)
+        category_graph = await construct_category_network()
+        session.add(models.CategoryNetwork(**graph_to_dict(category_graph)))
 
-    for i in range(NUM_GAMES):
-        game, history = generate_boardgame(
-            bgg_id=1000 + i,
-            designers=designers,
-            families=families,
-            mechanics=mechanics,
-            categories=categories,
-        )
-        games.append(game)
-        history_entries.extend(history)
+        designer_graph = await construct_designer_network()
+        session.add(models.DesignerNetwork(**graph_to_dict(designer_graph)))
 
-    await models.Boardgame.insert_many(games)
-    await models.RankHistory.insert_many(history_entries)
+        family_graph = await construct_family_network()
+        session.add(models.FamilyNetwork(**graph_to_dict(family_graph)))
 
-    category_graph = await construct_category_network()
-    await models.CategoryNetwork.delete_all()
-    category_graph_db = models.CategoryNetwork(**graph_to_dict(category_graph))
-    await category_graph_db.insert()
+        mechanic_graph = await construct_mechanic_network()
+        session.add(models.MechanicNetwork(**graph_to_dict(mechanic_graph)))
 
-    designer_graph = await construct_designer_network()
-    await models.DesignerNetwork.delete_all()
-    designer_graph_db = models.DesignerNetwork(**graph_to_dict(designer_graph))
-    await designer_graph_db.insert()
+        boardgame_graph = await construct_boardgame_network()
+        session.add(models.BoardgameNetwork(**graph_to_dict(boardgame_graph)))
 
-    family_graph = await construct_family_network()
-    await models.FamilyNetwork.delete_all()
-    family_graph_db = models.FamilyNetwork(**graph_to_dict(family_graph))
-    await family_graph_db.insert()
-
-    mechanic_graph = await construct_mechanic_network()
-    await models.MechanicNetwork.delete_all()
-    mechanic_graph_db = models.MechanicNetwork(**graph_to_dict(mechanic_graph))
-    await mechanic_graph_db.insert()
-
-    boardgame_graph = await construct_boardgame_network()
-    await models.BoardgameNetwork.delete_all()
-    boardgame_graph_db = models.BoardgameNetwork(**graph_to_dict(boardgame_graph))
-    await boardgame_graph_db.insert()
+        await session.commit()
 
     print(
-        f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries.",
+        f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries."
     )
 
 

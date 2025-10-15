@@ -7,16 +7,17 @@ from typing import Any, TypeVar
 
 import aiohttp
 import requests
-from beanie import WriteRules
 from PIL import Image
 from pydantic import BaseModel
+from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from sabogaapi import models
 from sabogaapi.config import settings
-from sabogaapi.database import init_db
+from sabogaapi.database import AsyncSession, Base, sessionmanager
 from sabogaapi.logger import configure_logger
 from sabogaapi.statistics.clusters import (
-    construct_boardgame_network,
     construct_category_network,
     construct_designer_network,
     construct_family_network,
@@ -25,6 +26,9 @@ from sabogaapi.statistics.clusters import (
 )
 
 logger = configure_logger()
+
+
+T = TypeVar("T", bound=models.Base)
 
 
 class BoardgameBGGIDs(BaseModel):
@@ -106,7 +110,6 @@ def parse_boardgame_data(item: ET.Element) -> dict:
     if description_element is not None and description_element.text:
         description = html.unescape(description_element.text)
 
-    # Ranking Data Extraction
     statistics = item.find("statistics")
     ratings = statistics.find("ratings") if statistics is not None else None
     rank = _extract_rank(ratings)
@@ -154,34 +157,24 @@ def parse_boardgame_data(item: ET.Element) -> dict:
     }
 
 
-async def analyse_api_response(  # noqa: C901
-    item: ET.Element,
-) -> (
-    tuple[None, None, None, None, None]
-    | tuple[
-        models.Boardgame,
-        list[models.Category] | None,
-        list[models.Designer] | None,
-        list[models.Family] | None,
-        list[models.Mechanic] | None,
-    ]
-):
+async def analyse_api_response(
+    item: ET.Element, session: AsyncSession
+) -> tuple[
+    models.Boardgame | None,
+    list[models.Category],
+    list[models.Designer],
+    list[models.Family],
+    list[models.Mechanic],
+]:
+    """Parse one <item> and prepare ORM objects (no DB calls)."""
     data = parse_boardgame_data(item)
 
-    # Get boardgame from database or create a new one
-    boardgame = await models.Boardgame.find_one(
-        models.Boardgame.bgg_id == data["bgg_id"]
-    )
+    # Unranked games → skip (handled later by caller)
     if data["rank"] is None:
-        if boardgame is not None:
-            await boardgame.delete()
-            logger.info("Deleted boardgame %s due to missing rank.", data["bgg_id"])
-        return None, None, None, None, None
+        return None, [], [], [], []
 
-    if boardgame is None:
-        boardgame = models.Boardgame(bgg_id=data["bgg_id"], bgg_rank=data["rank"])
-
-    # Simple fields
+    # Create boardgame object
+    boardgame = models.Boardgame(bgg_id=data["bgg_id"], bgg_rank=data["rank"])
     boardgame.name = data["name"]
     boardgame.description = data["description"]
     boardgame.year_published = data["year_published"]
@@ -192,18 +185,21 @@ async def analyse_api_response(  # noqa: C901
     boardgame.maxplaytime = data["maxplaytime"]
 
     # Process image
-    if data["image_url"]:
+    if data.get("image_url"):
         image_filename = f"{data['bgg_id']}.jpg"
         image_file = settings.img_dir / image_filename
+        image_file.parent.mkdir(parents=True, exist_ok=True)
+
         if not image_file.exists():
             async with (
-                aiohttp.ClientSession() as session,
-                session.get(data["image_url"]) as img_request,
+                aiohttp.ClientSession() as session_img,
+                session_img.get(data["image_url"]) as resp,
             ):
-                if img_request.status == 200:
-                    content = await img_request.read()
-                    with image_file.open("wb") as handler:
-                        handler.write(content)
+                if resp.status == 200:
+                    content = await resp.read()
+                    with image_file.open("wb") as f:
+                        f.write(content)
+
         thumbnail_filename = f"{image_file.stem}-thumbnail.jpg"
         thumbnail_file = settings.img_dir / thumbnail_filename
         if not thumbnail_file.exists():
@@ -214,188 +210,212 @@ async def analyse_api_response(  # noqa: C901
         boardgame.image_url = f"/img/{image_filename}"
         boardgame.thumbnail_url = f"/img/{thumbnail_filename}"
 
-    # Process categories
-    category_names_ids = data["categories"]
-    categories = None
-    if category_names_ids:
-        categories = [
-            models.Category(name=name, bgg_id=bgg_id)
-            for bgg_id, name in category_names_ids
-        ]
+    categories = []
+    for bgg_id, name in data.get("categories", []):
+        category = await get_or_create(
+            session, models.Category, bgg_id=bgg_id, defaults={"name": name}
+        )
+        categories.append(category)
 
-    # Process families
-    family_names_ids = data["families"]
-    families = None
-    if family_names_ids:
-        families = [
-            models.Family(name=name, bgg_id=bgg_id) for bgg_id, name in family_names_ids
-        ]
+    designers = []
+    for bgg_id, name in data.get("designers", []):
+        designer = await get_or_create(
+            session, models.Designer, bgg_id=bgg_id, defaults={"name": name}
+        )
+        designers.append(designer)
 
-    # Process mechanics
-    mechanic_names_ids = data["mechanics"]
-    mechanics = None
-    if mechanic_names_ids:
-        mechanics = [
-            models.Mechanic(name=name, bgg_id=bgg_id)
-            for bgg_id, name in mechanic_names_ids
-        ]
+    families = []
+    for bgg_id, name in data.get("families", []):
+        family = await get_or_create(
+            session, models.Family, bgg_id=bgg_id, defaults={"name": name}
+        )
+        families.append(family)
 
-    # Process designers
-    designer_names_ids = data["designers"]
-    designers = None
-    if designer_names_ids:
-        designers = [
-            models.Designer(name=name, bgg_id=bgg_id)
-            for bgg_id, name in designer_names_ids
-        ]
+    mechanics = []
+    for bgg_id, name in data.get("mechanics", []):
+        mechanic = await get_or_create(
+            session, models.Mechanic, bgg_id=bgg_id, defaults={"name": name}
+        )
+        mechanics.append(mechanic)
 
     return boardgame, categories, designers, families, mechanics
 
 
-T = TypeVar("T", bound=models.Document)
+async def get_or_create(
+    session: AsyncSession,
+    model: type[T],
+    defaults: dict[str, Any] | None = None,
+    **kwargs: dict[str, Any],
+) -> T:
+    stmt = select(model).filter_by(**kwargs)
+    instance: T | None = await session.scalar(stmt)
+    if instance:
+        return instance
+
+    params = {**kwargs}
+    if defaults:
+        params.update(defaults)
+    instance_created: T = model(**params)
+    session.add(instance_created)
+
+    try:
+        await session.flush()
+    except IntegrityError:
+        await session.rollback()
+        instance_new: T | None = await session.scalar(stmt)
+        if instance_new:
+            return instance_new
+
+    return instance_created
 
 
 async def process_entities(
-    entities: list[T],
-    model: type[T],
+    session: AsyncSession,
+    entities: list[Any],
+    model: type[Any],
     id_field: str = "bgg_id",
     update_fields: list[str] | None = None,
-) -> list[T | None]:
-    """
-    Insert or update entities of a given model.
+) -> list[Any]:
+    results = []
 
-    Args:
-        entities: List of model instances to process.
-        model: The model class (e.g., models.Designer).
-        id_field: The unique field used for lookup (default "bgg_id").
-        update_fields: Fields to update if entity exists. Defaults to all.
-
-    Returns:
-        List of entities as stored in the database.
-    """
-    entities_db = []
     for entity in entities:
         entity_id = getattr(entity, id_field)
-        existing = await model.find(
-            getattr(model, id_field) == entity_id
-        ).first_or_none()
+        stmt = select(model).where(getattr(model, id_field) == entity_id)
+        result = await session.execute(stmt)
+        existing = result.scalar_one_or_none()
 
+        # exclude primary key column
         fields_to_update = update_fields or [
-            f for f in entity.model_dump() if f != id_field
+            f.name
+            for f in entity.__table__.columns
+            if f.name not in (id_field, "id", "type")
         ]
 
         if existing:
-            update_dict = {field: getattr(entity, field) for field in fields_to_update}
-            await model.find(getattr(model, id_field) == entity_id).update(
-                {"$set": update_dict}
-            )
-            existing = await model.find(
-                getattr(model, id_field) == entity_id
-            ).first_or_none()
-            entities_db.append(existing)
+            for f in fields_to_update:
+                setattr(existing, f, getattr(entity, f))
+            results.append(existing)
         else:
-            new = await model.insert(entity)
-            entities_db.append(new)
+            session.add(entity)
+            results.append(entity)
 
-    return entities_db
+    await session.flush()
+    return results
 
 
 async def process_item(
-    item: ET.Element,
+    session: AsyncSession, item: ET.Element
 ) -> models.Boardgame | None:
     boardgame, categories, designers, families, mechanics = await analyse_api_response(
-        item
+        item=item, session=session
     )
+    if not boardgame:
+        return None
 
-    if categories:
-        categories_db = await process_entities(
-            model=models.Category, entities=categories, update_fields=["name", "bgg_id"]
-        )
-    else:
-        categories_db = []
-    if designers:
-        designers_db = await process_entities(
-            model=models.Designer, entities=designers, update_fields=["name", "bgg_id"]
-        )
-    else:
-        designers_db = []
-    if families:
-        families_db = await process_entities(
-            model=models.Family, entities=families, update_fields=["name", "bgg_id"]
-        )
-    else:
-        families_db = []
-    if mechanics:
-        mechanics_db = await process_entities(
-            model=models.Mechanic, entities=mechanics, update_fields=["name", "bgg_id"]
-        )
-    else:
-        mechanics_db = []
+    # Add all child entities to session and flush to get PKs
+    all_children = categories + designers + families + mechanics
+    for child in all_children:
+        session.add(child)
+    await session.flush()
 
-    if boardgame:
-        boardgame.categories = categories_db  # type: ignore[assignment]
-        boardgame.designers = designers_db  # type: ignore[assignment]
-        boardgame.families = families_db  # type: ignore[assignment]
-        boardgame.mechanics = mechanics_db  # type: ignore[assignment]
-        await boardgame.save(link_rule=WriteRules.DO_NOTHING)
-    return None
+    # Load boardgame with relationships to avoid lazy loading
+    stmt = (
+        select(models.Boardgame)
+        .where(models.Boardgame.bgg_id == boardgame.bgg_id)
+        .options(
+            selectinload(models.Boardgame.categories),
+            selectinload(models.Boardgame.designers),
+            selectinload(models.Boardgame.families),
+            selectinload(models.Boardgame.mechanics),
+        )
+    )
+    result = await session.execute(stmt)
+    existing = result.scalar_one_or_none()
+
+    skip_fields = {"id", "type"}
+    if existing:
+        # Update simple columns
+        for f in boardgame.__table__.columns.keys():  # noqa: SIM118
+            if f not in skip_fields:
+                setattr(existing, f, getattr(boardgame, f))
+        # Assign relationships directly (objects are already in session)
+        existing.categories = categories
+        existing.designers = designers
+        existing.families = families
+        existing.mechanics = mechanics
+    else:
+        # Add new boardgame and assign relationships
+        boardgame.categories = categories
+        boardgame.designers = designers
+        boardgame.families = families
+        boardgame.mechanics = mechanics
+        session.add(boardgame)
+
+    await session.commit()
+    return boardgame
 
 
-async def process_batch(ids: list[int]) -> None:
+async def process_batch(session: AsyncSession, ids: list[int]) -> None:
     logger.info("Scraping %s.", ids)
     parsed_xml = scrape_api(ids)
     if parsed_xml is None:
         return
 
-    items = parsed_xml.findall("item")
-    for item in items:
-        await process_item(item)
-    return
+    for item in parsed_xml.findall("item"):
+        await process_item(session, item)
 
 
 async def fill_in_data(step: int = 20) -> None:
-    await init_db()
-    run_index = 0
+    """Iterate over all known boardgames and refetch details."""
 
-    while True:
-        ids = (
-            await models.Boardgame.find_all()
-            .project(BoardgameBGGIDs)
-            .sort("-bgg_id")
-            .skip(run_index * step)
-            .limit(step)
-            .to_list()
-        )
-        ids_int = [x.bgg_id for x in ids]
+    async with sessionmanager.connect() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-        if not ids_int:
-            break
+    async with sessionmanager.session() as session:
+        run_index = 0
+        while True:
+            result = await session.execute(
+                select(models.Boardgame.bgg_id)
+                .order_by(models.Boardgame.bgg_id.desc())
+                .offset(run_index * step)
+                .limit(step)
+            )
+            ids = [r[0] for r in result.all()]
+            if not ids:
+                break
 
-        await process_batch(ids_int)
-        run_index += 1
-        await asyncio.sleep(5)
+            await process_batch(session, ids)
+            run_index += 1
+            await asyncio.sleep(5)
 
-    category_graph = await construct_category_network()
-    await models.CategoryNetwork.delete_all()
-    category_graph_db = models.DesignerNetwork(**graph_to_dict(category_graph))
-    await category_graph_db.insert()
+        await session.execute(delete(models.CategoryNetwork))
+        await session.commit()
 
-    designer_graph = await construct_designer_network()
-    await models.DesignerNetwork.delete_all()
-    designer_graph_db = models.DesignerNetwork(**graph_to_dict(designer_graph))
-    await designer_graph_db.insert()
+        category_graph = await construct_category_network()
+        network = models.CategoryNetwork(**graph_to_dict(category_graph))
+        session.add(network)
+        await session.commit()
 
-    family_graph = await construct_family_network()
-    await models.FamilyNetwork.delete_all()
-    family_graph_db = models.FamilyNetwork(**graph_to_dict(family_graph))
-    await family_graph_db.insert()
+        await session.execute(delete(models.DesignerNetwork))
+        await session.commit()
 
-    mechanic_graph = await construct_mechanic_network()
-    await models.MechanicNetwork.delete_all()
-    mechanic_graph_db = models.MechanicNetwork(**graph_to_dict(mechanic_graph))
-    await mechanic_graph_db.insert()
+        designer_graph = await construct_designer_network()
+        network = models.DesignerNetwork(**graph_to_dict(designer_graph))
+        session.add(network)
+        await session.commit()
 
-    boardgame_graph = await construct_boardgame_network()
-    await models.BoardgameNetwork.delete_all()
-    boardgame_graph_db = models.BoardgameNetwork(**graph_to_dict(boardgame_graph))
-    await boardgame_graph_db.insert()
+        await session.execute(delete(models.FamilyNetwork))
+        await session.commit()
+
+        family_graph = await construct_family_network()
+        network = models.FamilyNetwork(**graph_to_dict(family_graph))
+        session.add(network)
+        await session.commit()
+
+        await session.execute(delete(models.MechanicNetwork))
+        await session.commit()
+
+        mechanic_graph = await construct_mechanic_network()
+        network = models.MechanicNetwork(**graph_to_dict(mechanic_graph))
+        session.add(network)
+        await session.commit()

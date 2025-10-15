@@ -7,6 +7,7 @@ import time
 from fastapi import APIRouter, Request, Response
 from fastapi.exceptions import HTTPException
 
+from sabogaapi.api.dependencies.core import DBSessionDep
 from sabogaapi.logger import configure_logger
 from sabogaapi.schemas import BoardgameInList, Network
 from sabogaapi.services import BoardgameService
@@ -33,9 +34,10 @@ def make_link(request: Request, page: int, per_page: int, rel: str) -> str:
 
 
 @router.get("/rank-history")
-async def read_games_with_rank_changes(
+async def read_games_with_rank_changes(  # noqa: PLR0913
     response: Response,
     request: Request,
+    db_session: DBSessionDep,
     compare_to: datetime.date | None = None,
     page: int = 1,
     per_page: int = 50,
@@ -101,12 +103,13 @@ async def read_games_with_rank_changes(
     compare_to = compare_to.replace(hour=0, minute=0, second=0, microsecond=0)
 
     top_ranked_data = await BoardgameService.get_top_ranked_boardgames(
+        db_session=db_session,
         compare_to=compare_to,
         page=page,
         page_size=per_page,
     )
 
-    total_count = await BoardgameService.get_total_count()
+    total_count = await BoardgameService.get_total_count(db_session=db_session)
     last_page = math.ceil(total_count / per_page)
 
     links = []
@@ -143,15 +146,15 @@ async def read_games_with_volatility() -> dict[str, str]:
 
 
 @router.get("/trending")
-async def read_trending_games() -> list[BoardgameInList]:
-    return await BoardgameService.get_trending_games(limit=5)
+async def read_trending_games(db_session: DBSessionDep) -> list[BoardgameInList]:
+    return await BoardgameService.get_trending_games(limit=5, db_session=db_session)
 
 
 @router.get("/declining")
-async def read_declining_games() -> list[BoardgameInList]:
-    return await BoardgameService.get_declining_games(limit=5)
+async def read_declining_games(db_session: DBSessionDep) -> list[BoardgameInList]:
+    return await BoardgameService.get_declining_games(limit=5, db_session=db_session)
 
 
 @router.get("/clusters")
-async def read_boardgame_clusters() -> Network:
-    return await BoardgameService.get_boardgame_network()
+async def read_boardgame_clusters(db_session: DBSessionDep) -> Network:
+    return await BoardgameService.get_network(db_session=db_session)
