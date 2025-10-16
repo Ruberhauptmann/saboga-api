@@ -18,6 +18,7 @@ from sabogaapi.config import settings
 from sabogaapi.database import AsyncSession, Base, sessionmanager
 from sabogaapi.logger import configure_logger
 from sabogaapi.statistics.clusters import (
+    construct_boardgame_network,
     construct_category_network,
     construct_designer_network,
     construct_family_network,
@@ -387,6 +388,14 @@ async def fill_in_data(step: int = 20) -> None:
             await process_batch(session, ids)
             run_index += 1
             await asyncio.sleep(5)
+
+        await session.execute(delete(models.BoardgameNetwork))
+        await session.commit()
+
+        boardgame_graph = await construct_boardgame_network()
+        network = models.BoardgameNetwork(**graph_to_dict(boardgame_graph))
+        session.add(network)
+        await session.commit()
 
         await session.execute(delete(models.CategoryNetwork))
         await session.commit()

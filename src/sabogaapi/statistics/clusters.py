@@ -3,11 +3,14 @@ from typing import Any
 
 import community as community_louvain
 import networkx as nx
+import numpy as np
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from sabogaapi import models
 from sabogaapi.database import sessionmanager
+
+BASE_SIZE = 5
 
 
 def graph_to_dict(graph: nx.Graph) -> dict[str, Any]:
@@ -68,7 +71,7 @@ def build_designer_graph(
         data["cluster"] = partition[n]
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = data.get("weight", 1)
+        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -119,7 +122,7 @@ def build_category_graph(
         data["cluster"] = partition[n]
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = data.get("weight", 1)
+        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -170,7 +173,7 @@ def build_family_graph(
         data["cluster"] = partition[n]
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = data.get("weight", 1)
+        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -222,7 +225,7 @@ def build_mechanic_graph(
         data["cluster"] = partition[n]
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = data.get("weight", 1)
+        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -308,7 +311,7 @@ def build_boardgame_graph(  # noqa: C901, PLR0912
         data["cluster"] = partition[n]
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = data.get("weight", 1)
+        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
         data["label"] = str(data.get("weight", 1))
 
     return graph
