@@ -1,4 +1,19 @@
 
+.. _changelog-0.0.58:
+
+0.0.58 — 2025-10-16
+-------------------
+
+Changed
+^^^^^^^
+
+- Scale node sizes logarithmically
+
+Fixed
+^^^^^
+
+- Construct boardgame graph when scraping
+
 .. _changelog-0.0.54:
 
 0.0.54 — 2025-10-15
