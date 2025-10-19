@@ -1,4 +1,21 @@
 
+.. _changelog-0.0.59:
+
+0.0.59 — 2025-10-19
+------------------
+
+Changed
+^^^^^^^
+
+- Calculate graphs with clearer cluster positioning
+
+Fixed
+^^^^^
+
+- Again calculate boardgame graph
+
+- Fix rank in boardgame table
+
 .. _changelog-0.0.58:
 
 0.0.58 — 2025-10-16
