@@ -81,7 +81,7 @@ def _extract_list(item: ET.Element, key: str) -> list[Any]:
         element = link.get("value")
         value_id = link.get("id") if element is not None else None
         id_ = int(value_id) if value_id is not None else None
-        if element and id_:
+        if element and id_ and not element.startswith("Admin"):
             return_list.append((id_, element))
     return return_list
 
@@ -114,16 +114,6 @@ def parse_boardgame_data(item: ET.Element) -> dict:
     statistics = item.find("statistics")
     ratings = statistics.find("ratings") if statistics is not None else None
     rank = _extract_rank(ratings)
-    average_element = ratings.find("average") if ratings is not None else None
-    average_rating = (
-        _map_to(float, average_element.get("value"))
-        if average_element is not None
-        else None
-    )
-    geek_element = ratings.find("bayesaverage") if ratings is not None else None
-    geek_rating = (
-        _map_to(float, geek_element.get("value")) if geek_element is not None else None
-    )
 
     year_published = _extract_int(item, "yearpublished")
     minplayers = _extract_int(item, "minplayers")
@@ -141,10 +131,8 @@ def parse_boardgame_data(item: ET.Element) -> dict:
         "bgg_id": bgg_id,
         "name": name,
         "image_url": image_url,
-        "description": description,
         "rank": rank,
-        "average_rating": average_rating,
-        "geek_rating": geek_rating,
+        "description": description,
         "year_published": year_published,
         "minplayers": minplayers,
         "maxplayers": maxplayers,
@@ -333,19 +321,32 @@ async def process_item(
     result = await session.execute(stmt)
     existing = result.scalar_one_or_none()
 
-    skip_fields = {"id", "type"}
+    # Fields we parsed from the API
+    api_fields = {
+        "name",
+        "description",
+        "year_published",
+        "minplayers",
+        "maxplayers",
+        "playingtime",
+        "minplaytime",
+        "maxplaytime",
+        "bgg_rank",
+        "image_url",
+        "thumbnail_url",
+    }
     if existing:
-        # Update simple columns
-        for f in boardgame.__table__.columns.keys():  # noqa: SIM118
-            if f not in skip_fields:
-                setattr(existing, f, getattr(boardgame, f))
-        # Assign relationships directly (objects are already in session)
+        for f in api_fields:
+            value = getattr(boardgame, f)
+            if value is not None:
+                setattr(existing, f, value)
+
+        # Assign relationships
         existing.categories = categories
         existing.designers = designers
         existing.families = families
         existing.mechanics = mechanics
     else:
-        # Add new boardgame and assign relationships
         boardgame.categories = categories
         boardgame.designers = designers
         boardgame.families = families
@@ -373,7 +374,7 @@ async def fill_in_data(step: int = 20) -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     async with sessionmanager.session() as session:
-        run_index = 0
+        run_index = 1
         while True:
             result = await session.execute(
                 select(models.Boardgame.bgg_id)
@@ -387,6 +388,8 @@ async def fill_in_data(step: int = 20) -> None:
 
             await process_batch(session, ids)
             run_index += 1
+            if run_index == 2:
+                break
             await asyncio.sleep(5)
 
         await session.execute(delete(models.BoardgameNetwork))

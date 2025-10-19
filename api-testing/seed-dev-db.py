@@ -164,6 +164,7 @@ async def generate_data():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+    """
     async with sessionmanager.session() as session:
         designers = [
             models.Designer(name=fake.name(), bgg_id=i) for i in range(1, NUM_DESIGNERS)
@@ -209,6 +210,7 @@ async def generate_data():
         session.add(models.BoardgameNetwork(**graph_to_dict(boardgame_graph)))
 
         await session.commit()
+    """
 
     print(
         f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries."
