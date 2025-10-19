@@ -1,7 +1,6 @@
-from collections.abc import Sequence
-from typing import Any
+from collections.abc import Iterable, Sequence
+from typing import Any, TypeVar
 
-import community as community_louvain
 import networkx as nx
 import numpy as np
 from sqlalchemy import select
@@ -10,7 +9,44 @@ from sqlalchemy.orm import selectinload
 from sabogaapi import models
 from sabogaapi.database import sessionmanager
 
-BASE_SIZE = 5
+T = TypeVar("T", bound=models.Base)
+
+BASE_NODE_SIZE = 1
+BASE_EDGE_SIZE = 0.01
+
+
+def build_edges(graph: nx.Graph, items: Sequence[T], attribute: str) -> nx.Graph:
+    for item in items:
+        g_ids = [int(g.bgg_id) for g in getattr(item, attribute)]  # type: ignore[attr-defined]
+        for i in range(len(g_ids)):
+            graph.nodes[g_ids[i]]["size"] += 1
+            for j in range(i + 1, len(g_ids)):
+                if graph.has_edge(g_ids[i], g_ids[j]):
+                    graph[g_ids[i]][g_ids[j]]["weight"] += 1
+                else:
+                    graph.add_edge(g_ids[i], g_ids[j], weight=1)
+
+    return graph
+
+
+def build_communities(
+    graph: nx.Graph, min_weight: int
+) -> tuple[Iterable, dict[Any, int]]:
+    edges_to_remove = [
+        (u, v) for u, v, d in graph.edges(data=True) if d["weight"] < min_weight
+    ]
+    graph.remove_edges_from(edges_to_remove)
+    graph.remove_nodes_from(list(nx.isolates(graph)))
+
+    communities = nx.community.greedy_modularity_communities(graph, weight="weight")
+    node_to_comm = {node: i for i, comm in enumerate(communities) for node in comm}
+
+    for _, comm in enumerate(communities):
+        if len(comm) <= 2:
+            for node in comm:
+                node_to_comm[node] = -1
+
+    return communities, node_to_comm
 
 
 def graph_to_dict(graph: nx.Graph) -> dict[str, Any]:
@@ -47,31 +83,50 @@ def build_designer_graph(
     for d in designers:
         graph.add_node(d.bgg_id, label=d.name, size=1)
 
-    for g in boardgames:
-        d_ids = [int(d.bgg_id) for d in g.designers]  # type: ignore[attr-defined]
-        for i in range(len(d_ids)):
-            graph.nodes[d_ids[i]]["size"] += 3
-            for j in range(i + 1, len(d_ids)):
-                if graph.has_edge(d_ids[i], d_ids[j]):
-                    graph[d_ids[i]][d_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(d_ids[i], d_ids[j], weight=1)
+    graph = build_edges(graph, boardgames, "designers")
 
-    # Clustering
-    partition = community_louvain.best_partition(graph, weight="weight")
-    for n in graph.nodes:
-        if graph.degree[n] == 0:
-            partition[n] = -1  # isolated nodes
+    communities, node_to_comm = build_communities(graph, min_weight=2)
 
-    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.2)
+    supergraph = nx.cycle_graph(len(list(communities)))
+    superpos = nx.spring_layout(supergraph, scale=5, seed=429)
+
+    centers = list(superpos.values())
+
+    pos = {}
+    for center, comm in zip(centers, communities, strict=False):
+        if len(comm) <= 2:
+            k = 0.1
+            scale = 0.1
+        elif len(comm) <= 5:
+            k = 0.5
+            scale = 0.2
+        elif len(comm) <= 20:
+            k = 1.0
+            scale = 1.0
+        else:
+            k = 2.0
+            scale = 1.0
+
+        pos.update(
+            nx.spring_layout(
+                nx.subgraph(graph, comm),
+                center=center,
+                seed=1430,
+                k=k,
+                scale=scale,
+                iterations=50,
+            )
+        )
 
     for n, data in graph.nodes(data=True):
         data["x"] = float(pos[n][0])
         data["y"] = float(pos[n][1])
-        data["cluster"] = partition[n]
+        data["cluster"] = node_to_comm[n]
+        data["label"] = f"{data.get('label')} ({data.get('size') - 1})"
+        data["size"] = BASE_NODE_SIZE * np.log1p(data.get("size"))
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
+        data["size"] = BASE_EDGE_SIZE * np.log1p(data.get("weight"))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -98,31 +153,32 @@ def build_category_graph(
     for c in categories:
         graph.add_node(c.bgg_id, label=c.name, size=1)
 
-    for g in boardgames:
-        d_ids = [int(d.bgg_id) for d in g.categories]  # type: ignore[attr-defined]
-        for i in range(len(d_ids)):
-            graph.nodes[d_ids[i]]["size"] += 3
-            for j in range(i + 1, len(d_ids)):
-                if graph.has_edge(d_ids[i], d_ids[j]):
-                    graph[d_ids[i]][d_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(d_ids[i], d_ids[j], weight=1)
+    graph = build_edges(graph, boardgames, "categories")
 
-    # Clustering
-    partition = community_louvain.best_partition(graph, weight="weight")
+    communities, node_to_comm = build_communities(graph, min_weight=2)
+
+    supergraph = nx.cycle_graph(len(list(communities)))
+    superpos = nx.spring_layout(supergraph, scale=3, seed=429)
+
+    # Use the "supernode" positions as the center of each node cluster
+    centers = list(superpos.values())
+    pos = {}
+    for center, comm in zip(centers, communities, strict=False):
+        pos.update(nx.spring_layout(nx.subgraph(graph, comm), center=center, seed=1430))
+
     for n in graph.nodes:
         if graph.degree[n] == 0:
-            partition[n] = -1  # isolated nodes
-
-    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.2)
+            node_to_comm[n] = -1  # isolated nodes
 
     for n, data in graph.nodes(data=True):
         data["x"] = float(pos[n][0])
         data["y"] = float(pos[n][1])
-        data["cluster"] = partition[n]
+        data["cluster"] = node_to_comm[n]
+        data["label"] = f"{data.get('label')} ({data.get('size') - 1})"
+        data["size"] = BASE_NODE_SIZE * np.log1p(data.get("size"))
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
+        data["size"] = BASE_EDGE_SIZE * np.log1p(data.get("weight"))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -149,31 +205,32 @@ def build_family_graph(
     for f in families:
         graph.add_node(f.bgg_id, label=f.name, size=1)
 
-    for g in boardgames:
-        d_ids = [int(f.bgg_id) for f in g.families]  # type: ignore[attr-defined]
-        for i in range(len(d_ids)):
-            graph.nodes[d_ids[i]]["size"] += 3
-            for j in range(i + 1, len(d_ids)):
-                if graph.has_edge(d_ids[i], d_ids[j]):
-                    graph[d_ids[i]][d_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(d_ids[i], d_ids[j], weight=1)
+    graph = build_edges(graph, boardgames, "families")
 
-    # Clustering
-    partition = community_louvain.best_partition(graph, weight="weight")
+    communities = nx.community.greedy_modularity_communities(graph, weight="weight")
+    node_to_comm = {node: i for i, comm in enumerate(communities) for node in comm}
+
+    supergraph = nx.cycle_graph(len(communities))
+    superpos = nx.spring_layout(supergraph, scale=3, seed=429)
+
+    centers = list(superpos.values())
+    pos = {}
+    for center, comm in zip(centers, communities, strict=False):
+        pos.update(nx.spring_layout(nx.subgraph(graph, comm), center=center, seed=1430))
+
     for n in graph.nodes:
         if graph.degree[n] == 0:
-            partition[n] = -1  # isolated nodes
-
-    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.2)
+            node_to_comm[n] = -1  # isolated nodes
 
     for n, data in graph.nodes(data=True):
         data["x"] = float(pos[n][0])
         data["y"] = float(pos[n][1])
-        data["cluster"] = partition[n]
+        data["cluster"] = node_to_comm[n]
+        data["label"] = f"{data.get('label')} ({data.get('size') - 1})"
+        data["size"] = BASE_NODE_SIZE * np.log1p(data.get("size"))
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
+        data["size"] = BASE_EDGE_SIZE * np.log1p(data.get("weight"))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -201,31 +258,52 @@ def build_mechanic_graph(
     for m in mechanics:
         graph.add_node(m.bgg_id, label=m.name, size=1)
 
-    for g in boardgames:
-        d_ids = [int(m.bgg_id) for m in g.mechanics]  # type: ignore[attr-defined]
-        for i in range(len(d_ids)):
-            graph.nodes[d_ids[i]]["size"] += 3
-            for j in range(i + 1, len(d_ids)):
-                if graph.has_edge(d_ids[i], d_ids[j]):
-                    graph[d_ids[i]][d_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(d_ids[i], d_ids[j], weight=1)
+    graph = build_edges(graph, boardgames, "mechanics")
 
-    # Clustering
-    partition = community_louvain.best_partition(graph, weight="weight")
-    for n in graph.nodes:
-        if graph.degree[n] == 0:
-            partition[n] = -1  # isolated nodes
+    communities, node_to_comm = build_communities(graph, min_weight=10)
 
-    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.2)
+    for _, comm in enumerate(communities):
+        if len(comm) <= 2:  # or <= 3 for 2-3 nodes
+            for node in comm:
+                node_to_comm[node] = -1
+
+    supergraph = nx.cycle_graph(len(list(communities)))
+    superpos = nx.spring_layout(supergraph, scale=3, seed=429)
+
+    centers = list(superpos.values())
+
+    pos = {}
+    for center, comm in zip(centers, communities, strict=False):
+        if len(comm) <= 2:
+            k = 0.1
+            scale = 0.1
+        elif len(comm) <= 5:
+            k = 0.5
+            scale = 0.2
+        else:
+            k = 2.0
+            scale = 1.0
+
+        pos.update(
+            nx.spring_layout(
+                nx.subgraph(graph, comm),
+                center=center,
+                seed=1430,
+                k=k,
+                scale=scale,
+                iterations=50,
+            )
+        )
 
     for n, data in graph.nodes(data=True):
         data["x"] = float(pos[n][0])
         data["y"] = float(pos[n][1])
-        data["cluster"] = partition[n]
+        data["cluster"] = node_to_comm[n]
+        data["label"] = f"{data.get('label')} ({data.get('size') - 1})"
+        data["size"] = BASE_NODE_SIZE * np.log1p(data.get("size"))
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
+        data["size"] = BASE_EDGE_SIZE * np.log1p(data.get("weight"))
         data["label"] = str(data.get("weight", 1))
 
     return graph
@@ -245,7 +323,7 @@ async def construct_mechanic_network() -> nx.Graph:
     return build_mechanic_graph(boardgames, mechanics)
 
 
-def build_boardgame_graph(  # noqa: C901, PLR0912
+def build_boardgame_graph(  # noqa: C901
     boardgames: Sequence[models.Boardgame],
     categories: Sequence[models.Category],
     designers: Sequence[models.Designer],
@@ -257,61 +335,71 @@ def build_boardgame_graph(  # noqa: C901, PLR0912
     for g in boardgames:
         graph.add_node(g.bgg_id, label=g.name, size=1)
 
-    for c in categories:
-        g_ids = [int(g.bgg_id) for g in c.boardgames]  # type: ignore[attr-defined]
-        for i in range(len(g_ids)):
-            graph.nodes[g_ids[i]]["size"] += 3
-            for j in range(i + 1, len(g_ids)):
-                if graph.has_edge(g_ids[i], g_ids[j]):
-                    graph[g_ids[i]][g_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(g_ids[i], g_ids[j], weight=1)
+    graph = build_edges(graph, categories, "boardgames")
 
-    for d in designers:
-        g_ids = [int(g.bgg_id) for g in d.boardgames]  # type: ignore[attr-defined]
-        for i in range(len(g_ids)):
-            graph.nodes[g_ids[i]]["size"] += 3
-            for j in range(i + 1, len(g_ids)):
-                if graph.has_edge(g_ids[i], g_ids[j]):
-                    graph[g_ids[i]][g_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(g_ids[i], g_ids[j], weight=1)
+    graph = build_edges(graph, designers, "boardgames")
 
-    for f in families:
-        g_ids = [int(g.bgg_id) for g in f.boardgames]  # type: ignore[attr-defined]
-        for i in range(len(g_ids)):
-            graph.nodes[g_ids[i]]["size"] += 3
-            for j in range(i + 1, len(g_ids)):
-                if graph.has_edge(g_ids[i], g_ids[j]):
-                    graph[g_ids[i]][g_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(g_ids[i], g_ids[j], weight=1)
+    graph = build_edges(graph, families, "boardgames")
 
-    for m in mechanics:
-        g_ids = [int(g.bgg_id) for g in m.boardgames]  # type: ignore[attr-defined]
-        for i in range(len(g_ids)):
-            graph.nodes[g_ids[i]]["size"] += 3
-            for j in range(i + 1, len(g_ids)):
-                if graph.has_edge(g_ids[i], g_ids[j]):
-                    graph[g_ids[i]][g_ids[j]]["weight"] += 1
-                else:
-                    graph.add_edge(g_ids[i], g_ids[j], weight=1)
+    graph = build_edges(graph, mechanics, "boardgames")
 
-    # Clustering
-    partition = community_louvain.best_partition(graph, weight="weight")
-    for n in graph.nodes:
-        if graph.degree[n] == 0:
-            partition[n] = -1  # isolated nodes
+    graph = build_edges(graph, categories, "boardgames")
 
-    pos = nx.spring_layout(graph, seed=42, weight="weight", k=0.2)
+    min_weight = 10
+    edges_to_remove = [
+        (u, v) for u, v, d in graph.edges(data=True) if d["weight"] < min_weight
+    ]
+    graph.remove_edges_from(edges_to_remove)
+    graph.remove_nodes_from(list(nx.isolates(graph)))
+
+    communities = nx.community.greedy_modularity_communities(graph, weight="weight")
+    node_to_comm = {node: i for i, comm in enumerate(communities) for node in comm}
+
+    for _, comm in enumerate(communities):
+        if len(comm) <= 2:  # or <= 3 for 2-3 nodes
+            for node in comm:
+                node_to_comm[node] = -1
+
+    supergraph = nx.cycle_graph(len(communities))
+    superpos = nx.spring_layout(supergraph, scale=20, seed=429)
+
+    centers = list(superpos.values())
+
+    pos = {}
+    for center, comm in zip(centers, communities, strict=False):
+        if len(comm) <= 2:
+            k = 0.1
+            scale = 0.1
+        elif len(comm) <= 5:
+            k = 0.5
+            scale = 0.2
+        elif len(comm) <= 20:
+            k = 1.0
+            scale = 1.0
+        else:
+            k = 2.0
+            scale = 1.0
+
+        pos.update(
+            nx.spring_layout(
+                nx.subgraph(graph, comm),
+                center=center,
+                seed=1430,
+                k=k,
+                scale=scale,
+                iterations=50,
+            )
+        )
 
     for n, data in graph.nodes(data=True):
         data["x"] = float(pos[n][0])
         data["y"] = float(pos[n][1])
-        data["cluster"] = partition[n]
+        data["cluster"] = node_to_comm[n]
+        data["label"] = f"{data.get('label')} ({data.get('size') - 1})"
+        data["size"] = BASE_NODE_SIZE * np.log1p(data.get("size"))
 
     for _u, _v, data in graph.edges(data=True):
-        data["size"] = BASE_SIZE * np.log1p(data.get("weight", 1))
+        data["size"] = BASE_EDGE_SIZE * np.log1p(data.get("weight"))
         data["label"] = str(data.get("weight", 1))
 
     return graph
