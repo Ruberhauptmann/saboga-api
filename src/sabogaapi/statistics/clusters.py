@@ -15,9 +15,9 @@ BASE_NODE_SIZE = 1
 BASE_EDGE_SIZE = 0.01
 
 
-def build_edges(graph: nx.Graph, items: Sequence[T]) -> nx.Graph:
+def build_edges(graph: nx.Graph, items: Sequence[T], attribute: str) -> nx.Graph:
     for item in items:
-        g_ids = [int(g.bgg_id) for g in item.boardgames]  # type: ignore[attr-defined]
+        g_ids = [int(g.bgg_id) for g in getattr(item, attribute)]  # type: ignore[attr-defined]
         for i in range(len(g_ids)):
             graph.nodes[g_ids[i]]["size"] += 1
             for j in range(i + 1, len(g_ids)):
@@ -83,7 +83,7 @@ def build_designer_graph(
     for d in designers:
         graph.add_node(d.bgg_id, label=d.name, size=1)
 
-    graph = build_edges(graph, boardgames)
+    graph = build_edges(graph, boardgames, "designers")
 
     communities, node_to_comm = build_communities(graph, min_weight=2)
 
@@ -153,7 +153,7 @@ def build_category_graph(
     for c in categories:
         graph.add_node(c.bgg_id, label=c.name, size=1)
 
-    graph = build_edges(graph, boardgames)
+    graph = build_edges(graph, boardgames, "categories")
 
     communities, node_to_comm = build_communities(graph, min_weight=2)
 
@@ -205,7 +205,7 @@ def build_family_graph(
     for f in families:
         graph.add_node(f.bgg_id, label=f.name, size=1)
 
-    graph = build_edges(graph, boardgames)
+    graph = build_edges(graph, boardgames, "families")
 
     communities = nx.community.greedy_modularity_communities(graph, weight="weight")
     node_to_comm = {node: i for i, comm in enumerate(communities) for node in comm}
@@ -258,7 +258,7 @@ def build_mechanic_graph(
     for m in mechanics:
         graph.add_node(m.bgg_id, label=m.name, size=1)
 
-    graph = build_edges(graph, boardgames)
+    graph = build_edges(graph, boardgames, "mechanics")
 
     communities, node_to_comm = build_communities(graph, min_weight=10)
 
@@ -335,15 +335,15 @@ def build_boardgame_graph(  # noqa: C901
     for g in boardgames:
         graph.add_node(g.bgg_id, label=g.name, size=1)
 
-    graph = build_edges(graph, categories)
+    graph = build_edges(graph, categories, "boardgames")
 
-    graph = build_edges(graph, designers)
+    graph = build_edges(graph, designers, "boardgames")
 
-    graph = build_edges(graph, families)
+    graph = build_edges(graph, families, "boardgames")
 
-    graph = build_edges(graph, mechanics)
+    graph = build_edges(graph, mechanics, "boardgames")
 
-    graph = build_edges(graph, categories)
+    graph = build_edges(graph, categories, "boardgames")
 
     min_weight = 10
     edges_to_remove = [

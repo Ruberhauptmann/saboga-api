@@ -374,7 +374,7 @@ async def fill_in_data(step: int = 20) -> None:
         await conn.run_sync(Base.metadata.create_all)
 
     async with sessionmanager.session() as session:
-        run_index = 1
+        run_index = 0
         while True:
             result = await session.execute(
                 select(models.Boardgame.bgg_id)
@@ -383,6 +383,7 @@ async def fill_in_data(step: int = 20) -> None:
                 .limit(step)
             )
             ids = [r[0] for r in result.all()]
+            print(ids)
             if not ids:
                 break
 
@@ -396,6 +397,7 @@ async def fill_in_data(step: int = 20) -> None:
         await session.commit()
 
         boardgame_graph = await construct_boardgame_network()
+        print(boardgame_graph)
         network = models.BoardgameNetwork(**graph_to_dict(boardgame_graph))
         session.add(network)
         await session.commit()
