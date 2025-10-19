@@ -87,7 +87,7 @@ def build_designer_graph(
 
     communities, node_to_comm = build_communities(graph, min_weight=2)
 
-    supergraph = nx.cycle_graph(len(communities))
+    supergraph = nx.cycle_graph(len(list(communities)))
     superpos = nx.spring_layout(supergraph, scale=5, seed=429)
 
     centers = list(superpos.values())
@@ -157,7 +157,7 @@ def build_category_graph(
 
     communities, node_to_comm = build_communities(graph, min_weight=2)
 
-    supergraph = nx.cycle_graph(len(communities))
+    supergraph = nx.cycle_graph(len(list(communities)))
     superpos = nx.spring_layout(supergraph, scale=3, seed=429)
 
     # Use the "supernode" positions as the center of each node cluster
