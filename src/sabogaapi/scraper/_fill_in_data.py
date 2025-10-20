@@ -301,13 +301,11 @@ async def process_item(
     if not boardgame:
         return None
 
-    # Add all child entities to session and flush to get PKs
     all_children = categories + designers + families + mechanics
     for child in all_children:
         session.add(child)
     await session.flush()
 
-    # Load boardgame with relationships to avoid lazy loading
     stmt = (
         select(models.Boardgame)
         .where(models.Boardgame.bgg_id == boardgame.bgg_id)
@@ -321,7 +319,6 @@ async def process_item(
     result = await session.execute(stmt)
     existing = result.scalar_one_or_none()
 
-    # Fields we parsed from the API
     api_fields = {
         "name",
         "description",
@@ -341,7 +338,6 @@ async def process_item(
             if value is not None:
                 setattr(existing, f, value)
 
-        # Assign relationships
         existing.categories = categories
         existing.designers = designers
         existing.families = families
