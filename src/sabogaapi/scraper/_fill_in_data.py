@@ -384,8 +384,6 @@ async def fill_in_data(step: int = 20) -> None:
 
             await process_batch(session, ids)
             run_index += 1
-            if run_index == 2:
-                break
             await asyncio.sleep(5)
 
         await session.execute(delete(models.BoardgameNetwork))
