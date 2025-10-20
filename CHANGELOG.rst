@@ -1,4 +1,14 @@
 
+.. _changelog-0.0.60:
+
+0.0.60 — 2025-10-20
+-------------------
+
+Fixed
+^^^^^
+
+- Remove termination condition for scraping (was used in testing)
+
 .. _changelog-0.0.59:
 
 0.0.59 — 2025-10-19
