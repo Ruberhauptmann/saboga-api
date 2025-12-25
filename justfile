@@ -18,7 +18,7 @@ format:
     uv run ruff format .
 
 type:
-    uv run mypy --ignore-missing-imports src/
+    uv run ty check
 
 migration MESSAGE:
     docker exec -it saboga-api uv run alembic revision --autogenerate -m "{{MESSAGE}}"

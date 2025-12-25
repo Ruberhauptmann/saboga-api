@@ -20,6 +20,7 @@ from sabogaapi import models, schemas
 from sabogaapi.config import settings
 from sabogaapi.database import sessionmanager
 from sabogaapi.logger import configure_logger
+from sabogaapi.services.graph_service import GraphService
 from sabogaapi.statistics.trending import calculate_trends
 from sabogaapi.statistics.volatility import calculate_volatility
 
@@ -231,3 +232,8 @@ async def ascrape_update() -> None:  # pragma: no cover
 
     logger.info("Inserted %s new boardgames.", len(new_games))
     logger.info("Updated %s existing boardgames.", updated_games)
+
+    logger.info("Building and saving graphs.")
+    async with sessionmanager.session() as session:
+        result = await GraphService.build_and_save_all(session)
+        logger.info("Graph build complete: %s", result)

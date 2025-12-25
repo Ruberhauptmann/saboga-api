@@ -9,7 +9,7 @@ from fastapi.exceptions import HTTPException
 
 from sabogaapi.api.dependencies.core import DBSessionDep
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import BoardgameInList, Network
+from sabogaapi.schemas import BoardgameInList
 from sabogaapi.services import BoardgameService
 
 logger = configure_logger()
@@ -153,8 +153,3 @@ async def read_trending_games(db_session: DBSessionDep) -> list[BoardgameInList]
 @router.get("/declining")
 async def read_declining_games(db_session: DBSessionDep) -> list[BoardgameInList]:
     return await BoardgameService.get_declining_games(limit=5, db_session=db_session)
-
-
-@router.get("/clusters")
-async def read_boardgame_clusters(db_session: DBSessionDep) -> Network:
-    return await BoardgameService.get_network(db_session=db_session)

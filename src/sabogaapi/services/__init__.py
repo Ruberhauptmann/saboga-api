@@ -2,6 +2,7 @@ from .boardgame_service import BoardgameService
 from .category_service import CategoryService
 from .designer_service import DesignerService
 from .family_service import FamilyService
+from .graph_service import GraphService
 from .mechanic_service import MechanicService
 from .rank_history_service import RankHistoryService
 from .search_service import SearchService
@@ -11,6 +12,7 @@ __all__ = [
     "CategoryService",
     "DesignerService",
     "FamilyService",
+    "GraphService",
     "MechanicService",
     "RankHistoryService",
     "SearchService",

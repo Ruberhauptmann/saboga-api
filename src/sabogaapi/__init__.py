@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from starlette.staticfiles import StaticFiles
 
+from .api.routers import graphs
 from .config import settings
 from .routers import (
     boardgames,
@@ -73,6 +74,7 @@ def create_app(
     app.include_router(mechanics.router)
 
     app.include_router(search.router)
+    app.include_router(graphs.router)
 
     app.add_middleware(
         CORSMiddleware,

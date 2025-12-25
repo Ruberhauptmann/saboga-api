@@ -4,8 +4,6 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from sabogaapi import schemas
-
 TModel = TypeVar("TModel")
 TSchema = TypeVar("TSchema")
 TSchemaWithGames = TypeVar("TSchemaWithGames")
@@ -18,7 +16,6 @@ class BaseEntityService(Generic[TModel, TSchema, TSchemaWithGames, TNetworkModel
     model: type[TModel]
     schema: type[TSchema]
     schema_with_games: type[TSchemaWithGames]
-    network_model: type[TNetworkModel]
 
     @classmethod
     async def get_total_count(cls, db_session: AsyncSession) -> int:
@@ -56,13 +53,3 @@ class BaseEntityService(Generic[TModel, TSchema, TSchemaWithGames, TNetworkModel
         if instance is None:
             return None
         return cls.schema_with_games.model_validate(instance)
-
-    @classmethod
-    async def get_network(cls, db_session: AsyncSession) -> schemas.Network:
-        """Fetch the network representation."""
-        stmt = select(cls.network_model).limit(1)
-        result = await db_session.execute(stmt)
-        network = result.scalars().first()
-        if not network:
-            return schemas.Network(nodes=[], edges=[])
-        return schemas.Network.model_validate(network)

@@ -9,7 +9,7 @@ import aiohttp
 import requests
 from PIL import Image
 from pydantic import BaseModel
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
@@ -17,14 +17,6 @@ from sabogaapi import models
 from sabogaapi.config import settings
 from sabogaapi.database import AsyncSession, Base, sessionmanager
 from sabogaapi.logger import configure_logger
-from sabogaapi.statistics.clusters import (
-    construct_boardgame_network,
-    construct_category_network,
-    construct_designer_network,
-    construct_family_network,
-    construct_mechanic_network,
-    graph_to_dict,
-)
 
 logger = configure_logger()
 
@@ -385,43 +377,3 @@ async def fill_in_data(step: int = 20) -> None:
             await process_batch(session, ids)
             run_index += 1
             await asyncio.sleep(5)
-
-        await session.execute(delete(models.BoardgameNetwork))
-        await session.commit()
-
-        boardgame_graph = await construct_boardgame_network()
-        network = models.BoardgameNetwork(**graph_to_dict(boardgame_graph))
-        session.add(network)
-        await session.commit()
-
-        await session.execute(delete(models.CategoryNetwork))
-        await session.commit()
-
-        category_graph = await construct_category_network()
-        network = models.CategoryNetwork(**graph_to_dict(category_graph))
-        session.add(network)
-        await session.commit()
-
-        await session.execute(delete(models.DesignerNetwork))
-        await session.commit()
-
-        designer_graph = await construct_designer_network()
-        network = models.DesignerNetwork(**graph_to_dict(designer_graph))
-        session.add(network)
-        await session.commit()
-
-        await session.execute(delete(models.FamilyNetwork))
-        await session.commit()
-
-        family_graph = await construct_family_network()
-        network = models.FamilyNetwork(**graph_to_dict(family_graph))
-        session.add(network)
-        await session.commit()
-
-        await session.execute(delete(models.MechanicNetwork))
-        await session.commit()
-
-        mechanic_graph = await construct_mechanic_network()
-        network = models.MechanicNetwork(**graph_to_dict(mechanic_graph))
-        session.add(network)
-        await session.commit()
