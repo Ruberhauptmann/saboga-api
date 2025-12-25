@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from sabogaapi import models, schemas
 from sabogaapi.database import Base, sessionmanager
+from sabogaapi.services.graph_service import GraphService
 from sabogaapi.statistics.clusters import (
     construct_boardgame_network,
     construct_category_network,
@@ -164,7 +165,6 @@ async def generate_data():
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    """
     async with sessionmanager.session() as session:
         designers = [
             models.Designer(name=fake.name(), bgg_id=i) for i in range(1, NUM_DESIGNERS)
@@ -193,24 +193,9 @@ async def generate_data():
         session.add_all(games + history_entries)
         await session.commit()
 
-        # networks (if you want to persist those too)
-        category_graph = await construct_category_network()
-        session.add(models.CategoryNetwork(**graph_to_dict(category_graph)))
-
-        designer_graph = await construct_designer_network()
-        session.add(models.DesignerNetwork(**graph_to_dict(designer_graph)))
-
-        family_graph = await construct_family_network()
-        session.add(models.FamilyNetwork(**graph_to_dict(family_graph)))
-
-        mechanic_graph = await construct_mechanic_network()
-        session.add(models.MechanicNetwork(**graph_to_dict(mechanic_graph)))
-
-        boardgame_graph = await construct_boardgame_network()
-        session.add(models.BoardgameNetwork(**graph_to_dict(boardgame_graph)))
-
+    async with sessionmanager.session() as session:
+        await GraphService.build_and_save_all(session)
         await session.commit()
-    """
 
     print(
         f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries."

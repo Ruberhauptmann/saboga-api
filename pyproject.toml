@@ -24,6 +24,7 @@ dependencies = [
     "sktime>=0.36.0",
     "sqlalchemy>=2.0.43",
     "statsforecast>=2.0.1",
+    "ty>=0.0.7",
     "uvicorn>=0.32.1",
     "webdriver-manager>=4.0.2",
 ]
@@ -42,7 +43,6 @@ dev = [
     "pytest>=8.3.4",
     "rust-just>=1.40.0",
     "scriv>=1.5.1",
-    "tox>=4.23.2",
 ]
 test = [
     "mongomock-motor>=0.0.34",
@@ -61,6 +61,7 @@ lint = [
 type = [
     "mypy>=1.13.0",
     "pandas-stubs>=2.2.3.250308",
+    "ty>=0.0.7",
     "types-beautifulsoup4>=4.12.0.20241020",
     "types-requests>=2.32.0.20241016",
 ]
@@ -74,7 +75,6 @@ ignore = [
     "S101", # check for assert
     "COM812", # trailing comma
     "PD901", # check for generic name df for DataFrames
-    "D",
     "RUF012", # Mutable class vars
     "S314" # Check for defusedxml
 ]

@@ -199,3 +199,44 @@ class RankHistory(Base):
     boardgame: Mapped["Boardgame"] = relationship(back_populates="bgg_rank_history")
 
     __table_args__ = (Index("ix_rankhistory_boardgame_date", "boardgame_id", "date"),)
+
+
+# --- Heterogeneous Graph Storage ---
+class HeterogeneousGraphData(Base):
+    __tablename__ = "heterogeneous_graph"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        index=True,
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        onupdate=datetime.datetime.now(datetime.UTC),
+    )
+    nodes: Mapped[list[dict]] = mapped_column(JSON)
+    edges: Mapped[list[dict]] = mapped_column(JSON)
+    meta: Mapped[dict] = mapped_column(JSON, default={})
+
+
+# --- Projected Graphs Storage ---
+class ProjectedGraphData(Base):
+    __tablename__ = "projected_graphs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    graph_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        index=True,
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.datetime.now(datetime.UTC),
+        onupdate=datetime.datetime.now(datetime.UTC),
+    )
+    nodes: Mapped[list[dict]] = mapped_column(JSON)
+    edges: Mapped[list[dict]] = mapped_column(JSON)
+    meta: Mapped[dict] = mapped_column(JSON, default={})

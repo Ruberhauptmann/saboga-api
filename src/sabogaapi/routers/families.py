@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 
 from sabogaapi.api.dependencies.core import DBSessionDep
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import Family, FamilyWithBoardgames, Network
+from sabogaapi.schemas import Family, FamilyWithBoardgames
 from sabogaapi.services import FamilyService
 
 logger = configure_logger()
@@ -64,11 +64,6 @@ async def read_all_families(
     return await FamilyService.read_all(
         db_session=db_session, page=page, per_page=per_page
     )
-
-
-@router.get("/clusters")
-async def read_family_clusters(db_session: DBSessionDep) -> Network:
-    return await FamilyService.get_network(db_session=db_session)
 
 
 @router.get("/{bgg_id}")

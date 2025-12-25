@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 
 from sabogaapi.api.dependencies.core import DBSessionDep
 from sabogaapi.logger import configure_logger
-from sabogaapi.schemas import Designer, DesignerWithBoardgames, Network
+from sabogaapi.schemas import Designer, DesignerWithBoardgames
 from sabogaapi.services import DesignerService
 
 logger = configure_logger()
@@ -64,11 +64,6 @@ async def read_all_designers(
     return await DesignerService.read_all(
         db_session=db_session, page=page, per_page=per_page
     )
-
-
-@router.get("/clusters")
-async def read_designer_clusters(db_session: DBSessionDep) -> Network:
-    return await DesignerService.get_network(db_session=db_session)
 
 
 @router.get("/{bgg_id}")
