@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY saboga_project /app/saboga_project
 COPY manage.py /app/
 COPY scripts/ /app/scripts
-COPY README.md /app/
+COPY api /app/api
 
 # (optional) re‑run sync in case application itself adds extras
 RUN --mount=type=cache,target=/root/.cache/uv \
