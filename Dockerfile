@@ -1,36 +1,35 @@
-# First, build the application
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+# single‑stage build, uv is installed and available at runtime
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+# bring in any system packages your app needs
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        firefox-esr && \
+    rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project --no-dev
 
-ADD saboga_project /app/saboga_project
-ADD manage.py /app/
-ADD scripts/ /app/scripts
-ADD pyproject.toml /app/
-ADD uv.lock /app/
-ADD README.md /app/
+# copy only what's needed for dependency resolution first
+# (this lets Docker cache the venv when dependencies don't change)
+COPY pyproject.toml uv.lock /app/
+# if you have additional build-time files, copy them too
 
+# sync the virtualenv using uv – it will be created inside /app/.venv
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
+# now copy the application sources
+COPY saboga_project /app/saboga_project
+COPY manage.py /app/
+COPY scripts/ /app/scripts
+COPY README.md /app/
 
-# Then, use a final image without uv
-FROM python:3.12-slim-bookworm
+# (optional) re‑run sync in case application itself adds extras
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        firefox-esr
-
-# Copy the entire app directory from the builder, preserving the venv
-COPY --from=builder /app /app
-
-WORKDIR /app
-
-# Place executables in the environment at the front of the path
+# make sure the venv is on PATH
 ENV PATH="/app/.venv/bin:$PATH"
 
+# run using uv or plain python – uv is still in the image so both work
 CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]
