@@ -1,3 +1,5 @@
+name: saboga
+
 services:
   reverse-proxy:
     container_name: traefik
@@ -36,10 +38,10 @@ services:
     container_name: saboga-api
     labels:
       - "traefik.http.routers.saboga-api.rule=Host(`saboga.localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.middlewares.saboga-api-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.routers.saboga-api.middlewares=saboga-api-stripprefix"
       - "traefik.http.routers.saboga-api.tls=true"
       - "traefik.docker.network=saboga-reverse-proxy"
-      - "traefik.http.routers.saboga-api.middlewares=strip-api-prefix"
-      - "traefik.http.middlewares.strip-api-prefix.stripPrefix.prefixes=/api"
       - "traefik.http.services.saboga-api.loadbalancer.server.port=8000"
     expose:
       - "8000"
@@ -50,6 +52,8 @@ services:
     networks:
       - saboga-reverse-proxy
       - saboga-api
+    volumes:
+      - staticfiles:/app/static
     develop:
       watch:
         - action: sync
@@ -70,9 +74,23 @@ services:
     networks:
       - saboga-api
 
+  # static file server using nginx
+  static-server:
+    image: nginx:alpine
+    container_name: saboga-static
+    labels:
+      - "traefik.http.routers.saboga-static.rule=Host(`saboga.localhost`) && PathPrefix(`/static`)"
+      - "traefik.http.routers.saboga-static.tls=true"
+      - "traefik.docker.network=saboga-reverse-proxy"
+    volumes:
+      - staticfiles:/usr/share/nginx/html/static:ro
+      - ./nginx-static.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - saboga-reverse-proxy
 
 volumes:
   saboga_db_data:
+  staticfiles:
 
 networks:
   saboga-api:
