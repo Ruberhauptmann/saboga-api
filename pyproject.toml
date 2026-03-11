@@ -1,80 +1,25 @@
 [project]
-name = "sabogaapi"
-version = "0.0.61"
-description = ""
-authors = [{name="Tjark Sievers", email="tjarksievers@icloud.com"}]
+name = "saboga-api"
+version = "0.1.0"
+description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
-    "aioresponses>=0.7.8",
-    "alembic>=1.17.0",
-    "asgi-correlation-id>=4.3.4",
-    "beanie>=1.27.0",
-    "fastapi[standard]>=0.115.6",
-    "loki-logger-handler>=1.1.1",
-    "networkx>=3.5",
-    "pandas>=2.2.3",
-    "pillow>=11.1.0",
-    "prometheus-fastapi-instrumentator>=7.1.0",
-    "psycopg[binary,pool]>=3.2.10",
-    "pydantic-settings>=2.9.1",
-    "python-louvain>=0.16",
-    "requests>=2.32.3",
-    "selenium>=4.34.0",
-    "sktime>=0.36.0",
-    "sqlalchemy>=2.0.43",
-    "statsforecast>=2.0.1",
-    "uvicorn>=0.32.1",
+    "django-extensions>=4.1",
+    "djangorestframework>=3.16.1",
+    "faker>=40.8.0",
+    "networkx>=3.6.1",
+    "pandas>=3.0.1",
+    "pillow>=12.1.1",
+    "psycopg[binary,pool]>=3.3.3",
+    "scipy>=1.17.1",
+    "selenium>=4.41.0",
     "webdriver-manager>=4.0.2",
 ]
 
-[project.scripts]
-scrape = "sabogaapi.scraper:scrape"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [dependency-groups]
 dev = [
-    "faker>=37.4.0",
-    "pre-commit>=4.0.1",
-    "pytest>=8.3.4",
-    "rust-just>=1.40.0",
-    "scriv>=1.5.1",
-    "tox>=4.23.2",
-]
-test = [
-    "mongomock-motor>=0.0.34",
-    "pytest-integration>=0.2.3",
-    "pytest-cov>=6.0.0",
-    "pytest>=8.3.4",
-    "pytest-mock>=3.14.0",
-    "pytest-codspeed>=3.2.0",
-    "pytest-mongodb>=2.4.0",
-    "docker>=7.1.0",
-    "pytest-asyncio>=1.1.0",
-]
-lint = [
-    "ruff>=0.8.2",
-]
-type = [
-    "mypy>=1.13.0",
-    "pandas-stubs>=2.2.3.250308",
-    "types-beautifulsoup4>=4.12.0.20241020",
-    "types-requests>=2.32.0.20241016",
-]
-
-[tool.ruff.lint]
-select = ["ALL"]
-ignore = [
-    "D203", # check for blank line before class docstring
-    "D213", # summary on first line
-    "PLR2004", # check for magic values
-    "S101", # check for assert
-    "COM812", # trailing comma
-    "PD901", # check for generic name df for DataFrames
-    "D",
-    "RUF012", # Mutable class vars
-    "S314" # Check for defusedxml
+    "django-extensions>=4.1",
+    "pre-commit>=4.5.1",
+    "ruff>=0.14.10",
 ]

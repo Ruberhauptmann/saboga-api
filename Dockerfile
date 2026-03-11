@@ -7,13 +7,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project --no-dev
 
-ADD src /app/src
+ADD saboga_project /app/saboga_project
+ADD manage.py /app/
+ADD scripts/ /app/scripts
 ADD pyproject.toml /app/
 ADD uv.lock /app/
 ADD README.md /app/
-ADD entrypoint.sh /app/
-ADD alembic /app/alembic
-ADD alembic.ini /app/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
@@ -26,12 +25,12 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         firefox-esr
 
-# Copy the application from the builder
-COPY --from=builder --chown=app:app /app /app
+# Copy the entire app directory from the builder, preserving the venv
+COPY --from=builder /app /app
+
+WORKDIR /app
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-RUN chmod +x /app/entrypoint.sh
-
-CMD ["/app/entrypoint.sh"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
