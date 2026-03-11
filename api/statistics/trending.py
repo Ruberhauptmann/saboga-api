@@ -1,6 +1,5 @@
 """Calculate trends for rank and rating history."""
 
-import datetime
 import logging
 
 import numpy as np

@@ -1,6 +1,5 @@
 """Service for managing graph storage and retrieval using Django ORM."""
 
-from datetime import datetime
 from typing import Optional
 
 from django.utils import timezone

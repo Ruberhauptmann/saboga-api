@@ -13,7 +13,6 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from django.conf import settings as django_settings
 from api import models
 # asynchronous database helper not yet ported; using Django ORM directly in fill-data is
 # currently unsupported. If called we will raise to indicate missing implementation.
