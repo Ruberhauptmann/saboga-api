@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.test import TestCase
 
 from api import models
-from api.scraper._update import insert_games, download_zip
+from api.scraper._update import insert_games
 
 
 class ScraperInsertTests(TestCase):

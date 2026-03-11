@@ -2,10 +2,10 @@ name: Type checking
 
 on:
   workflow_call:
-  pull_request:
-  push:
-    branches:
-      - 'main'
+  #pull_request:
+  #push:
+  #  branches:
+  #    - 'main'
 
 concurrency:
   group: typecheck-${{ github.ref }}

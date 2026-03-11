@@ -1,9 +1,8 @@
 """High level graph operations used by API views."""
 
 from .builder import GraphBuilder
-from .projections import GraphProjector
 from .storage import GraphStorageService
-from .heterogeneous import HeterogeneousGraph, EdgeType
+from .heterogeneous import HeterogeneousGraph
 
 
 class GraphService:
