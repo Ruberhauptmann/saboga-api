@@ -25,8 +25,9 @@ SECRET_KEY = "django-insecure-5hoc#)jbh+d)q*gp3$l(*b@b8sbd#eqp52s#w%$znt2rm$st4!
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+#DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["saboga.localhost", "saboga.tjarksievers.de"]
 
 FORCE_SCRIPT_NAME = "/api"
 
