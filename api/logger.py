@@ -1,20 +1,20 @@
 import logging
+from loki_logger_handler.loki_logger_handler import LokiLoggerHandler
 
 
-def configure_logger(name: str = "saboga") -> logging.Logger:
-    """Return a logger instance configured for console output.
+def configure_logger() -> logging.Logger:
+    logger = logging.getLogger("loki_logger")
+    logger.setLevel(logging.DEBUG)
 
-    This is a very simple stand-in for the previous Loki-based logger used in
-    the FastAPI version.  For now it just attaches a stream handler if one does
-    not already exist.
-    """
-    logger = logging.getLogger(name)
-    if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            "%(asctime)s %(levelname)s [%(name)s] %(message)s"
-        )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    loki_handler = LokiLoggerHandler(
+        url="http://loki:3100/loki/api/v1/push",
+        labels={"application": "Saboga"},
+        label_keys={},
+        timeout=10,
+    )
+    #loki_handler.addFilter(CorrelationIdFilter(uuid_length=32, default_value="-"))
+    logger.addHandler(loki_handler)
+
     return logger

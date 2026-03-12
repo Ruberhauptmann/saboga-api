@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import BoardgameViewSet, CategoryViewSet, GraphViewSet
+from .views import BoardgameViewSet, CategoryViewSet, GraphViewSet, MetricsViewSet
 
 router = DefaultRouter()
 router.register("boardgames", BoardgameViewSet, basename="boardgame")

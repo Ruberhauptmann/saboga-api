@@ -111,3 +111,9 @@ class BuildAllGraphsResultSerializer(serializers.Serializer):
 class AllGraphsSerializer(serializers.Serializer):
     heterogeneous = BaseGraphSerializer()
     projected = serializers.DictField(child=BaseGraphSerializer())
+
+
+class LatestRankHistoryTimestampSerializer(serializers.Serializer):
+    """Simple container used by the metrics endpoint."""
+
+    latest_rank_history_timestamp = serializers.FloatField()

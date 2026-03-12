@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from . import models
 from . import serializers
 
+from django.db.models import Max
+
 # graph utilities
 from .graph.services import GraphService
 from .graph.projections import GraphProjector
@@ -179,6 +181,38 @@ class GraphViewSet(viewsets.ViewSet):
                 ]
             }
         )
+
+
+class MetricsViewSet(viewsets.ViewSet):
+    """A tiny collection of administrative metrics exposed over HTTP.
+
+    The only current metric is the timestamp of the most recent
+    ``RankHistory`` row.  We keep the implementation simple in order to
+    make the value available in the DRF API and in OpenAPI documentation
+    without pulling in the Prometheus instrumentation layer used by the
+    old FastAPI service.
+    """
+
+    serializer_class = s.LatestRankHistoryTimestampSerializer
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="latest-rank-history",
+        serializer_class=s.LatestRankHistoryTimestampSerializer,
+    )
+    def latest_rank_history(self, request):
+        # compute the maximum ``date`` value using an aggregate query;
+        # Django returns an aware ``datetime`` instance when timezone
+        # support is enabled so the ``timestamp()`` call works correctly.
+        max_date = models.RankHistory.objects.aggregate(
+            max_date=Max("date")
+        )["max_date"]
+        if max_date is not None:
+            timestamp = max_date.timestamp()
+        else:
+            timestamp = 0.0
+        return Response({"latest_rank_history_timestamp": timestamp})
 
 
 class BoardgameViewSet(viewsets.ReadOnlyModelViewSet):
