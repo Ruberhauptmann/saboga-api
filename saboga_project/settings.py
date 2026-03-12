@@ -134,9 +134,12 @@ USE_TZ = True
 
 STATIC_ROOT = BASE_DIR / "static"
 
-STATIC_URL = "/static/"
-MEDIA_URL = "/media/"
+STATIC_URL = "/api/static/"
+MEDIA_URL = "/api/media/"
+
+IMG_DIR = BASE_DIR / "img"
 
 # BGG credentials (for scraping)
 BGG_USERNAME = os.getenv("BGG_USERNAME", "")
 BGG_PASSWORD = os.getenv("BGG_PASSWORD", "")
+BGG_API_KEY = os.getenv("BGG_API_KEY", "")

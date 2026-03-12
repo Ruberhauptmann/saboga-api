@@ -28,8 +28,7 @@ from faker import Faker
 from PIL import Image, ImageDraw, ImageFont
 
 from api import models
-from api.statistics.trending import calculate_trends
-from api.statistics.volatility import calculate_volatility
+from api.statistics import calculate_trends, calculate_volatility
 
 fake = Faker()
 

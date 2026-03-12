@@ -54,6 +54,7 @@ services:
       - saboga-api
     volumes:
       - staticfiles:/app/static
+      - img:/app/img
     develop:
       watch:
         - action: sync
@@ -90,11 +91,14 @@ services:
     image: nginx:alpine
     container_name: saboga-static
     labels:
-      - "traefik.http.routers.saboga-static.rule=Host(`saboga.localhost`) && PathPrefix(`/static`)"
+      - "traefik.http.routers.saboga-static.rule=Host(`saboga.localhost`) && PathPrefix(`/api/static`)"
       - "traefik.http.routers.saboga-static.tls=true"
+      - "traefik.http.routers.saboga-img.rule=Host(`saboga.localhost`) && PathPrefix(`/api/img`)"
+      - "traefik.http.routers.saboga-img.tls=true"
       - "traefik.docker.network=saboga-reverse-proxy"
     volumes:
       - staticfiles:/usr/share/nginx/html/static:ro
+      - img:/usr/share/nginx/html/img:ro
       - ./nginx-static.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - saboga-reverse-proxy
@@ -102,6 +106,7 @@ services:
 volumes:
   saboga_db_data:
   staticfiles:
+  img:
 
 networks:
   saboga-api:

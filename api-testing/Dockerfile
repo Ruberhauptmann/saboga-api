@@ -6,6 +6,10 @@ RUN apt-get update && \
 
 WORKDIR /app
 
+RUN mkdir /app/img
+
+VOLUME [ "/app/img" ]
+
 # Copy dependency files first
 ADD pyproject.toml uv.lock README.md ./
 # Create venv and install deps (cached unless lockfile changes)

@@ -1,39 +1,19 @@
-import asyncio
 import html
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any
 
-import aiohttp
+from django.conf import settings
+
 import requests
 from PIL import Image
-from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
 
 from api import models
-# asynchronous database helper not yet ported; using Django ORM directly in fill-data is
-# currently unsupported. If called we will raise to indicate missing implementation.
 
 from api.logger import configure_logger
 
 logger = configure_logger()
-
-
-def _not_implemented(*args, **kwargs):
-    raise RuntimeError("fill_in_data routine has not been ported to Django yet")
-
-
-# if someone calls fill_in_data we'll delegate to the stub at the bottom
-
-
-T = TypeVar("T", bound=models.Base)
-
-
-class BoardgameBGGIDs(BaseModel):
-    bgg_id: int
 
 
 def _timeout(e: str, number_of_tries: int) -> None:
@@ -50,6 +30,7 @@ def scrape_api(ids: list[int]) -> ET.Element | None:
             r = requests.get(
                 f"https://boardgamegeek.com/xmlapi2/thing?id={ids_string}&stats=1&type=boardgame",
                 timeout=10,
+                headers={"Authorization": f"Bearer {settings.BGG_API_KEY}"},
             )
             return ET.fromstring(r.text)
         except (
@@ -146,8 +127,8 @@ def parse_boardgame_data(item: ET.Element) -> dict:
     }
 
 
-async def analyse_api_response(
-    item: ET.Element, session: AsyncSession
+def analyse_api_response(
+    item: ET.Element
 ) -> tuple[
     models.Boardgame | None,
     list[models.Category],
@@ -163,8 +144,9 @@ async def analyse_api_response(
         return None, [], [], [], []
 
     # Create boardgame object
-    boardgame = models.Boardgame(bgg_id=data["bgg_id"], bgg_rank=data["rank"])
+    boardgame, _ = models.Boardgame.objects.get_or_create(bgg_id=data["bgg_id"])
     boardgame.name = data["name"]
+    boardgame.bgg_rank = data["rank"]
     boardgame.description = data["description"]
     boardgame.year_published = data["year_published"]
     boardgame.minplayers = data["minplayers"]
@@ -176,21 +158,19 @@ async def analyse_api_response(
     # Process image
     if data.get("image_url"):
         image_filename = f"{data['bgg_id']}.jpg"
-        image_file = settings.img_dir / image_filename
+        image_file = settings.IMG_DIR / image_filename
         image_file.parent.mkdir(parents=True, exist_ok=True)
 
         if not image_file.exists():
-            async with (
-                aiohttp.ClientSession() as session_img,
-                session_img.get(data["image_url"]) as resp,
-            ):
-                if resp.status == 200:
-                    content = await resp.read()
-                    with image_file.open("wb") as f:
-                        f.write(content)
+            try:
+                response = requests.get(data["image_url"], timeout=30)
+                with image_file.open("wb") as f:
+                    f.write(response.content)
+            except requests.RequestException as e:
+                logger.warning("Failed to download image for %s: %s", data["bgg_id"], e)
 
         thumbnail_filename = f"{image_file.stem}-thumbnail.jpg"
-        thumbnail_file = settings.img_dir / thumbnail_filename
+        thumbnail_file = settings.IMG_DIR / thumbnail_filename
         if not thumbnail_file.exists():
             im = Image.open(image_file).convert("RGB")
             im.thumbnail((128, 128))
@@ -201,189 +181,56 @@ async def analyse_api_response(
 
     categories = []
     for bgg_id, name in data.get("categories", []):
-        category = await get_or_create(
-            session, models.Category, bgg_id=bgg_id, defaults={"name": name}
-        )
+        category, _ = models.Category.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
         categories.append(category)
 
     designers = []
     for bgg_id, name in data.get("designers", []):
-        designer = await get_or_create(
-            session, models.Designer, bgg_id=bgg_id, defaults={"name": name}
-        )
+        designer, _ = models.Designer.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
         designers.append(designer)
 
     families = []
     for bgg_id, name in data.get("families", []):
-        family = await get_or_create(
-            session, models.Family, bgg_id=bgg_id, defaults={"name": name}
-        )
+        family, _ = models.Family.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
         families.append(family)
 
     mechanics = []
     for bgg_id, name in data.get("mechanics", []):
-        mechanic = await get_or_create(
-            session, models.Mechanic, bgg_id=bgg_id, defaults={"name": name}
-        )
+        mechanic, _ = models.Mechanic.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
         mechanics.append(mechanic)
 
-    return boardgame, categories, designers, families, mechanics
+    boardgame.categories.set(categories)
+    boardgame.designers.set(designers)
+    boardgame.families.set(families)
+    boardgame.mechanics.set(mechanics)
 
+    boardgame.save()
 
-async def get_or_create(
-    session: AsyncSession,
-    model: type[T],
-    defaults: dict[str, Any] | None = None,
-    **kwargs: dict[str, Any],
-) -> T:
-    stmt = select(model).filter_by(**kwargs)
-    instance: T | None = await session.scalar(stmt)
-    if instance:
-        return instance
-
-    params = {**kwargs}
-    if defaults:
-        params.update(defaults)
-    instance_created: T = model(**params)
-    session.add(instance_created)
-
-    try:
-        await session.flush()
-    except IntegrityError:
-        await session.rollback()
-        instance_new: T | None = await session.scalar(stmt)
-        if instance_new:
-            return instance_new
-
-    return instance_created
-
-
-async def process_entities(
-    session: AsyncSession,
-    entities: list[Any],
-    model: type[Any],
-    id_field: str = "bgg_id",
-    update_fields: list[str] | None = None,
-) -> list[Any]:
-    results = []
-
-    for entity in entities:
-        entity_id = getattr(entity, id_field)
-        stmt = select(model).where(getattr(model, id_field) == entity_id)
-        result = await session.execute(stmt)
-        existing = result.scalar_one_or_none()
-
-        # exclude primary key column
-        fields_to_update = update_fields or [
-            f.name
-            for f in entity.__table__.columns
-            if f.name not in (id_field, "id", "type")
-        ]
-
-        if existing:
-            for f in fields_to_update:
-                setattr(existing, f, getattr(entity, f))
-            results.append(existing)
-        else:
-            session.add(entity)
-            results.append(entity)
-
-    await session.flush()
-    return results
-
-
-async def process_item(
-    session: AsyncSession, item: ET.Element
-) -> models.Boardgame | None:
-    boardgame, categories, designers, families, mechanics = await analyse_api_response(
-        item=item, session=session
-    )
-    if not boardgame:
-        return None
-
-    all_children = categories + designers + families + mechanics
-    for child in all_children:
-        session.add(child)
-    await session.flush()
-
-    stmt = (
-        select(models.Boardgame)
-        .where(models.Boardgame.bgg_id == boardgame.bgg_id)
-        .options(
-            selectinload(models.Boardgame.categories),
-            selectinload(models.Boardgame.designers),
-            selectinload(models.Boardgame.families),
-            selectinload(models.Boardgame.mechanics),
-        )
-    )
-    result = await session.execute(stmt)
-    existing = result.scalar_one_or_none()
-
-    api_fields = {
-        "name",
-        "description",
-        "year_published",
-        "minplayers",
-        "maxplayers",
-        "playingtime",
-        "minplaytime",
-        "maxplaytime",
-        "bgg_rank",
-        "image_url",
-        "thumbnail_url",
-    }
-    if existing:
-        for f in api_fields:
-            value = getattr(boardgame, f)
-            if value is not None:
-                setattr(existing, f, value)
-
-        existing.categories = categories
-        existing.designers = designers
-        existing.families = families
-        existing.mechanics = mechanics
-    else:
-        boardgame.categories = categories
-        boardgame.designers = designers
-        boardgame.families = families
-        boardgame.mechanics = mechanics
-        session.add(boardgame)
-
-    await session.commit()
     return boardgame
 
 
-async def process_batch(session: AsyncSession, ids: list[int]) -> None:
+def process_batch(ids: list[int]) -> None:
     logger.info("Scraping %s.", ids)
     parsed_xml = scrape_api(ids)
     if parsed_xml is None:
         return
 
     for item in parsed_xml.findall("item"):
-        await process_item(session, item)
+        analyse_api_response(item)
 
 
-async def fill_in_data(step: int = 20) -> None:
-    # porting in progress: raise to avoid silent failure
-    _not_implemented()
+def run() -> None:
     """Iterate over all known boardgames and refetch details."""
+    step = 20
 
-    async with sessionmanager.connect() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    run_index = 0
+    while True:
+        ids = models.Boardgame.objects.order_by("-bgg_id").values_list("bgg_id", flat=True)[
+            run_index * step : (run_index + 1) * step
+        ]
+        if not ids:
+            break
 
-    async with sessionmanager.session() as session:
-        run_index = 0
-        while True:
-            result = await session.execute(
-                select(models.Boardgame.bgg_id)
-                .order_by(models.Boardgame.bgg_id.desc())
-                .offset(run_index * step)
-                .limit(step)
-            )
-            ids = [r[0] for r in result.all()]
-            if not ids:
-                break
-
-            await process_batch(session, ids)
-            run_index += 1
-            await asyncio.sleep(5)
+        process_batch(ids)
+        run_index += 1
+        time.sleep(5)
