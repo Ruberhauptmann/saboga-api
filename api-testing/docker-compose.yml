@@ -64,6 +64,17 @@ services:
         - action: rebuild
           path: ../pyproject.toml
 
+  saboga-manage:
+    image: saboga-api:latest
+    build:
+      context: ../
+      dockerfile: api-testing/Dockerfile
+    container_name: saboga-manage
+    env_file:
+      - .env
+    networks:
+      - saboga-api
+
   saboga-database:
     image: postgres:17
     container_name: saboga-database

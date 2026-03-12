@@ -27,7 +27,7 @@ SECRET_KEY = "django-insecure-5hoc#)jbh+d)q*gp3$l(*b@b8sbd#eqp52s#w%$znt2rm$st4!
 DEBUG = True
 #DEBUG = False
 
-ALLOWED_HOSTS = ["saboga.localhost", "saboga.tjarksievers.de"]
+ALLOWED_HOSTS = ["saboga-api", "saboga.localhost", "saboga.tjarksievers.de"]
 
 FORCE_SCRIPT_NAME = "/api"
 
@@ -43,10 +43,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "rest_framework",
+    "django_prometheus",
     "api",
 ]
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -54,6 +56,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "api.instrumentation.RankHistoryMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "saboga_project.urls"

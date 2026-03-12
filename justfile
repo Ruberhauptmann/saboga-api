@@ -20,24 +20,18 @@ format:
 type:
     uv run ty check
 
-migration MESSAGE:
-    docker exec -it saboga-api uv run alembic revision --autogenerate -m "{{MESSAGE}}"
-    docker cp saboga-api:/app/alembic ./
-
 
 # Create Django migrations inside a temporary Docker container and copy them out
 django-makemigrations:
 	@echo "Building temporary image for migrations..."
-	@docker build -f api-testing/Dockerfile -t saboga-api-migrator .
-	@docker run --name saboga-api-migrator-run saboga-api-migrator python manage.py makemigrations || true
+	@docker compose -f api-testing/docker-compose.yml run --name saboga-manage saboga-manage python manage.py makemigrations || true
 	@echo "Ensuring local migrations directory exists..."
-	@mkdir -p apps/api/migrations
+	@mkdir -p api/migrations
 	@echo "Copying migrations from container to host..."
-	@docker cp saboga-api-migrator-run:/app/apps/api/migrations/. apps/api/migrations/ || true
+	@docker cp saboga-manage:/app/api/migrations/. api/migrations/ || true
 	@echo "Cleaning up temporary container and image..."
-	@docker rm saboga-api-migrator-run >/dev/null 2>&1 || true
-	@docker rmi saboga-api-migrator >/dev/null 2>&1 || true
-	@echo "Done. Review new migration files in apps/api/migrations."
+	@docker rm saboga-manage >/dev/null 2>&1 || true
+	@echo "Done. Review new migration files in api/migrations."
 
 # Install the development environment
 environment:

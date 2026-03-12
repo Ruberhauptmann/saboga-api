@@ -1,7 +1,15 @@
 from django.db import models
+from django.utils import timezone
+
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
 
 
-class Category(models.Model):
+class Category(BaseModel):
     name = models.CharField(max_length=255)
     bgg_id = models.IntegerField(unique=True, db_index=True)
     type = models.CharField(max_length=50, default="category")
@@ -13,7 +21,7 @@ class Category(models.Model):
         return self.name
 
 
-class Designer(models.Model):
+class Designer(BaseModel):
     name = models.CharField(max_length=255)
     bgg_id = models.IntegerField(unique=True, db_index=True)
     type = models.CharField(max_length=50, default="designer")
@@ -25,7 +33,7 @@ class Designer(models.Model):
         return self.name
 
 
-class Family(models.Model):
+class Family(BaseModel):
     name = models.CharField(max_length=255)
     bgg_id = models.IntegerField(unique=True, db_index=True)
     type = models.CharField(max_length=50, default="family")
@@ -37,7 +45,7 @@ class Family(models.Model):
         return self.name
 
 
-class Mechanic(models.Model):
+class Mechanic(BaseModel):
     name = models.CharField(max_length=255)
     bgg_id = models.IntegerField(unique=True, db_index=True)
     type = models.CharField(max_length=50, default="mechanic")
@@ -49,7 +57,7 @@ class Mechanic(models.Model):
         return self.name
 
 
-class Boardgame(models.Model):
+class Boardgame(BaseModel):
     bgg_id = models.IntegerField(unique=True, db_index=True)
     bgg_rank = models.IntegerField(null=True, db_index=True)
 
@@ -89,7 +97,7 @@ class Boardgame(models.Model):
         return self.name
 
 
-class RankHistory(models.Model):
+class RankHistory(BaseModel):
     date = models.DateTimeField(db_index=True)
     boardgame = models.ForeignKey(
         Boardgame, on_delete=models.CASCADE, related_name="bgg_rank_history"
@@ -108,7 +116,7 @@ class RankHistory(models.Model):
 
 
 # JSON network and graph storage
-class BoardgameNetwork(models.Model):
+class BoardgameNetwork(BaseModel):
     nodes = models.JSONField()
     edges = models.JSONField()
 
@@ -116,7 +124,7 @@ class BoardgameNetwork(models.Model):
         db_table = "boardgame_network"
 
 
-class CategoryNetwork(models.Model):
+class CategoryNetwork(BaseModel):
     nodes = models.JSONField()
     edges = models.JSONField()
 
@@ -124,7 +132,7 @@ class CategoryNetwork(models.Model):
         db_table = "category_network"
 
 
-class DesignerNetwork(models.Model):
+class DesignerNetwork(BaseModel):
     nodes = models.JSONField()
     edges = models.JSONField()
 
@@ -132,7 +140,7 @@ class DesignerNetwork(models.Model):
         db_table = "designer_network"
 
 
-class FamilyNetwork(models.Model):
+class FamilyNetwork(BaseModel):
     nodes = models.JSONField()
     edges = models.JSONField()
 
@@ -140,7 +148,7 @@ class FamilyNetwork(models.Model):
         db_table = "family_network"
 
 
-class MechanicNetwork(models.Model):
+class MechanicNetwork(BaseModel):
     nodes = models.JSONField()
     edges = models.JSONField()
 
@@ -148,7 +156,7 @@ class MechanicNetwork(models.Model):
         db_table = "mechanic_network"
 
 
-class HeterogeneousGraphData(models.Model):
+class HeterogeneousGraphData(BaseModel):
     created_at = models.DateTimeField(db_index=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     nodes = models.JSONField()
@@ -159,7 +167,7 @@ class HeterogeneousGraphData(models.Model):
         db_table = "heterogeneous_graph"
 
 
-class ProjectedGraphData(models.Model):
+class ProjectedGraphData(BaseModel):
     graph_type = models.CharField(max_length=255, db_index=True)
     created_at = models.DateTimeField(db_index=True)
     updated_at = models.DateTimeField(null=True, blank=True)
