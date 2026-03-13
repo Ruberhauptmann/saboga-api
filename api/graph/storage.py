@@ -25,6 +25,7 @@ class GraphStorageService:
 
         Returns:
             The created or updated :class:`HeterogeneousGraphData` record
+
         """
         graph_dict = graph.to_dict()
         existing = models.HeterogeneousGraphData.objects.first()
@@ -49,6 +50,7 @@ class GraphStorageService:
 
         Returns:
             The loaded :class:`HeterogeneousGraph` or ``None`` if not found
+
         """
         graph_data = models.HeterogeneousGraphData.objects.first()
         if not graph_data:
@@ -84,6 +86,7 @@ class GraphStorageService:
 
         Returns:
             The created or updated :class:`ProjectedGraphData` record
+
         """
         graph_dict = graph.to_dict()
         existing = models.ProjectedGraphData.objects.filter(
@@ -114,6 +117,7 @@ class GraphStorageService:
 
         Returns:
             The loaded :class:`HeterogeneousGraph` or ``None`` if not found
+
         """
         graph_data = models.ProjectedGraphData.objects.filter(
             graph_type=graph_type
@@ -144,6 +148,7 @@ class GraphStorageService:
 
         Returns:
             Summary dictionary with counts for each graph saved
+
         """
         hetero = GraphBuilder.build_graph()
         GraphStorageService.save_heterogeneous_graph(

@@ -15,6 +15,7 @@ class GraphBuilder:
 
         Returns:
             A populated :class:`HeterogeneousGraph` object
+
         """
         graph = HeterogeneousGraph()
 

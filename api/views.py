@@ -34,16 +34,18 @@ class GraphViewSet(viewsets.ViewSet):
     We also implement a minimal ``list`` method so that the DRF
     ``DefaultRouter`` will include ``/graphs/`` in the API root view.
     Without a list or retrieve method the router considers the viewset
-    to have no top‑level link and omits it from the index page.
+    to have no top-level link and omits it from the index page.
     """
 
     serializer_class = s.BaseGraphSerializer
 
     def list(self, request):
-        # simple placeholder; users should call one of the named actions
         return Response(
             {
-                "detail": "Graph endpoints are available under 'list-available', 'heterogeneous', or 'projected/<type>'",
+                "detail": (
+                    "Graph endpoints are available under 'list-available', "
+                    " 'heterogeneous', or 'projected/<type>'"
+                ),
             }
         )
 
@@ -170,31 +172,45 @@ class GraphViewSet(viewsets.ViewSet):
                 "available_graphs": [
                     {
                         "type": "heterogeneous",
-                        "description": "Complete heterogeneous graph with all node and edge types",
+                        "description": (
+                            "Complete heterogeneous graph with all node and edge types"
+                        ),
                     },
                     {
                         "type": "game-mechanic",
-                        "description": "Game-to-game connections through shared mechanics",
+                        "description": (
+                            "Game-to-game connections through shared mechanics"
+                        ),
                     },
                     {
                         "type": "game-category",
-                        "description": "Game-to-game connections through shared categories",
+                        "description": (
+                            "Game-to-game connections through shared categories"
+                        ),
                     },
                     {
                         "type": "game-designer",
-                        "description": "Game-to-game connections through shared designers",
+                        "description": (
+                            "Game-to-game connections through shared designers"
+                        ),
                     },
                     {
                         "type": "mechanic-mechanic",
-                        "description": "Mechanic-to-mechanic connections through shared games",
+                        "description": (
+                            "Mechanic-to-mechanic connections through shared games"
+                        ),
                     },
                     {
                         "type": "category-category",
-                        "description": "Category-to-category connections through shared games",
+                        "description": (
+                            "Category-to-category connections through shared games"
+                        ),
                     },
                     {
                         "type": "designer-designer",
-                        "description": "Designer-to-designer collaborations through shared games",
+                        "description": (
+                            "Designer-to-designer collaborations through shared games"
+                        ),
                     },
                 ]
             }
@@ -250,16 +266,13 @@ class BoardgameViewSet(viewsets.ReadOnlyModelViewSet):
         serializer_class=serializers.BoardgameRankHistorySerializer,
     )
     def rank_history(self, request):
-        # 1. Define the specific date you are interested in
-        target_date = datetime(2024, 1, 1)
+        target_date = datetime(2026, 3, 12)
 
-        # 2. Create a subquery to find the specific RankHistory record for each boardgame
         history_subquery = models.RankHistory.objects.filter(
             boardgame=OuterRef("pk"),
             date=target_date,  # Or use date__date=target_date if it's a DateTimeField
         )
 
-        # 3. Annotate the Boardgame queryset
         objs = models.Boardgame.objects.annotate(
             # Fetch values from the specific date
             past_rank=Subquery(history_subquery.values("bgg_rank")[:1]),

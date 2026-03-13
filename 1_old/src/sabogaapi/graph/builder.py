@@ -17,6 +17,7 @@ class GraphBuilder:
 
         Returns:
             A populated HeterogeneousGraph object
+
         """
         from sabogaapi.models import Boardgame, Category, Designer, Mechanic
 

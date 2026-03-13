@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from rest_framework import serializers
 
 from . import models
@@ -6,31 +8,37 @@ from . import models
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Category
-        fields = ["id", "name", "bgg_id", "type"]
+        fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
 
 
 class DesignerSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Designer
-        fields = ["id", "name", "bgg_id", "type"]
+        fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
 
 
 class FamilySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Family
-        fields = ["id", "name", "bgg_id", "type"]
+        fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
 
 
 class MechanicSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Mechanic
-        fields = ["id", "name", "bgg_id", "type"]
+        fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
 
 
 class RankHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = models.RankHistory
-        fields = ["id", "date", "bgg_rank", "bgg_geek_rating", "bgg_average_rating"]
+        fields: ClassVar[list[str]] = [
+            "id",
+            "date",
+            "bgg_rank",
+            "bgg_geek_rating",
+            "bgg_average_rating",
+        ]
 
 
 class BoardgameListSerializer(serializers.ModelSerializer):
@@ -41,7 +49,7 @@ class BoardgameListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Boardgame
-        fields = [
+        fields: ClassVar[list[str]] = [
             "id",
             "bgg_id",
             "bgg_rank",
@@ -58,8 +66,7 @@ class BoardgameListSerializer(serializers.ModelSerializer):
 
 
 class BoardgameRankHistorySerializer(BoardgameListSerializer):
-    """
-    Inherits from the List serializer but adds the annotated
+    """Inherits from the List serializer but adds the annotated
     historical and difference fields.
     """
 
@@ -75,7 +82,8 @@ class BoardgameRankHistorySerializer(BoardgameListSerializer):
 
     class Meta(BoardgameListSerializer.Meta):
         # Add the new fields to the existing list
-        fields = BoardgameListSerializer.Meta.fields + [
+        fields: ClassVar[list[str]] = [
+            *BoardgameListSerializer.Meta.fields,
             "past_rank",
             "past_geek_rating",
             "past_avg_rating",
@@ -90,7 +98,8 @@ class BoardgameDetailSerializer(BoardgameListSerializer):
 
     class Meta(BoardgameListSerializer.Meta):
         model = models.Boardgame
-        fields = BoardgameListSerializer.Meta.fields + [
+        fields: ClassVar[list[str]] = [
+            *BoardgameListSerializer.Meta.fields,
             "description",
             "image_url",
             "thumbnail_url",
@@ -107,7 +116,7 @@ class BoardgameDetailSerializer(BoardgameListSerializer):
 class NetworkSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.BoardgameNetwork
-        fields = ["id", "nodes", "edges"]
+        fields: ClassVar[list[str]] = ["id", "nodes", "edges"]
 
 
 # Graph response serializers used by GraphViewSet

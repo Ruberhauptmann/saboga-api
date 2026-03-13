@@ -61,8 +61,6 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
         username = getattr(django_settings, "BGG_USERNAME", "")
         password = getattr(django_settings, "BGG_PASSWORD", "")
 
-        print("Logging in with username:", username, flush=True)
-
         driver.find_element(By.ID, "inputUsername").send_keys(username)
         driver.find_element(By.ID, "inputPassword").send_keys(password)
         # driver.find_element(By.CSS_SELECTOR, "[type='submit']").click()
@@ -82,7 +80,6 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 
         logger.info("Fetching S3 URL for ZIP download")
         link_element = driver.find_element(By.LINK_TEXT, "Click to Download")
-        # link_element = driver.find_element(By.XPATH, '//a[text()="Click to Download"]')
         s3_url = link_element.get_attribute("href")
         logger.debug("S3 URL: %s", s3_url)
     finally:
@@ -112,7 +109,6 @@ def insert_games(games_df: pd.DataFrame) -> tuple[list[models.Boardgame], int]:
 
     This function is synchronous and uses the Django ORM directly.
     """
-
     logger.info("Processing boardgames from CSV.")
     date = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
 

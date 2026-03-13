@@ -26,6 +26,7 @@ class RankHistoryService:
 
         Returns:
             List[schemas.RankHistory]: List of rank history elements.
+
         """
         result = await db_session.execute(
             select(models.RankHistory)

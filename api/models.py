@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from django.db import models
 
 
@@ -72,9 +74,9 @@ class Boardgame(BaseModel):
     bgg_average_rating_trend = models.FloatField(null=True, blank=True)
     mean_trend = models.FloatField(null=True, blank=True)
 
-    description = models.TextField(null=True, blank=True)
-    image_url = models.URLField(null=True, blank=True)
-    thumbnail_url = models.URLField(null=True, blank=True)
+    description = models.TextField(blank=True, default="")
+    image_url = models.URLField(blank=True, default="")
+    thumbnail_url = models.URLField(blank=True, default="")
 
     year_published = models.IntegerField(null=True, blank=True)
     minplayers = models.IntegerField(null=True, blank=True)
@@ -108,11 +110,14 @@ class RankHistory(BaseModel):
 
     class Meta:
         db_table = "rank_history"
-        indexes = [
+        indexes: ClassVar[list[models.Index]] = [
             models.Index(
                 fields=["boardgame", "date"], name="ix_rankhistory_boardgame_date"
             )
         ]
+
+    def __str__(self) -> str:
+        return f"{self.boardgame} on {self.date}"
 
 
 # JSON network and graph storage
@@ -123,6 +128,9 @@ class BoardgameNetwork(BaseModel):
     class Meta:
         db_table = "boardgame_network"
 
+    def __str__(self):
+        return f"BoardgameNetwork created at {self.created_at}"
+
 
 class CategoryNetwork(BaseModel):
     nodes = models.JSONField()
@@ -130,6 +138,9 @@ class CategoryNetwork(BaseModel):
 
     class Meta:
         db_table = "category_network"
+
+    def __str__(self):
+        return f"CategoryNetwork created at {self.created_at}"
 
 
 class DesignerNetwork(BaseModel):
@@ -139,6 +150,9 @@ class DesignerNetwork(BaseModel):
     class Meta:
         db_table = "designer_network"
 
+    def __str__(self):
+        return f"DesignerNetwork created at {self.created_at}"
+
 
 class FamilyNetwork(BaseModel):
     nodes = models.JSONField()
@@ -147,6 +161,9 @@ class FamilyNetwork(BaseModel):
     class Meta:
         db_table = "family_network"
 
+    def __str__(self):
+        return f"FamilyNetwork created at {self.created_at}"
+
 
 class MechanicNetwork(BaseModel):
     nodes = models.JSONField()
@@ -154,6 +171,9 @@ class MechanicNetwork(BaseModel):
 
     class Meta:
         db_table = "mechanic_network"
+
+    def __str__(self):
+        return f"MechanicNetwork created at {self.created_at}"
 
 
 class HeterogeneousGraphData(BaseModel):
@@ -166,6 +186,9 @@ class HeterogeneousGraphData(BaseModel):
     class Meta:
         db_table = "heterogeneous_graph"
 
+    def __str__(self):
+        return f"HeterogeneousGraphData created at {self.created_at}"
+
 
 class ProjectedGraphData(BaseModel):
     graph_type = models.CharField(max_length=255, db_index=True)
@@ -177,3 +200,6 @@ class ProjectedGraphData(BaseModel):
 
     class Meta:
         db_table = "projected_graphs"
+
+    def __str__(self):
+        return f"{self.graph_type}"

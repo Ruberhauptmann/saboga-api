@@ -27,6 +27,7 @@ class GraphStorageService:
 
         Returns:
             The created HeterogeneousGraphData record
+
         """
         graph_dict = graph.to_dict()
 
@@ -59,6 +60,7 @@ class GraphStorageService:
 
         Returns:
             The loaded HeterogeneousGraph or None if not found
+
         """
         graph_data = session.query(HeterogeneousGraphData).first()
         if not graph_data:
@@ -103,6 +105,7 @@ class GraphStorageService:
 
         Returns:
             The created ProjectedGraphData record
+
         """
         graph_dict = graph.to_dict()
 
@@ -145,6 +148,7 @@ class GraphStorageService:
 
         Returns:
             The loaded HeterogeneousGraph or None if not found
+
         """
         graph_data = (
             session.query(ProjectedGraphData)
@@ -186,6 +190,7 @@ class GraphStorageService:
 
         Returns:
             Dictionary with information about what was saved
+
         """
         # Build main heterogeneous graph
         hetero_graph = GraphBuilder.build_graph(session)

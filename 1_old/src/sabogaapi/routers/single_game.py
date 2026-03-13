@@ -34,10 +34,12 @@ async def read_game(
         mode (Literal['auto', 'daily', 'weekly', 'yearly'], optional):
             Mode for historic data. Defaults to "auto".
 
-    Raises:
+    Raises
+    ------
         HTTPException: Exception if no game is found.
 
-    Returns:
+    Returns
+    -------
         BoardgameSingle: Boardgame.
 
     Parameters

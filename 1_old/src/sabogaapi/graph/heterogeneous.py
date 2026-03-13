@@ -48,6 +48,7 @@ class HeterogeneousGraph:
             node_type: Type of the node
             label: Human-readable label for the node
             attributes: Optional dictionary of node attributes
+
         """
         attrs = attributes or {}
         self.graph.add_node(
@@ -74,6 +75,7 @@ class HeterogeneousGraph:
 
         Raises:
             ValueError: If source or target node doesn't exist
+
         """
         if source_id not in self.graph.nodes:
             error_msg = f"Source node {source_id} does not exist in graph"
@@ -98,6 +100,7 @@ class HeterogeneousGraph:
 
         Returns:
             Node attributes dictionary or None if not found
+
         """
         if node_id in self.graph.nodes:
             return dict(self.graph.nodes[node_id])
@@ -113,6 +116,7 @@ class HeterogeneousGraph:
 
         Returns:
             List of (node_id, attributes) tuples
+
         """
         return [
             (node_id, dict(attrs))
@@ -130,6 +134,7 @@ class HeterogeneousGraph:
 
         Returns:
             List of (source, target, attributes) tuples
+
         """
         return [
             (source_id, target_id, dict(attrs))
@@ -148,6 +153,7 @@ class HeterogeneousGraph:
 
         Returns:
             List of (source, target, attributes) tuples
+
         """
         return [
             (source_id, target_id, dict(attrs))
@@ -164,6 +170,7 @@ class HeterogeneousGraph:
 
         Returns:
             List of (source, target, attributes) tuples
+
         """
         return [
             (source_id, target_id, dict(attrs))
@@ -183,6 +190,7 @@ class HeterogeneousGraph:
         Returns:
             Dictionary with 'outgoing' and/or 'incoming' keys containing
             (node_id, attributes) tuples
+
         """
         neighbors: dict[str, list[tuple[int, dict[str, Any]]]] = {}
 
@@ -205,6 +213,7 @@ class HeterogeneousGraph:
 
         Returns:
             Dictionary containing graph statistics
+
         """
         nodes_by_type = {}
         for node_type in NodeType:
@@ -230,6 +239,7 @@ class HeterogeneousGraph:
 
         Returns:
             Dictionary representation of the graph
+
         """
         nodes = [
             {
@@ -260,6 +270,7 @@ class HeterogeneousGraph:
 
         Returns:
             The underlying NetworkX DiGraph object
+
         """
         return self.graph
 

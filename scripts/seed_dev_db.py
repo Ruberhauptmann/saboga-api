@@ -54,7 +54,6 @@ def generate_rank_history(days: int = 30):
     :mod:`api.statistics` still work and the ORM objects are created later
     once the associated ``Boardgame`` exists.
     """
-
     trend_type = random.choice(["improving", "declining", "random"])
     base_rank = random.randint(100, 900)
 
@@ -119,7 +118,6 @@ def generate_image_with_text(filepath: str, text: str, size: tuple[int, int]):
 
 def generate_boardgame(bgg_id, designers, categories, families, mechanics):
     """Return an unsaved ``Boardgame`` instance plus its rank history dicts."""
-
     rank_history, latest = generate_rank_history(HISTORY_DAYS)
 
     minplayers = random.randint(1, 4)
@@ -190,7 +188,6 @@ def generate_data():
     inserted we optionally call a placeholder for graph building if such a
     service exists in the Django codebase.
     """
-
     # wipe out old rows
     models.RankHistory.objects.all().delete()
     models.Boardgame.objects.all().delete()
@@ -244,10 +241,6 @@ def generate_data():
         graph_service.build_and_save_all()
     except ImportError:
         pass
-
-    print(
-        f"Inserted {NUM_GAMES} boardgames with {NUM_GAMES * HISTORY_DAYS} rank history entries."
-    )
 
 
 def run():

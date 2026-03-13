@@ -323,7 +323,7 @@ async def construct_mechanic_network() -> nx.Graph:
     return build_mechanic_graph(boardgames, mechanics)
 
 
-def build_boardgame_graph(  # noqa: C901
+def build_boardgame_graph(
     boardgames: Sequence[models.Boardgame],
     categories: Sequence[models.Category],
     designers: Sequence[models.Designer],

@@ -34,7 +34,7 @@ def make_link(request: Request, page: int, per_page: int, rel: str) -> str:
 
 
 @router.get("/rank-history")
-async def read_games_with_rank_changes(  # noqa: PLR0913
+async def read_games_with_rank_changes(
     response: Response,
     request: Request,
     db_session: DBSessionDep,

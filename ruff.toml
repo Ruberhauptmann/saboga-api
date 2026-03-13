@@ -1,0 +1,24 @@
+line-length = 88
+
+[lint]
+extend-select = [
+    "E",
+    #"D",
+    "F",
+    "RUF",
+    "N",
+    "TC",
+    "SLF",
+    "RET",
+    "T20",
+    "INP",
+    "ISC",
+    "DJ"
+]
+ignore = ["D203", "D213"]
+
+[lint.per-file-ignores]
+"__init__.py" = ["E402", "D"]
+"**/{tests}/*" = ["E402", "D"]
+"**/settings.py" = ["E501"]
+"**/{migrations}/*" = ["ALL"]

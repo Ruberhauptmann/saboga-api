@@ -50,6 +50,7 @@ class GraphProjector:
 
         Returns:
             A projected graph with only game nodes and edges between them
+
         """
         projected = HeterogeneousGraph()
 
@@ -113,6 +114,7 @@ class GraphProjector:
 
         Returns:
             A projected graph with only mechanic nodes
+
         """
         projected = HeterogeneousGraph()
 
@@ -173,6 +175,7 @@ class GraphProjector:
 
         Returns:
             A projected graph with only category nodes
+
         """
         projected = HeterogeneousGraph()
 
@@ -232,6 +235,7 @@ class GraphProjector:
 
         Returns:
             A projected graph with only designer nodes
+
         """
         projected = HeterogeneousGraph()
 
