@@ -5,25 +5,25 @@ from rest_framework import serializers
 from . import models
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategoryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Category
         fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
 
 
-class DesignerSerializer(serializers.ModelSerializer):
+class DesignerListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Designer
+        model = models.Category
         fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
 
 
-class FamilySerializer(serializers.ModelSerializer):
+class FamilyListSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Family
         fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
 
 
-class MechanicSerializer(serializers.ModelSerializer):
+class MechanicListSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Mechanic
         fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "type"]
@@ -41,11 +41,17 @@ class RankHistorySerializer(serializers.ModelSerializer):
         ]
 
 
+class BoardgameSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Boardgame
+        fields: ClassVar[list[str]] = ["id", "name", "bgg_id", "bgg_rank"]
+
+
 class BoardgameListSerializer(serializers.ModelSerializer):
-    categories = CategorySerializer(many=True, read_only=True)
-    designers = DesignerSerializer(many=True, read_only=True)
-    families = FamilySerializer(many=True, read_only=True)
-    mechanics = MechanicSerializer(many=True, read_only=True)
+    categories = CategoryListSerializer(many=True, read_only=True)
+    designers = DesignerListSerializer(many=True, read_only=True)
+    families = FamilyListSerializer(many=True, read_only=True)
+    mechanics = MechanicListSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Boardgame
@@ -62,6 +68,8 @@ class BoardgameListSerializer(serializers.ModelSerializer):
             "designers",
             "families",
             "mechanics",
+            "thumbnail_url",
+            "year_published",
         ]
 
 
@@ -76,9 +84,9 @@ class BoardgameRankHistorySerializer(BoardgameListSerializer):
     past_avg_rating = serializers.FloatField(read_only=True)
 
     # Calculated difference fields
-    rank_diff = serializers.IntegerField(read_only=True)
-    geek_rating_diff = serializers.FloatField(read_only=True)
-    avg_rating_diff = serializers.FloatField(read_only=True)
+    bgg_rank_change = serializers.IntegerField(read_only=True)
+    bgg_geek_rating_change = serializers.FloatField(read_only=True)
+    bgg_average_rating_change = serializers.FloatField(read_only=True)
 
     class Meta(BoardgameListSerializer.Meta):
         # Add the new fields to the existing list
@@ -87,9 +95,9 @@ class BoardgameRankHistorySerializer(BoardgameListSerializer):
             "past_rank",
             "past_geek_rating",
             "past_avg_rating",
-            "rank_diff",
-            "geek_rating_diff",
-            "avg_rating_diff",
+            "bgg_rank_change",
+            "bgg_geek_rating_change",
+            "bgg_average_rating_change",
         ]
 
 
@@ -102,7 +110,6 @@ class BoardgameDetailSerializer(BoardgameListSerializer):
             *BoardgameListSerializer.Meta.fields,
             "description",
             "image_url",
-            "thumbnail_url",
             "year_published",
             "minplayers",
             "maxplayers",
@@ -155,3 +162,53 @@ class LatestRankHistoryTimestampSerializer(serializers.Serializer):
     """Simple container used by the metrics endpoint."""
 
     latest_rank_history_timestamp = serializers.FloatField()
+
+
+class CategoryDetailSerializer(CategoryListSerializer):
+    boardgames = BoardgameSimpleSerializer(many=True, read_only=True)
+
+    class Meta(CategoryListSerializer.Meta):
+        model = models.Category
+        fields: ClassVar[list[str]] = [
+            *CategoryListSerializer.Meta.fields,
+            "boardgames",
+        ]
+
+
+class DesignerDetailSerializer(DesignerListSerializer):
+    boardgames = BoardgameSimpleSerializer(many=True, read_only=True)
+
+    class Meta(DesignerListSerializer.Meta):
+        model = models.Designer
+        fields: ClassVar[list[str]] = [
+            *DesignerListSerializer.Meta.fields,
+            "boardgames",
+        ]
+
+
+class FamilyDetailSerializer(FamilyListSerializer):
+    boardgames = BoardgameSimpleSerializer(many=True, read_only=True)
+
+    class Meta(FamilyListSerializer.Meta):
+        model = models.Family
+        fields: ClassVar[list[str]] = [
+            *FamilyListSerializer.Meta.fields,
+            "boardgames",
+        ]
+
+
+class MechanicDetailSerializer(MechanicListSerializer):
+    boardgames = BoardgameSimpleSerializer(many=True, read_only=True)
+
+    class Meta(MechanicListSerializer.Meta):
+        model = models.Mechanic
+        fields: ClassVar[list[str]] = [
+            *MechanicListSerializer.Meta.fields,
+            "boardgames",
+        ]
+
+
+class SearchResultSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    # Use a generic field or point to specific serializers
+    data = serializers.JSONField()

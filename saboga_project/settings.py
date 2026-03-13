@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "rest_framework",
     "drf_spectacular",
+    "drf_link_header_pagination",
     "django_prometheus",
     "api",
 ]
@@ -146,6 +147,8 @@ BGG_API_KEY = os.getenv("BGG_API_KEY", "")
 
 
 REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "drf_link_header_pagination.LinkHeaderPagination",
+    "PAGE_SIZE": 100,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 

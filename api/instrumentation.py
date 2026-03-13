@@ -4,7 +4,6 @@ from django.utils.deprecation import MiddlewareMixin
 
 from . import models
 
-# gauge used by both the DRF endpoint and the middleware
 LATEST_RANK_HISTORY_TS = Gauge(
     "latest_rank_history_timestamp",
     "Unix timestamp of the most recent entry in rank_history",

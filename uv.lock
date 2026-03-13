@@ -168,6 +168,18 @@ wheels = [
 ]
 
 [[package]]
+name = "drf-link-header-pagination"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "djangorestframework" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/21/86/92c695f5b0f55626dcf2db5d10977d284941b3adceb46d1067a787781382/drf_link_header_pagination-0.2.0.tar.gz", hash = "sha256:19446c5716a8b857f5e0ecbba39a49508a8e748ef51a8cfd6bd706090e97060c", size = 7683, upload-time = "2022-09-19T14:49:12.359Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/b2/0b73d23049cbe2936e35cf159f0840fca715966e4197d9a6418515d786eb/drf_link_header_pagination-0.2.0-py3-none-any.whl", hash = "sha256:9890a871803395544c5a0ee0665fc2d2701fcdf151570ed15c8b8d873aefe27d", size = 4816, upload-time = "2022-09-19T14:49:10.767Z" },
+]
+
+[[package]]
 name = "drf-spectacular"
 version = "0.29.0"
 source = { registry = "https://pypi.org/simple" }
@@ -779,6 +791,7 @@ dependencies = [
     { name = "django-extensions" },
     { name = "django-prometheus" },
     { name = "djangorestframework" },
+    { name = "drf-link-header-pagination" },
     { name = "drf-spectacular" },
     { name = "faker" },
     { name = "loki-logger-handler" },
@@ -809,6 +822,7 @@ requires-dist = [
     { name = "django-extensions", specifier = ">=4.1" },
     { name = "django-prometheus", specifier = ">=2.4.1" },
     { name = "djangorestframework", specifier = ">=3.16.1" },
+    { name = "drf-link-header-pagination", specifier = ">=0.2.0" },
     { name = "drf-spectacular", specifier = ">=0.29.0" },
     { name = "faker", specifier = ">=40.8.0" },
     { name = "loki-logger-handler", specifier = ">=1.1.2" },

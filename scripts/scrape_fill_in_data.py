@@ -139,14 +139,12 @@ def analyse_api_response(
     """Parse one <item> and prepare ORM objects (no DB calls)."""
     data = parse_boardgame_data(item)
 
-    # Unranked games → skip (handled later by caller)
     if data["rank"] is None:
         return None, [], [], [], []
 
     # Create boardgame object
     boardgame, _ = models.Boardgame.objects.get_or_create(bgg_id=data["bgg_id"])
     boardgame.name = data["name"]
-    boardgame.bgg_rank = data["rank"]
     boardgame.description = data["description"]
     boardgame.year_published = data["year_published"]
     boardgame.minplayers = data["minplayers"]

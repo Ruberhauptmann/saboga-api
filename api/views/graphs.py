@@ -2,24 +2,12 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from django.db.models import OuterRef, Subquery, F
-from datetime import datetime
-from . import models
-from . import serializers
-
-from django.db.models import Max
 
 # graph utilities
-from .graph.services import GraphService
-from .graph.projections import GraphProjector
+from ..graph.services import GraphService
+from ..graph.projections import GraphProjector
 
-from . import serializers as s
-
-
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.Category.objects.all().order_by("name")
-    serializer_class = serializers.CategorySerializer
-    lookup_field = "bgg_id"
+from .. import serializers as s
 
 
 class GraphViewSet(viewsets.ViewSet):
@@ -215,86 +203,3 @@ class GraphViewSet(viewsets.ViewSet):
                 ]
             }
         )
-
-
-class MetricsViewSet(viewsets.ViewSet):
-    """A tiny collection of administrative metrics exposed over HTTP.
-
-    The only current metric is the timestamp of the most recent
-    ``RankHistory`` row.  We keep the implementation simple in order to
-    make the value available in the DRF API and in OpenAPI documentation
-    without pulling in the Prometheus instrumentation layer used by the
-    old FastAPI service.
-    """
-
-    serializer_class = s.LatestRankHistoryTimestampSerializer
-
-    @action(
-        detail=False,
-        methods=["get"],
-        url_path="latest-rank-history",
-        serializer_class=s.LatestRankHistoryTimestampSerializer,
-    )
-    def latest_rank_history(self, request):
-        # compute the maximum ``date`` value using an aggregate query;
-        # Django returns an aware ``datetime`` instance when timezone
-        # support is enabled so the ``timestamp()`` call works correctly.
-        max_date = models.RankHistory.objects.aggregate(max_date=Max("date"))[
-            "max_date"
-        ]
-        if max_date is not None:
-            timestamp = max_date.timestamp()
-        else:
-            timestamp = 0.0
-        return Response({"latest_rank_history_timestamp": timestamp})
-
-
-class BoardgameViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = models.Boardgame.objects.all().order_by("-bgg_rank")
-    serializer_class = serializers.BoardgameListSerializer
-    lookup_field = "bgg_id"
-
-    def get_serializer_class(self):
-        if self.action == "retrieve":
-            return serializers.BoardgameDetailSerializer
-        return super().get_serializer_class()
-
-    @action(
-        detail=False,
-        methods=["get"],
-        url_path="rank-history",
-        serializer_class=serializers.BoardgameRankHistorySerializer,
-    )
-    def rank_history(self, request):
-        target_date = datetime(2026, 3, 12)
-
-        history_subquery = models.RankHistory.objects.filter(
-            boardgame=OuterRef("pk"),
-            date=target_date,  # Or use date__date=target_date if it's a DateTimeField
-        )
-
-        objs = models.Boardgame.objects.annotate(
-            # Fetch values from the specific date
-            past_rank=Subquery(history_subquery.values("bgg_rank")[:1]),
-            past_geek_rating=Subquery(history_subquery.values("bgg_geek_rating")[:1]),
-            past_avg_rating=Subquery(history_subquery.values("bgg_average_rating")[:1]),
-            # Compute the differences (Current Value - Past Value)
-            rank_diff=F("bgg_rank") - F("past_rank"),
-            geek_rating_diff=F("bgg_geek_rating") - F("past_geek_rating"),
-            avg_rating_diff=F("bgg_average_rating") - F("past_avg_rating"),
-        ).order_by("past_rank")[:50]  # Sort by the historical rank
-
-        serializer = self.get_serializer(objs, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=["get"])
-    def trending(self, request):
-        objs = models.Boardgame.objects.order_by("-bgg_rank_trend")[:5]
-        serializer = self.get_serializer(objs, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=["get"])
-    def declining(self, request):
-        objs = models.Boardgame.objects.order_by("bgg_rank_trend")[:5]
-        serializer = self.get_serializer(objs, many=True)
-        return Response(serializer.data)
