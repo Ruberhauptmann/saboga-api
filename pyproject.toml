@@ -8,6 +8,7 @@ dependencies = [
     "django-extensions>=4.1",
     "django-prometheus>=2.4.1",
     "djangorestframework>=3.16.1",
+    "drf-spectacular>=0.29.0",
     "faker>=40.8.0",
     "loki-logger-handler>=1.1.2",
     "networkx>=3.6.1",

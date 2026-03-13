@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "rest_framework",
+    'drf_spectacular',
     "django_prometheus",
     "api",
 ]
@@ -143,3 +144,15 @@ IMG_DIR = BASE_DIR / "img"
 BGG_USERNAME = os.getenv("BGG_USERNAME", "")
 BGG_PASSWORD = os.getenv("BGG_PASSWORD", "")
 BGG_API_KEY = os.getenv("BGG_API_KEY", "")
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Saboga API',
+    'DESCRIPTION': 'Your project description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

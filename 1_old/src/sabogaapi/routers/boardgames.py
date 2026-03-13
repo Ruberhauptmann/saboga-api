@@ -143,13 +143,3 @@ async def read_games_with_rank_changes(  # noqa: PLR0913
 @router.get("/volatile")
 async def read_games_with_volatility() -> dict[str, str]:
     return {"status": "not yet implemented"}
-
-
-@router.get("/trending")
-async def read_trending_games(db_session: DBSessionDep) -> list[BoardgameInList]:
-    return await BoardgameService.get_trending_games(limit=5, db_session=db_session)
-
-
-@router.get("/declining")
-async def read_declining_games(db_session: DBSessionDep) -> list[BoardgameInList]:
-    return await BoardgameService.get_declining_games(limit=5, db_session=db_session)

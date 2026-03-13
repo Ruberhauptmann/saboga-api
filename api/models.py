@@ -98,7 +98,7 @@ class Boardgame(BaseModel):
 
 
 class RankHistory(BaseModel):
-    date = models.DateTimeField(db_index=True)
+    date = models.DateField(db_index=True)
     boardgame = models.ForeignKey(
         Boardgame, on_delete=models.CASCADE, related_name="bgg_rank_history"
     )

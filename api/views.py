@@ -2,6 +2,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from django.db.models import OuterRef, Subquery, F
+from datetime import datetime
 from . import models
 from . import serializers
 
@@ -224,6 +226,33 @@ class BoardgameViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return serializers.BoardgameDetailSerializer
         return super().get_serializer_class()
+
+    @action(detail=False, methods=["get"], url_path="rank-history", serializer_class=serializers.BoardgameRankHistorySerializer)
+    def rank_history(self, request):
+        # 1. Define the specific date you are interested in
+        target_date = datetime(2024, 1, 1)
+
+        # 2. Create a subquery to find the specific RankHistory record for each boardgame
+        history_subquery = models.RankHistory.objects.filter(
+            boardgame=OuterRef('pk'),
+            date=target_date # Or use date__date=target_date if it's a DateTimeField
+        )
+
+        # 3. Annotate the Boardgame queryset
+        objs = models.Boardgame.objects.annotate(
+            # Fetch values from the specific date
+            past_rank=Subquery(history_subquery.values('bgg_rank')[:1]),
+            past_geek_rating=Subquery(history_subquery.values('bgg_geek_rating')[:1]),
+            past_avg_rating=Subquery(history_subquery.values('bgg_average_rating')[:1]),
+
+            # Compute the differences (Current Value - Past Value)
+            rank_diff=F('bgg_rank') - F('past_rank'),
+            geek_rating_diff=F('bgg_geek_rating') - F('past_geek_rating'),
+            avg_rating_diff=F('bgg_average_rating') - F('past_avg_rating')
+        ).order_by('past_rank')[:50] # Sort by the historical rank
+
+        serializer = self.get_serializer(objs, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=["get"])
     def trending(self, request):

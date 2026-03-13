@@ -56,6 +56,28 @@ class BoardgameListSerializer(serializers.ModelSerializer):
             "mechanics",
         ]
 
+class BoardgameRankHistorySerializer(BoardgameListSerializer):
+    """
+    Inherits from the List serializer but adds the annotated
+    historical and difference fields.
+    """
+    # Annotated fields from the queryset
+    past_rank = serializers.IntegerField(read_only=True)
+    past_geek_rating = serializers.FloatField(read_only=True)
+    past_avg_rating = serializers.FloatField(read_only=True)
+
+    # Calculated difference fields
+    rank_diff = serializers.IntegerField(read_only=True)
+    geek_rating_diff = serializers.FloatField(read_only=True)
+    avg_rating_diff = serializers.FloatField(read_only=True)
+
+    class Meta(BoardgameListSerializer.Meta):
+        # Add the new fields to the existing list
+        fields = BoardgameListSerializer.Meta.fields + [
+            "past_rank", "past_geek_rating", "past_avg_rating",
+            "rank_diff", "geek_rating_diff", "avg_rating_diff"
+        ]
+
 
 class BoardgameDetailSerializer(BoardgameListSerializer):
     bgg_rank_history = RankHistorySerializer(many=True, read_only=True)
