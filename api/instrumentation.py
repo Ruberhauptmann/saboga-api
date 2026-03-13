@@ -1,7 +1,6 @@
-from prometheus_client import Gauge, Summary
+from prometheus_client import Gauge
 from django.db.models import Max
 from django.utils.deprecation import MiddlewareMixin
-import time
 
 from . import models
 
@@ -23,9 +22,9 @@ class RankHistoryMiddleware(MiddlewareMixin):
     """
 
     def process_response(self, request, response):
-        max_date = models.RankHistory.objects.aggregate(
-            max_date=Max("updated_at")
-        )["max_date"]
+        max_date = models.RankHistory.objects.aggregate(max_date=Max("updated_at"))[
+            "max_date"
+        ]
         if max_date is not None:
             LATEST_RANK_HISTORY_TS.set(max_date.timestamp())
         else:

@@ -18,17 +18,18 @@ import datetime
 import random
 import re
 
+from faker import Faker
+from PIL import Image, ImageDraw, ImageFont
+
+from api import models
+from api.statistics import calculate_trends, calculate_volatility
+
 # set up Django environment
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "saboga_project.settings")
 import django
 
 django.setup()
 
-from faker import Faker
-from PIL import Image, ImageDraw, ImageFont
-
-from api import models
-from api.statistics import calculate_trends, calculate_volatility
 
 fake = Faker()
 

@@ -14,7 +14,7 @@ def configure_logger() -> logging.Logger:
         label_keys={},
         timeout=10,
     )
-    #loki_handler.addFilter(CorrelationIdFilter(uuid_length=32, default_value="-"))
+    # loki_handler.addFilter(CorrelationIdFilter(uuid_length=32, default_value="-"))
     logger.addHandler(loki_handler)
 
     return logger

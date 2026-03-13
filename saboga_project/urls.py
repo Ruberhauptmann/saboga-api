@@ -25,5 +25,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("django_prometheus.urls")),
     path("", include("api.urls")),
-    path('schema/', SpectacularAPIView.as_view(), name='schema'),
+    path("schema/", SpectacularAPIView.as_view(), name="schema"),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

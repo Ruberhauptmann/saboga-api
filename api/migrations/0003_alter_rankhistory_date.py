@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0002_boardgame_created_at_boardgame_updated_at_and_more'),
+        ("api", "0002_boardgame_created_at_boardgame_updated_at_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='rankhistory',
-            name='date',
+            model_name="rankhistory",
+            name="date",
             field=models.DateField(db_index=True),
         ),
     ]

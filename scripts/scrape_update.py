@@ -65,7 +65,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 
         driver.find_element(By.ID, "inputUsername").send_keys(username)
         driver.find_element(By.ID, "inputPassword").send_keys(password)
-        #driver.find_element(By.CSS_SELECTOR, "[type='submit']").click()
+        # driver.find_element(By.CSS_SELECTOR, "[type='submit']").click()
         driver.find_element(By.XPATH, '//button[text()=" Sign In "]').click()
 
         logger.info("Login submitted. Waiting for redirect")
@@ -82,7 +82,7 @@ def download_zip() -> pd.DataFrame:  # pragma: no cover
 
         logger.info("Fetching S3 URL for ZIP download")
         link_element = driver.find_element(By.LINK_TEXT, "Click to Download")
-        #link_element = driver.find_element(By.XPATH, '//a[text()="Click to Download"]')
+        # link_element = driver.find_element(By.XPATH, '//a[text()="Click to Download"]')
         s3_url = link_element.get_attribute("href")
         logger.debug("S3 URL: %s", s3_url)
     finally:

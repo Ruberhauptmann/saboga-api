@@ -56,11 +56,13 @@ class BoardgameListSerializer(serializers.ModelSerializer):
             "mechanics",
         ]
 
+
 class BoardgameRankHistorySerializer(BoardgameListSerializer):
     """
     Inherits from the List serializer but adds the annotated
     historical and difference fields.
     """
+
     # Annotated fields from the queryset
     past_rank = serializers.IntegerField(read_only=True)
     past_geek_rating = serializers.FloatField(read_only=True)
@@ -74,8 +76,12 @@ class BoardgameRankHistorySerializer(BoardgameListSerializer):
     class Meta(BoardgameListSerializer.Meta):
         # Add the new fields to the existing list
         fields = BoardgameListSerializer.Meta.fields + [
-            "past_rank", "past_geek_rating", "past_avg_rating",
-            "rank_diff", "geek_rating_diff", "avg_rating_diff"
+            "past_rank",
+            "past_geek_rating",
+            "past_avg_rating",
+            "rank_diff",
+            "geek_rating_diff",
+            "avg_rating_diff",
         ]
 
 
@@ -107,6 +113,7 @@ class NetworkSerializer(serializers.ModelSerializer):
 # Graph response serializers used by GraphViewSet
 class BaseGraphSerializer(serializers.Serializer):
     """Generic schema for a graph dictionary returned from the service."""
+
     nodes = serializers.ListField(child=serializers.DictField())
     edges = serializers.ListField(child=serializers.DictField())
 

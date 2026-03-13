@@ -36,6 +36,7 @@ class GraphViewSet(viewsets.ViewSet):
     Without a list or retrieve method the router considers the viewset
     to have no top‑level link and omits it from the index page.
     """
+
     serializer_class = s.BaseGraphSerializer
 
     def list(self, request):
@@ -53,7 +54,12 @@ class GraphViewSet(viewsets.ViewSet):
             graph = GraphService.build_heterogeneous_graph()
         return Response(graph.to_dict())
 
-    @action(detail=False, methods=["post"], url_path="heterogeneous/build", serializer_class=s.BuildGraphResultSerializer)
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="heterogeneous/build",
+        serializer_class=s.BuildGraphResultSerializer,
+    )
     def build_heterogeneous(self, request):
         graph = GraphService.build_heterogeneous_graph()
         GraphService.save_heterogeneous_graph(graph)
@@ -103,7 +109,12 @@ class GraphViewSet(viewsets.ViewSet):
                 )
         return Response(graph.to_dict())
 
-    @action(detail=False, methods=["post"], url_path="build-all", serializer_class=s.BuildAllGraphsResultSerializer)
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="build-all",
+        serializer_class=s.BuildAllGraphsResultSerializer,
+    )
     def build_all(self, request):
         results = GraphService.build_and_save_all()
         return Response({"status": "success", "graphs_built": results})
@@ -147,7 +158,12 @@ class GraphViewSet(viewsets.ViewSet):
             }
         )
 
-    @action(detail=False, methods=["get"], serializer_class=s.AvailableGraphsResponseSerializer, url_path="list-available")
+    @action(
+        detail=False,
+        methods=["get"],
+        serializer_class=s.AvailableGraphsResponseSerializer,
+        url_path="list-available",
+    )
     def list_available(self, request):
         return Response(
             {
@@ -207,9 +223,9 @@ class MetricsViewSet(viewsets.ViewSet):
         # compute the maximum ``date`` value using an aggregate query;
         # Django returns an aware ``datetime`` instance when timezone
         # support is enabled so the ``timestamp()`` call works correctly.
-        max_date = models.RankHistory.objects.aggregate(
-            max_date=Max("date")
-        )["max_date"]
+        max_date = models.RankHistory.objects.aggregate(max_date=Max("date"))[
+            "max_date"
+        ]
         if max_date is not None:
             timestamp = max_date.timestamp()
         else:
@@ -227,29 +243,33 @@ class BoardgameViewSet(viewsets.ReadOnlyModelViewSet):
             return serializers.BoardgameDetailSerializer
         return super().get_serializer_class()
 
-    @action(detail=False, methods=["get"], url_path="rank-history", serializer_class=serializers.BoardgameRankHistorySerializer)
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="rank-history",
+        serializer_class=serializers.BoardgameRankHistorySerializer,
+    )
     def rank_history(self, request):
         # 1. Define the specific date you are interested in
         target_date = datetime(2024, 1, 1)
 
         # 2. Create a subquery to find the specific RankHistory record for each boardgame
         history_subquery = models.RankHistory.objects.filter(
-            boardgame=OuterRef('pk'),
-            date=target_date # Or use date__date=target_date if it's a DateTimeField
+            boardgame=OuterRef("pk"),
+            date=target_date,  # Or use date__date=target_date if it's a DateTimeField
         )
 
         # 3. Annotate the Boardgame queryset
         objs = models.Boardgame.objects.annotate(
             # Fetch values from the specific date
-            past_rank=Subquery(history_subquery.values('bgg_rank')[:1]),
-            past_geek_rating=Subquery(history_subquery.values('bgg_geek_rating')[:1]),
-            past_avg_rating=Subquery(history_subquery.values('bgg_average_rating')[:1]),
-
+            past_rank=Subquery(history_subquery.values("bgg_rank")[:1]),
+            past_geek_rating=Subquery(history_subquery.values("bgg_geek_rating")[:1]),
+            past_avg_rating=Subquery(history_subquery.values("bgg_average_rating")[:1]),
             # Compute the differences (Current Value - Past Value)
-            rank_diff=F('bgg_rank') - F('past_rank'),
-            geek_rating_diff=F('bgg_geek_rating') - F('past_geek_rating'),
-            avg_rating_diff=F('bgg_average_rating') - F('past_avg_rating')
-        ).order_by('past_rank')[:50] # Sort by the historical rank
+            rank_diff=F("bgg_rank") - F("past_rank"),
+            geek_rating_diff=F("bgg_geek_rating") - F("past_geek_rating"),
+            avg_rating_diff=F("bgg_average_rating") - F("past_avg_rating"),
+        ).order_by("past_rank")[:50]  # Sort by the historical rank
 
         serializer = self.get_serializer(objs, many=True)
         return Response(serializer.data)

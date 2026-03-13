@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-5hoc#)jbh+d)q*gp3$l(*b@b8sbd#eqp52s#w%$znt2rm$st4!
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-#DEBUG = False
+# DEBUG = False
 
 ALLOWED_HOSTS = ["saboga-api", "saboga.localhost", "saboga.tjarksievers.de"]
 
@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "rest_framework",
-    'drf_spectacular',
+    "drf_spectacular",
     "django_prometheus",
     "api",
 ]
@@ -147,12 +147,12 @@ BGG_API_KEY = os.getenv("BGG_API_KEY", "")
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Saboga API',
-    'DESCRIPTION': 'Your project description',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    "TITLE": "Saboga API",
+    "DESCRIPTION": "Your project description",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }

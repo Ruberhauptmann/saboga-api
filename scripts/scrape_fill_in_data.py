@@ -128,7 +128,7 @@ def parse_boardgame_data(item: ET.Element) -> dict:
 
 
 def analyse_api_response(
-    item: ET.Element
+    item: ET.Element,
 ) -> tuple[
     models.Boardgame | None,
     list[models.Category],
@@ -181,22 +181,30 @@ def analyse_api_response(
 
     categories = []
     for bgg_id, name in data.get("categories", []):
-        category, _ = models.Category.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
+        category, _ = models.Category.objects.get_or_create(
+            bgg_id=bgg_id, defaults={"name": name}
+        )
         categories.append(category)
 
     designers = []
     for bgg_id, name in data.get("designers", []):
-        designer, _ = models.Designer.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
+        designer, _ = models.Designer.objects.get_or_create(
+            bgg_id=bgg_id, defaults={"name": name}
+        )
         designers.append(designer)
 
     families = []
     for bgg_id, name in data.get("families", []):
-        family, _ = models.Family.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
+        family, _ = models.Family.objects.get_or_create(
+            bgg_id=bgg_id, defaults={"name": name}
+        )
         families.append(family)
 
     mechanics = []
     for bgg_id, name in data.get("mechanics", []):
-        mechanic, _ = models.Mechanic.objects.get_or_create(bgg_id=bgg_id, defaults={"name": name})
+        mechanic, _ = models.Mechanic.objects.get_or_create(
+            bgg_id=bgg_id, defaults={"name": name}
+        )
         mechanics.append(mechanic)
 
     boardgame.categories.set(categories)
@@ -225,9 +233,9 @@ def run() -> None:
 
     run_index = 0
     while True:
-        ids = models.Boardgame.objects.order_by("-bgg_id").values_list("bgg_id", flat=True)[
-            run_index * step : (run_index + 1) * step
-        ]
+        ids = models.Boardgame.objects.order_by("-bgg_id").values_list(
+            "bgg_id", flat=True
+        )[run_index * step : (run_index + 1) * step]
         if not ids:
             break
 
