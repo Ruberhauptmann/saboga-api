@@ -1,5 +1,4 @@
-"""
-WSGI config for saboga_project project.
+"""WSGI config for saboga_project project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

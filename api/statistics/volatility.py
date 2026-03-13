@@ -19,6 +19,7 @@ def calculate_volatility(
     Returns:
         tuple[float, float, float]: Volatility for rank, geek_rating and
             average_rating, or ``(None, None, None)`` if there's no data.
+
     """
     logger.info("Starting volatility calculation.")
 

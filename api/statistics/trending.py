@@ -22,6 +22,7 @@ def calculate_trends(
         tuple[float, float, float, float]: Trends for rank, geek_rating,
             average_rating and mean trend. If there is insufficient data all
             values are ``None``.
+
     """
     logger.info("Starting trend calculation.")
 
