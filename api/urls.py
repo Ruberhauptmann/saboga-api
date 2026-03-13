@@ -4,7 +4,6 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     BoardgameViewSet,
     CategoryViewSet,
-    GraphViewSet,
     DesignerViewSet,
     FamilyViewSet,
     MechanicViewSet,
@@ -17,7 +16,6 @@ router.register("categories", CategoryViewSet, basename="category")
 router.register("designers", DesignerViewSet, basename="designer")
 router.register("families", FamilyViewSet, basename="family")
 router.register("mechanics", MechanicViewSet, basename="mechanic")
-router.register("graphs", GraphViewSet, basename="graph")
 
 urlpatterns = [
     path("", include(router.urls)),

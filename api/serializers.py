@@ -212,3 +212,19 @@ class SearchResultSerializer(serializers.Serializer):
     type = serializers.CharField()
     # Use a generic field or point to specific serializers
     data = serializers.JSONField()
+
+
+class PredictionSerializer(serializers.Serializer):
+    date = serializers.DateTimeField()
+    bgg_rank = serializers.IntegerField()
+    bgg_rank_confidence_interval = serializers.ListField(
+        child=serializers.FloatField(), min_length=2, max_length=2
+    )
+    bgg_average_rating = serializers.FloatField()
+    bgg_average_rating_confidence_interval = serializers.ListField(
+        child=serializers.FloatField(), min_length=2, max_length=2
+    )
+    bgg_geek_rating = serializers.FloatField()
+    bgg_geek_rating_confidence_interval = serializers.ListField(
+        child=serializers.FloatField(), min_length=2, max_length=2
+    )

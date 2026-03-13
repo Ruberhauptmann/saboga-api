@@ -1,5 +1,4 @@
 from .category import CategoryViewSet
-from .graphs import GraphViewSet
 from .boardgame import BoardgameViewSet
 from .designer import DesignerViewSet
 from .family import FamilyViewSet

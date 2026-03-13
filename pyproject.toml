@@ -3,7 +3,7 @@ name = "saboga-api"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "django-extensions>=4.1",
     "django-prometheus>=2.4.1",
@@ -13,11 +13,13 @@ dependencies = [
     "faker>=40.8.0",
     "loki-logger-handler>=1.1.2",
     "networkx>=3.6.1",
-    "pandas>=3.0.1",
+    "pandas>=2.3.3",
     "pillow>=12.1.1",
     "psycopg[binary,pool]>=3.3.3",
-    "scipy>=1.17.1",
     "selenium>=4.41.0",
+    "setuptools==81.0.0",
+    "sktime>=0.40.0",
+    "statsforecast>=2.0.3",
     "webdriver-manager>=4.0.2",
 ]
 
