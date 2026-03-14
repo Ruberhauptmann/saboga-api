@@ -10,6 +10,7 @@ import requests
 from PIL import Image
 
 from api import models
+from django.core.files.base import ContentFile
 
 from api.logger import configure_logger
 
@@ -156,19 +157,19 @@ def analyse_api_response(
     # Process image
     if data.get("image_url"):
         image_filename = f"{data['bgg_id']}.jpg"
-        image_file = settings.IMG_DIR / image_filename
+        image_file = settings.MEDIA_ROOT / image_filename
         image_file.parent.mkdir(parents=True, exist_ok=True)
 
         if not image_file.exists():
             try:
                 response = requests.get(data["image_url"], timeout=30)
-                with image_file.open("wb") as f:
-                    f.write(response.content)
+                content_file = ContentFile(response.content, name=image_filename)
+                boardgame.image = content_file
             except requests.RequestException as e:
                 logger.warning("Failed to download image for %s: %s", data["bgg_id"], e)
 
         thumbnail_filename = f"{image_file.stem}-thumbnail.jpg"
-        thumbnail_file = settings.IMG_DIR / thumbnail_filename
+        thumbnail_file = settings.MEDIA_ROOT / thumbnail_filename
         if not thumbnail_file.exists():
             im = Image.open(image_file).convert("RGB")
             im.thumbnail((128, 128))
