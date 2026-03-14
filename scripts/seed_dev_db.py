@@ -20,6 +20,7 @@ import re
 
 from faker import Faker
 from PIL import Image, ImageDraw, ImageFont
+from django.core.files import File
 
 from api import models
 from api.statistics import calculate_trends, calculate_volatility
@@ -167,8 +168,6 @@ def generate_boardgame(bgg_id, designers, categories, families, mechanics):
         mean_trend=mean_trend,
         name=title,
         description=fake.paragraph(nb_sentences=10),
-        image_url=f"/img/{main_image_path}",
-        thumbnail_url=f"/img/{thumb_image_path}",
         year_published=random.randint(1990, 2025),
         minplayers=minplayers,
         maxplayers=maxplayers,
@@ -176,6 +175,11 @@ def generate_boardgame(bgg_id, designers, categories, families, mechanics):
         minplaytime=minplay,
         maxplaytime=maxplay,
     )
+
+    with open(f"api-testing/img/{main_image_path}", "rb") as main_img_file:
+        boardgame.image.save(main_image_path, File(main_img_file), save=False)
+    with open(f"api-testing/img/{thumb_image_path}", "rb") as thumb_img_file:
+        boardgame.thumbnail.save(thumb_image_path, File(thumb_img_file), save=False)
 
     return boardgame, rank_history
 

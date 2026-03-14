@@ -134,11 +134,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_ROOT = BASE_DIR / "static"
+MEDIA_ROOT = BASE_DIR / "img"
 
 STATIC_URL = "/api/static/"
-MEDIA_URL = "/api/media/"
+MEDIA_URL = "/api/img/"
 
-IMG_DIR = BASE_DIR / "img"
 
 # BGG credentials (for scraping)
 BGG_USERNAME = os.getenv("BGG_USERNAME", "")

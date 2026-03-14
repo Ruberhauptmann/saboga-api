@@ -75,8 +75,8 @@ class Boardgame(BaseModel):
     mean_trend = models.FloatField(null=True, blank=True)
 
     description = models.TextField(blank=True, default="")
-    image_url = models.URLField(blank=True, default="")
-    thumbnail_url = models.URLField(blank=True, default="")
+    image = models.ImageField(blank=True, null=True)
+    thumbnail = models.ImageField(blank=True, null=True)
 
     year_published = models.IntegerField(null=True, blank=True)
     minplayers = models.IntegerField(null=True, blank=True)

@@ -68,7 +68,7 @@ class BoardgameListSerializer(serializers.ModelSerializer):
             "designers",
             "families",
             "mechanics",
-            "thumbnail_url",
+            "thumbnail",
             "year_published",
         ]
 
@@ -109,7 +109,7 @@ class BoardgameDetailSerializer(BoardgameListSerializer):
         fields: ClassVar[list[str]] = [
             *BoardgameListSerializer.Meta.fields,
             "description",
-            "image_url",
+            "image",
             "year_published",
             "minplayers",
             "maxplayers",
