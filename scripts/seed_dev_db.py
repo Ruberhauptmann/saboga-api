@@ -34,7 +34,7 @@ django.setup()
 
 fake = Faker()
 
-NUM_GAMES = 10
+NUM_GAMES = 20
 NUM_DESIGNERS = 4
 HISTORY_DAYS = 35
 

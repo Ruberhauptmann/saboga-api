@@ -148,7 +148,7 @@ BGG_API_KEY = os.getenv("BGG_API_KEY", "")
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "drf_link_header_pagination.LinkHeaderPagination",
-    "PAGE_SIZE": 100,
+    "PAGE_SIZE": 10,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
