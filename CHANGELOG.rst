@@ -1,4 +1,14 @@
 
+.. _changelog-0.1.7:
+
+0.1.7 — 2025-03-26
+------------------
+
+Changed
+^^^^^^^
+
+- Switch over to Django Rest Framework
+
 .. _changelog-0.0.60:
 
 0.0.60 — 2025-10-20
