@@ -141,9 +141,7 @@ class BoardgameViewSet(viewsets.ReadOnlyModelViewSet):
         page = self.paginate_queryset(objs)
 
         if page is not None:
-            print(self.get_serializer_class(), flush=True)
             serializer = self.get_serializer(page, many=True)
-            print(serializer, flush=True)
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(objs, many=True)

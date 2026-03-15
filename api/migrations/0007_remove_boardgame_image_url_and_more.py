@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('api', '0006_boardgame_thumbnail'),
+        ("api", "0006_boardgame_thumbnail"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='boardgame',
-            name='image_url',
+            model_name="boardgame",
+            name="image_url",
         ),
         migrations.RemoveField(
-            model_name='boardgame',
-            name='thumbnail_url',
+            model_name="boardgame",
+            name="thumbnail_url",
         ),
     ]
